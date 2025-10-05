@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Shantell_Sans, Inter, DM_Sans } from "next/font/google";
 import { ThemeProvider } from "@/components/theme-provider";
+import { AuthKitProvider } from '@workos-inc/authkit-nextjs/components';
 import "./globals.css";
 
 const shantellSans = Shantell_Sans({
@@ -36,14 +37,16 @@ export default function RootLayout({
       <body
         className={`${shantellSans.variable} ${inter.variable} ${dmSans.variable} antialiased font-sans`}
       >
-        <ThemeProvider
-          attribute="class"
-          defaultTheme="light"
-          enableSystem
-          disableTransitionOnChange
-        >
-          {children}
-        </ThemeProvider>
+        <AuthKitProvider>
+          <ThemeProvider
+            attribute="class"
+            defaultTheme="light"
+            enableSystem
+            disableTransitionOnChange
+          >
+            {children}
+          </ThemeProvider>
+        </AuthKitProvider>
       </body>
     </html>
   );

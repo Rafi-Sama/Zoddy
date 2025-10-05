@@ -138,8 +138,8 @@ export function AppSidebar() {
                 <DropdownMenuItem>
                   <span>Billing</span>
                 </DropdownMenuItem>
-                <DropdownMenuItem>
-                  <span>Sign out</span>
+                <DropdownMenuItem asChild>
+                  <a href="/signout">Sign out</a>
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>

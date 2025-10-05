@@ -1,8 +1,8 @@
-"use client"
 import { MainLayout } from "@/components/layout/main-layout"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
+import { withAuth } from '@workos-inc/authkit-nextjs'
 import {
   TrendingUp,
   ShoppingCart,
@@ -18,7 +18,24 @@ import {
   Search,
   Star
 } from "lucide-react"
-export default function DashboardPage() {
+
+export default async function DashboardPage() {
+  // Ensure user is authenticated and get user data
+  const { user } = await withAuth();
+
+  // Sync user to Supabase (this is idempotent - safe to run on every page load)
+  if (user) {
+    try {
+      const { syncWorkOSUserToSupabase } = await import('@/lib/sync-user');
+      await syncWorkOSUserToSupabase(user);
+    } catch (error) {
+      console.error('Failed to sync user to Supabase:', error);
+    }
+  }
+
+  // Example: You can now use user data and Supabase
+  // const supabase = await createSupabaseClient();
+  // const { data } = await supabase.from('orders').select('*').eq('user_id', user.id);
   return (
     <MainLayout
       breadcrumbs={[

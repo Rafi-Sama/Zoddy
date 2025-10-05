@@ -223,7 +223,7 @@ export default function PricingPage() {
                   ))}
                 </div>
                 <div className="pt-4">
-                  <Link href={plan.name === "Enterprise" ? "/contact" : "/auth/signup"}>
+                  <Link href={plan.name === "Enterprise" ? "/contact" : "/login"}>
                     <Button
                       variant={plan.ctaVariant}
                       className={`w-full ${
@@ -376,7 +376,7 @@ export default function PricingPage() {
             Join thousands of successful businesses. Start your free trial today—no credit card required.
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <Link href="/auth/signup">
+            <Link href="/login">
               <Button size="lg" className="bg-accent hover:bg-accent/90 text-lg px-8 py-6">
                 Start Free Trial
                 <ArrowRight className="ml-2 h-5 w-5" />

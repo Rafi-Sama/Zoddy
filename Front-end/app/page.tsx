@@ -1,9 +1,10 @@
-"use client"
 import { MarketingLayout } from "@/components/layout/marketing-layout"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import Link from "next/link"
+import { getSignUpUrl, withAuth } from '@workos-inc/authkit-nextjs'
+import { redirect } from 'next/navigation'
 import {
   TrendingUp,
   ShoppingCart,
@@ -18,7 +19,18 @@ import {
   MessageCircle,
   Star
 } from "lucide-react"
-export default function Home() {
+
+export default async function Home() {
+  // Check if user is already authenticated
+  const { user } = await withAuth({ ensureSignedIn: false });
+
+  // If user is signed in, redirect to dashboard
+  if (user) {
+    redirect('/dashboard');
+  }
+
+  // Get the sign-up URL for the CTA buttons
+  const signUpUrl = await getSignUpUrl();
   return (
     <MarketingLayout>
       {/* Hero Section */}
@@ -36,7 +48,7 @@ export default function Home() {
             track sales, manage customers, and grow revenue with powerful insights—all in Bangla.
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center mb-12">
-            <Link href="/auth/signup">
+            <Link href={signUpUrl}>
               <Button size="lg" className="bg-accent hover:bg-accent/90 text-lg px-8 py-6">
                 Start Free Trial
                 <ArrowRight className="ml-2 h-5 w-5" />
@@ -247,7 +259,7 @@ export default function Home() {
                 </div>
               ))}
             </div>
-            <Link href="/auth/signup">
+            <Link href={signUpUrl}>
               <Button size="lg" className="bg-accent hover:bg-accent/90">
                 Start Growing Today
                 <ArrowRight className="ml-2 h-4 w-4" />
@@ -330,7 +342,7 @@ export default function Home() {
             analyze, and grow their businesses. Start your free trial today.
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center mb-8">
-            <Link href="/auth/signup">
+            <Link href={signUpUrl}>
               <Button size="lg" className="bg-accent hover:bg-accent/90 text-lg px-8 py-6">
                 Start Free Trial - No Credit Card Required
               </Button>
