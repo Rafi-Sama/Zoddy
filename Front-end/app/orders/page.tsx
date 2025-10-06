@@ -141,15 +141,15 @@ export default function OrdersPage() {
   const getStatusIcon = (status: string) => {
     switch (status) {
       case "delivered":
-        return <CheckCircle className="h-4 w-4" />
+        return <CheckCircle className="h-3.5 w-3.5" />
       case "shipped":
-        return <Truck className="h-4 w-4" />
+        return <Truck className="h-3.5 w-3.5" />
       case "confirmed":
-        return <Package className="h-4 w-4" />
+        return <Package className="h-3.5 w-3.5" />
       case "pending":
-        return <Clock className="h-4 w-4" />
+        return <Clock className="h-3.5 w-3.5" />
       default:
-        return <Clock className="h-4 w-4" />
+        return <Clock className="h-3.5 w-3.5" />
     }
   }
   return (
@@ -160,18 +160,18 @@ export default function OrdersPage() {
     >
       {/* Filter & Search Bar */}
       <Card>
-        <CardContent className="pt-6">
-          <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+        <CardContent className="pt-4">
+          <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
             <div className="flex flex-1 gap-2">
               <div className="relative flex-1 max-w-md">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
                 <Input
                   placeholder="Search by customer, order ID, phone..."
-                  className="pl-10"
+                  className="pl-10 h-8 text-xs"
                 />
               </div>
               <Select>
-                <SelectTrigger className="w-[150px]">
+                <SelectTrigger className="w-[150px] h-8 text-xs">
                   <SelectValue placeholder="Status" />
                 </SelectTrigger>
                 <SelectContent>
@@ -183,7 +183,7 @@ export default function OrdersPage() {
                 </SelectContent>
               </Select>
               <Select>
-                <SelectTrigger className="w-[150px]">
+                <SelectTrigger className="w-[150px] h-8 text-xs">
                   <SelectValue placeholder="Payment" />
                 </SelectTrigger>
                 <SelectContent>
@@ -193,14 +193,14 @@ export default function OrdersPage() {
                   <SelectItem value="partial">Partial</SelectItem>
                 </SelectContent>
               </Select>
-              <Button variant="outline">
-                <Calendar className="h-4 w-4 mr-2" />
+              <Button variant="outline" className="h-8 text-xs px-3">
+                <Calendar className="h-3.5 w-3.5 mr-2" />
                 Date Range
               </Button>
             </div>
             <div className="flex gap-2">
-              <Button variant="outline">
-                <Download className="h-4 w-4 mr-2" />
+              <Button variant="outline" className="h-8 text-xs px-3">
+                <Download className="h-3.5 w-3.5 mr-2" />
                 Export
               </Button>
               <div className="flex rounded-md border">
@@ -208,21 +208,21 @@ export default function OrdersPage() {
                   variant={viewMode === "list" ? "default" : "ghost"}
                   size="sm"
                   onClick={() => setViewMode("list")}
-                  className="rounded-r-none"
+                  className="rounded-r-none h-8 px-3"
                 >
-                  <List className="h-4 w-4" />
+                  <List className="h-3.5 w-3.5" />
                 </Button>
                 <Button
                   variant={viewMode === "grid" ? "default" : "ghost"}
                   size="sm"
                   onClick={() => setViewMode("grid")}
-                  className="rounded-l-none"
+                  className="rounded-l-none h-8 px-3"
                 >
-                  <Grid3X3 className="h-4 w-4" />
+                  <Grid3X3 className="h-3.5 w-3.5" />
                 </Button>
               </div>
-              <Button className="bg-accent hover:bg-accent/90">
-                <Plus className="h-4 w-4 mr-2" />
+              <Button className="bg-accent hover:bg-accent/90 h-8 text-xs px-3">
+                <Plus className="h-3.5 w-3.5 mr-2" />
                 New Order
               </Button>
             </div>
@@ -233,49 +233,49 @@ export default function OrdersPage() {
       {viewMode === "list" ? (
         <Card>
           <CardHeader>
-            <CardTitle>Orders List</CardTitle>
-            <CardDescription>Manage and track all your orders</CardDescription>
+            <CardTitle className="text-lg">Orders List</CardTitle>
+            <CardDescription className="text-xs">Manage and track all your orders</CardDescription>
           </CardHeader>
           <CardContent>
             <div className="overflow-x-auto">
               <table className="w-full">
                 <thead>
                   <tr className="border-b">
-                    <th className="text-left py-3 px-2">Order ID</th>
-                    <th className="text-left py-3 px-2">Customer</th>
-                    <th className="text-left py-3 px-2">Date</th>
-                    <th className="text-left py-3 px-2">Items</th>
-                    <th className="text-left py-3 px-2">Amount</th>
-                    <th className="text-left py-3 px-2">Status</th>
-                    <th className="text-left py-3 px-2">Payment</th>
-                    <th className="text-left py-3 px-2">Actions</th>
+                    <th className="text-left py-2 px-1.5 text-xs">Order ID</th>
+                    <th className="text-left py-2 px-1.5 text-xs">Customer</th>
+                    <th className="text-left py-2 px-1.5 text-xs">Date</th>
+                    <th className="text-left py-2 px-1.5 text-xs">Items</th>
+                    <th className="text-left py-2 px-1.5 text-xs">Amount</th>
+                    <th className="text-left py-2 px-1.5 text-xs">Status</th>
+                    <th className="text-left py-2 px-1.5 text-xs">Payment</th>
+                    <th className="text-left py-2 px-1.5 text-xs">Actions</th>
                   </tr>
                 </thead>
                 <tbody>
                   {mockOrders.map((order) => (
                     <tr key={order.id} className="border-b hover:bg-muted/50">
-                      <td className="py-3 px-2 font-medium">{order.id}</td>
-                      <td className="py-3 px-2">
+                      <td className="py-2 px-1.5 font-medium text-xs">{order.id}</td>
+                      <td className="py-2 px-1.5">
                         <div>
-                          <div className="font-medium">{order.customer.name}</div>
-                          <div className="text-sm text-muted-foreground">{order.customer.phone}</div>
+                          <div className="font-medium text-xs">{order.customer.name}</div>
+                          <div className="text-[10px] text-muted-foreground">{order.customer.phone}</div>
                         </div>
                       </td>
-                      <td className="py-3 px-2 text-sm">{order.date}</td>
-                      <td className="py-3 px-2 text-sm">{order.items.length} items</td>
-                      <td className="py-3 px-2 font-medium">৳{order.amount}</td>
-                      <td className="py-3 px-2">
-                        <Badge className={getStatusColor(order.status)}>
+                      <td className="py-2 px-1.5 text-xs">{order.date}</td>
+                      <td className="py-2 px-1.5 text-xs">{order.items.length} items</td>
+                      <td className="py-2 px-1.5 font-medium text-xs">৳{order.amount}</td>
+                      <td className="py-2 px-1.5">
+                        <Badge className={getStatusColor(order.status) + " text-[9px] px-1.5 py-0"}>
                           {getStatusIcon(order.status)}
                           <span className="ml-1 capitalize">{order.status}</span>
                         </Badge>
                       </td>
-                      <td className="py-3 px-2">
-                        <Badge className={getPaymentStatusColor(order.paymentStatus)}>
+                      <td className="py-2 px-1.5">
+                        <Badge className={getPaymentStatusColor(order.paymentStatus) + " text-[9px] px-1.5 py-0"}>
                           {order.paymentStatus}
                         </Badge>
                       </td>
-                      <td className="py-3 px-2">
+                      <td className="py-2 px-1.5">
                         <div className="flex gap-1">
                           <Dialog>
                             <DialogTrigger asChild>
@@ -283,20 +283,21 @@ export default function OrdersPage() {
                                 variant="ghost"
                                 size="sm"
                                 onClick={() => setSelectedOrder(order)}
+                                className="h-6 px-2"
                               >
-                                <Eye className="h-4 w-4" />
+                                <Eye className="h-3.5 w-3.5" />
                               </Button>
                             </DialogTrigger>
                             <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
                               <OrderDetailsModal order={selectedOrder} />
                             </DialogContent>
                           </Dialog>
-                          <Button variant="ghost" size="sm">
-                            <Edit className="h-4 w-4" />
+                          <Button variant="ghost" size="sm" className="h-6 px-2">
+                            <Edit className="h-3.5 w-3.5" />
                           </Button>
                           {order.paymentStatus === "pending" && (
-                            <Button variant="ghost" size="sm">
-                              <CheckCircle className="h-4 w-4" />
+                            <Button variant="ghost" size="sm" className="h-6 px-2">
+                              <CheckCircle className="h-3.5 w-3.5" />
                             </Button>
                           )}
                         </div>
@@ -309,51 +310,51 @@ export default function OrdersPage() {
           </CardContent>
         </Card>
       ) : (
-        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+        <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-3">
           {mockOrders.map((order) => (
             <Card key={order.id} className="hover:shadow-md transition-shadow">
-              <CardHeader className="pb-3">
+              <CardHeader className="pb-2">
                 <div className="flex items-center justify-between">
-                  <CardTitle className="text-lg">{order.id}</CardTitle>
-                  <Badge className={getStatusColor(order.status)}>
+                  <CardTitle className="text-sm">{order.id}</CardTitle>
+                  <Badge className={getStatusColor(order.status) + " text-[9px] px-1.5 py-0"}>
                     {getStatusIcon(order.status)}
                     <span className="ml-1 capitalize">{order.status}</span>
                   </Badge>
                 </div>
-                <CardDescription>{order.customer.name}</CardDescription>
+                <CardDescription className="text-xs">{order.customer.name}</CardDescription>
               </CardHeader>
-              <CardContent className="space-y-3">
-                <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                  <Phone className="h-4 w-4" />
+              <CardContent className="space-y-2">
+                <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                  <Phone className="h-3.5 w-3.5" />
                   {order.customer.phone}
                 </div>
-                <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                  <Calendar className="h-4 w-4" />
+                <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                  <Calendar className="h-3.5 w-3.5" />
                   {order.date}
                 </div>
-                <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                  <Package className="h-4 w-4" />
+                <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                  <Package className="h-3.5 w-3.5" />
                   {order.items.length} items
                 </div>
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
-                    <DollarSign className="h-4 w-4" />
-                    <span className="font-bold">৳{order.amount}</span>
+                    <DollarSign className="h-3.5 w-3.5" />
+                    <span className="font-bold text-xs">৳{order.amount}</span>
                   </div>
-                  <Badge className={getPaymentStatusColor(order.paymentStatus)}>
+                  <Badge className={getPaymentStatusColor(order.paymentStatus) + " text-[9px] px-1.5 py-0"}>
                     {order.paymentStatus}
                   </Badge>
                 </div>
-                <div className="flex gap-2 pt-2">
+                <div className="flex gap-2 pt-1.5">
                   <Dialog>
                     <DialogTrigger asChild>
                       <Button
                         variant="outline"
                         size="sm"
-                        className="flex-1"
+                        className="flex-1 h-8 text-xs px-3"
                         onClick={() => setSelectedOrder(order)}
                       >
-                        <Eye className="h-4 w-4 mr-2" />
+                        <Eye className="h-3.5 w-3.5 mr-2" />
                         View
                       </Button>
                     </DialogTrigger>
@@ -361,8 +362,8 @@ export default function OrdersPage() {
                       <OrderDetailsModal order={selectedOrder} />
                     </DialogContent>
                   </Dialog>
-                  <Button variant="outline" size="sm" className="flex-1">
-                    <Edit className="h-4 w-4 mr-2" />
+                  <Button variant="outline" size="sm" className="flex-1 h-8 text-xs px-3">
+                    <Edit className="h-3.5 w-3.5 mr-2" />
                     Edit
                   </Button>
                 </div>
@@ -379,81 +380,81 @@ function OrderDetailsModal({ order }: { order: Order | null }) {
   return (
     <>
       <DialogHeader>
-        <DialogTitle>Order Details - {order.id}</DialogTitle>
-        <DialogDescription>
+        <DialogTitle className="text-lg">Order Details - {order.id}</DialogTitle>
+        <DialogDescription className="text-xs">
           Complete order information and status
         </DialogDescription>
       </DialogHeader>
-      <div className="space-y-6">
+      <div className="space-y-4">
         {/* Customer Info */}
-        <div className="grid gap-4 md:grid-cols-2">
+        <div className="grid gap-3 md:grid-cols-2">
           <Card>
-            <CardHeader className="pb-3">
-              <CardTitle className="text-lg">Customer Information</CardTitle>
+            <CardHeader className="pb-2">
+              <CardTitle className="text-sm">Customer Information</CardTitle>
             </CardHeader>
-            <CardContent className="space-y-2">
+            <CardContent className="space-y-1.5">
               <div className="flex items-center gap-2">
-                <span className="font-medium">Name:</span>
-                <span>{order.customer.name}</span>
+                <span className="font-medium text-xs">Name:</span>
+                <span className="text-xs">{order.customer.name}</span>
               </div>
               <div className="flex items-center gap-2">
-                <Phone className="h-4 w-4" />
-                <span>{order.customer.phone}</span>
+                <Phone className="h-3.5 w-3.5" />
+                <span className="text-xs">{order.customer.phone}</span>
               </div>
               <div className="flex items-center gap-2">
-                <MapPin className="h-4 w-4" />
-                <span className="text-sm">{order.customer.address}</span>
+                <MapPin className="h-3.5 w-3.5" />
+                <span className="text-xs">{order.customer.address}</span>
               </div>
             </CardContent>
           </Card>
           <Card>
-            <CardHeader className="pb-3">
-              <CardTitle className="text-lg">Order Status</CardTitle>
+            <CardHeader className="pb-2">
+              <CardTitle className="text-sm">Order Status</CardTitle>
             </CardHeader>
-            <CardContent className="space-y-3">
+            <CardContent className="space-y-2">
               <div className="flex items-center justify-between">
-                <span>Status:</span>
-                <Badge className={getStatusColor(order.status)}>
+                <span className="text-xs">Status:</span>
+                <Badge className={getStatusColor(order.status) + " text-[9px] px-1.5 py-0"}>
                   {getStatusIcon(order.status)}
                   <span className="ml-1 capitalize">{order.status}</span>
                 </Badge>
               </div>
               <div className="flex items-center justify-between">
-                <span>Payment:</span>
-                <Badge className={getPaymentStatusColor(order.paymentStatus)}>
+                <span className="text-xs">Payment:</span>
+                <Badge className={getPaymentStatusColor(order.paymentStatus) + " text-[9px] px-1.5 py-0"}>
                   {order.paymentStatus}
                 </Badge>
               </div>
               <div className="flex items-center justify-between">
-                <span>Delivery:</span>
-                <span className="text-sm">{order.delivery}</span>
+                <span className="text-xs">Delivery:</span>
+                <span className="text-xs">{order.delivery}</span>
               </div>
             </CardContent>
           </Card>
         </div>
         {/* Order Items */}
         <Card>
-          <CardHeader className="pb-3">
-            <CardTitle className="text-lg">Order Items</CardTitle>
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm">Order Items</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="space-y-3">
+            <div className="space-y-2">
               {order.items.map((item, index: number) => (
-                <div key={index} className="flex items-center justify-between py-2 border-b last:border-b-0">
+                <div key={index} className="flex items-center justify-between py-1.5 border-b last:border-b-0">
                   <div className="flex-1">
-                    <div className="font-medium">{item.name}</div>
-                    <div className="text-sm text-muted-foreground">Qty: {item.quantity}</div>
+                    <div className="font-medium text-xs">{item.name}</div>
+                    <div className="text-[10px] text-muted-foreground">Qty: {item.quantity}</div>
                   </div>
                   <div className="text-right">
-                    <div className="font-medium">৳{item.price}</div>
-                    <div className="text-sm text-muted-foreground">
+                    <div className="font-medium text-xs">৳{item.price}</div>
+                    <div className="text-[10px] text-muted-foreground">
                       Total: ৳{item.price * item.quantity}
                     </div>
                   </div>
                 </div>
               ))}
-              <div className="pt-3 border-t">
-                <div className="flex justify-between font-bold text-lg">
+              <div className="pt-2 border-t">
+                <div className="flex justify-between font-bold text-sm">
                   <span>Total Amount:</span>
                   <span>৳{order.amount}</span>
                 </div>
@@ -462,18 +463,18 @@ function OrderDetailsModal({ order }: { order: Order | null }) {
           </CardContent>
         </Card>
         {/* Action Buttons */}
-        <div className="flex gap-2 pt-4">
-          <Button variant="outline" className="flex-1">
-            <Edit className="h-4 w-4 mr-2" />
+        <div className="flex gap-2 pt-3">
+          <Button variant="outline" className="flex-1 h-8 text-xs px-3">
+            <Edit className="h-3.5 w-3.5 mr-2" />
             Edit Order
           </Button>
-          <Button variant="outline" className="flex-1">
-            <Download className="h-4 w-4 mr-2" />
+          <Button variant="outline" className="flex-1 h-8 text-xs px-3">
+            <Download className="h-3.5 w-3.5 mr-2" />
             Print Receipt
           </Button>
           {order.paymentStatus === "pending" && (
-            <Button className="flex-1 bg-accent hover:bg-accent/90">
-              <CheckCircle className="h-4 w-4 mr-2" />
+            <Button className="flex-1 bg-accent hover:bg-accent/90 h-8 text-xs px-3">
+              <CheckCircle className="h-3.5 w-3.5 mr-2" />
               Mark Paid
             </Button>
           )}
@@ -511,14 +512,14 @@ function getPaymentStatusColor(status: string) {
 function getStatusIcon(status: string) {
   switch (status) {
     case "delivered":
-      return <CheckCircle className="h-4 w-4" />
+      return <CheckCircle className="h-3.5 w-3.5" />
     case "shipped":
-      return <Truck className="h-4 w-4" />
+      return <Truck className="h-3.5 w-3.5" />
     case "confirmed":
-      return <Package className="h-4 w-4" />
+      return <Package className="h-3.5 w-3.5" />
     case "pending":
-      return <Clock className="h-4 w-4" />
+      return <Clock className="h-3.5 w-3.5" />
     default:
-      return <Clock className="h-4 w-4" />
+      return <Clock className="h-3.5 w-3.5" />
   }
 }

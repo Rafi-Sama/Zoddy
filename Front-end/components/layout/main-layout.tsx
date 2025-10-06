@@ -26,16 +26,16 @@ export function MainLayout({ children, breadcrumbs }: MainLayoutProps) {
     <SidebarProvider>
       <AppSidebar />
       <main className="flex-1 overflow-auto">
-        <header className="flex h-16 shrink-0 items-center gap-2 transition-[width,height] ease-linear group-has-[[data-collapsible=icon]]/sidebar-wrapper:h-12">
-          <div className="flex items-center gap-2 px-4 flex-1">
-            <SidebarTrigger className="-ml-1" />
-            <Separator orientation="vertical" className="mr-2 h-4" />
+        <header className="flex h-12 shrink-0 items-center gap-2 transition-[width,height] ease-linear group-has-[[data-collapsible=icon]]/sidebar-wrapper:h-10">
+          <div className="flex items-center gap-2 px-3 flex-1">
+            <SidebarTrigger className="-ml-1 h-7 w-7" />
+            <Separator orientation="vertical" className="mr-1.5 h-3.5" />
             {breadcrumbs && (
               <Breadcrumb>
                 <BreadcrumbList>
                   {breadcrumbs.map((breadcrumb, index) => (
                     <div key={index} className="flex items-center">
-                      <BreadcrumbItem className="hidden md:block">
+                      <BreadcrumbItem className="hidden md:block text-xs">
                         {breadcrumb.href ? (
                           <BreadcrumbLink href={breadcrumb.href}>
                             {breadcrumb.label}
@@ -53,11 +53,11 @@ export function MainLayout({ children, breadcrumbs }: MainLayoutProps) {
               </Breadcrumb>
             )}
           </div>
-          <div className="px-4">
+          <div className="px-3">
             <ThemeToggle />
           </div>
         </header>
-        <div className="flex flex-1 flex-col gap-4 p-4 pt-0">
+        <div className="flex flex-1 flex-col gap-3 p-3 pt-0">
           {children}
         </div>
       </main>

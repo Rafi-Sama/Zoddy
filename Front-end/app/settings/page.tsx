@@ -32,35 +32,35 @@ export default function SettingsPage() {
         { label: "Settings" }
       ]}
     >
-      <div className="space-y-6">
+      <div className="space-y-4">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight">Settings</h1>
-          <p className="text-muted-foreground">
+          <h1 className="text-xl font-bold tracking-tight">Settings</h1>
+          <p className="text-muted-foreground text-xs">
             Manage your business profile and application preferences.
           </p>
         </div>
-        <div className="grid gap-6">
+        <div className="grid gap-4">
           {/* Business Profile */}
           <Card>
-            <CardHeader>
-              <div className="flex items-center gap-2">
-                <Building2 className="h-5 w-5" />
-                <CardTitle>Business Profile</CardTitle>
+            <CardHeader className="pb-2">
+              <div className="flex items-center gap-1.5">
+                <Building2 className="h-4 w-4" />
+                <CardTitle className="text-sm">Business Profile</CardTitle>
               </div>
-              <CardDescription>
+              <CardDescription className="text-xs">
                 Update your business information and branding
               </CardDescription>
             </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label htmlFor="businessName">Business Name</Label>
-                  <Input id="businessName" placeholder="Your Business Name" defaultValue="Zoddy Fashion House" />
+            <CardContent className="space-y-3">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                <div className="space-y-1.5">
+                  <Label htmlFor="businessName" className="text-xs">Business Name</Label>
+                  <Input id="businessName" className="h-8 text-xs" placeholder="Your Business Name" defaultValue="Zoddy Fashion House" />
                 </div>
-                <div className="space-y-2">
-                  <Label htmlFor="businessType">Business Type</Label>
+                <div className="space-y-1.5">
+                  <Label htmlFor="businessType" className="text-xs">Business Type</Label>
                   <Select defaultValue="fashion">
-                    <SelectTrigger>
+                    <SelectTrigger className="h-8 text-xs">
                       <SelectValue placeholder="Select business type" />
                     </SelectTrigger>
                     <SelectContent>
@@ -73,59 +73,60 @@ export default function SettingsPage() {
                   </Select>
                 </div>
               </div>
-              <div className="space-y-2">
-                <Label htmlFor="businessAddress">Business Address</Label>
+              <div className="space-y-1.5">
+                <Label htmlFor="businessAddress" className="text-xs">Business Address</Label>
                 <Textarea
                   id="businessAddress"
+                  className="text-xs"
                   placeholder="Enter your business address"
                   defaultValue="123 Dhanmondi Road, Dhaka 1205, Bangladesh"
                 />
               </div>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label htmlFor="phone">Phone Number</Label>
-                  <Input id="phone" placeholder="+880 1xxx-xxxxxx" defaultValue="+880 1712-345678" />
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                <div className="space-y-1.5">
+                  <Label htmlFor="phone" className="text-xs">Phone Number</Label>
+                  <Input id="phone" className="h-8 text-xs" placeholder="+880 1xxx-xxxxxx" defaultValue="+880 1712-345678" />
                 </div>
-                <div className="space-y-2">
-                  <Label htmlFor="email">Email Address</Label>
-                  <Input id="email" type="email" placeholder="business@example.com" defaultValue="owner@zoddyfashion.com" />
+                <div className="space-y-1.5">
+                  <Label htmlFor="email" className="text-xs">Email Address</Label>
+                  <Input id="email" className="h-8 text-xs" type="email" placeholder="business@example.com" defaultValue="owner@zoddyfashion.com" />
                 </div>
               </div>
-              <div className="space-y-2">
-                <Label htmlFor="logo">Business Logo</Label>
-                <div className="flex items-center gap-4">
-                  <div className="h-16 w-16 bg-muted rounded-lg flex items-center justify-center">
-                    <Building2 className="h-8 w-8 text-muted-foreground" />
+              <div className="space-y-1.5">
+                <Label htmlFor="logo" className="text-xs">Business Logo</Label>
+                <div className="flex items-center gap-3">
+                  <div className="h-12 w-12 bg-muted rounded-lg flex items-center justify-center">
+                    <Building2 className="h-6 w-6 text-muted-foreground" />
                   </div>
-                  <Button variant="outline">
-                    <Upload className="h-4 w-4 mr-2" />
+                  <Button variant="outline" className="h-8 text-xs px-3">
+                    <Upload className="h-3.5 w-3.5 mr-2" />
                     Upload Logo
                   </Button>
                 </div>
               </div>
-              <div className="space-y-2">
-                <Label htmlFor="operatingHours">Operating Hours</Label>
-                <Input id="operatingHours" placeholder="e.g., Mon-Sat: 9AM-6PM" defaultValue="Mon-Sat: 9AM-8PM, Sun: 10AM-6PM" />
+              <div className="space-y-1.5">
+                <Label htmlFor="operatingHours" className="text-xs">Operating Hours</Label>
+                <Input id="operatingHours" className="h-8 text-xs" placeholder="e.g., Mon-Sat: 9AM-6PM" defaultValue="Mon-Sat: 9AM-8PM, Sun: 10AM-6PM" />
               </div>
             </CardContent>
           </Card>
           {/* Preferences */}
           <Card>
-            <CardHeader>
-              <div className="flex items-center gap-2">
-                <User className="h-5 w-5" />
-                <CardTitle>Preferences</CardTitle>
+            <CardHeader className="pb-2">
+              <div className="flex items-center gap-1.5">
+                <User className="h-4 w-4" />
+                <CardTitle className="text-sm">Preferences</CardTitle>
               </div>
-              <CardDescription>
+              <CardDescription className="text-xs">
                 Customize your application experience
               </CardDescription>
             </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label htmlFor="currency">Currency</Label>
+            <CardContent className="space-y-3">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                <div className="space-y-1.5">
+                  <Label htmlFor="currency" className="text-xs">Currency</Label>
                   <Select defaultValue="bdt">
-                    <SelectTrigger>
+                    <SelectTrigger className="h-8 text-xs">
                       <SelectValue placeholder="Select currency" />
                     </SelectTrigger>
                     <SelectContent>
@@ -135,10 +136,10 @@ export default function SettingsPage() {
                     </SelectContent>
                   </Select>
                 </div>
-                <div className="space-y-2">
-                  <Label htmlFor="dateFormat">Date Format</Label>
+                <div className="space-y-1.5">
+                  <Label htmlFor="dateFormat" className="text-xs">Date Format</Label>
                   <Select defaultValue="dd-mm-yyyy">
-                    <SelectTrigger>
+                    <SelectTrigger className="h-8 text-xs">
                       <SelectValue placeholder="Select date format" />
                     </SelectTrigger>
                     <SelectContent>
@@ -149,11 +150,11 @@ export default function SettingsPage() {
                   </Select>
                 </div>
               </div>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label htmlFor="timezone">Time Zone</Label>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                <div className="space-y-1.5">
+                  <Label htmlFor="timezone" className="text-xs">Time Zone</Label>
                   <Select defaultValue="dhaka">
-                    <SelectTrigger>
+                    <SelectTrigger className="h-8 text-xs">
                       <SelectValue placeholder="Select timezone" />
                     </SelectTrigger>
                     <SelectContent>
@@ -163,10 +164,10 @@ export default function SettingsPage() {
                     </SelectContent>
                   </Select>
                 </div>
-                <div className="space-y-2">
-                  <Label htmlFor="language">Language</Label>
+                <div className="space-y-1.5">
+                  <Label htmlFor="language" className="text-xs">Language</Label>
                   <Select defaultValue="en">
-                    <SelectTrigger>
+                    <SelectTrigger className="h-8 text-xs">
                       <SelectValue placeholder="Select language" />
                     </SelectTrigger>
                     <SelectContent>
@@ -180,16 +181,16 @@ export default function SettingsPage() {
           </Card>
           {/* Payment Methods */}
           <Card>
-            <CardHeader>
-              <div className="flex items-center gap-2">
-                <CreditCard className="h-5 w-5" />
-                <CardTitle>Payment Methods</CardTitle>
+            <CardHeader className="pb-2">
+              <div className="flex items-center gap-1.5">
+                <CreditCard className="h-4 w-4" />
+                <CardTitle className="text-sm">Payment Methods</CardTitle>
               </div>
-              <CardDescription>
+              <CardDescription className="text-xs">
                 Configure accepted payment methods for your business
               </CardDescription>
             </CardHeader>
-            <CardContent className="space-y-4">
+            <CardContent className="space-y-3">
               {[
                 { name: "Cash", enabled: true, description: "Cash on delivery" },
                 { name: "bKash", enabled: true, description: "Mobile banking" },
@@ -198,19 +199,19 @@ export default function SettingsPage() {
                 { name: "Bank Transfer", enabled: true, description: "Direct bank transfer" },
                 { name: "Credit/Debit Card", enabled: false, description: "Card payments" },
               ].map((method) => (
-                <div key={method.name} className="flex items-center justify-between py-2">
+                <div key={method.name} className="flex items-center justify-between py-1.5">
                   <div className="space-y-0.5">
-                    <Label className="text-base">{method.name}</Label>
-                    <div className="text-sm text-muted-foreground">{method.description}</div>
+                    <Label className="text-xs">{method.name}</Label>
+                    <div className="text-[10px] text-muted-foreground">{method.description}</div>
                   </div>
                   <Switch defaultChecked={method.enabled} />
                 </div>
               ))}
               <Separator />
-              <div className="space-y-2">
-                <Label htmlFor="defaultPayment">Default Payment Method</Label>
+              <div className="space-y-1.5">
+                <Label htmlFor="defaultPayment" className="text-xs">Default Payment Method</Label>
                 <Select defaultValue="cash">
-                  <SelectTrigger>
+                  <SelectTrigger className="h-8 text-xs">
                     <SelectValue placeholder="Select default payment method" />
                   </SelectTrigger>
                   <SelectContent>
@@ -224,47 +225,47 @@ export default function SettingsPage() {
           </Card>
           {/* Delivery Settings */}
           <Card>
-            <CardHeader>
-              <div className="flex items-center gap-2">
-                <Truck className="h-5 w-5" />
-                <CardTitle>Delivery Settings</CardTitle>
+            <CardHeader className="pb-2">
+              <div className="flex items-center gap-1.5">
+                <Truck className="h-4 w-4" />
+                <CardTitle className="text-sm">Delivery Settings</CardTitle>
               </div>
-              <CardDescription>
+              <CardDescription className="text-xs">
                 Configure delivery options and fees
               </CardDescription>
             </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label htmlFor="deliveryFee">Default Delivery Fee</Label>
-                  <Input id="deliveryFee" placeholder="60" defaultValue="60" />
+            <CardContent className="space-y-3">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                <div className="space-y-1.5">
+                  <Label htmlFor="deliveryFee" className="text-xs">Default Delivery Fee</Label>
+                  <Input id="deliveryFee" className="h-8 text-xs" placeholder="60" defaultValue="60" />
                 </div>
-                <div className="space-y-2">
-                  <Label htmlFor="freeDeliveryThreshold">Free Delivery Threshold</Label>
-                  <Input id="freeDeliveryThreshold" placeholder="1000" defaultValue="1000" />
+                <div className="space-y-1.5">
+                  <Label htmlFor="freeDeliveryThreshold" className="text-xs">Free Delivery Threshold</Label>
+                  <Input id="freeDeliveryThreshold" className="h-8 text-xs" placeholder="1000" defaultValue="1000" />
                 </div>
+              </div>
+              <div className="space-y-1.5">
+                <Label htmlFor="estimatedDays" className="text-xs">Estimated Delivery Days</Label>
+                <Input id="estimatedDays" className="h-8 text-xs" placeholder="e.g., 1-3 business days" defaultValue="1-3 business days" />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="estimatedDays">Estimated Delivery Days</Label>
-                <Input id="estimatedDays" placeholder="e.g., 1-3 business days" defaultValue="1-3 business days" />
-              </div>
-              <div className="space-y-3">
-                <Label>Delivery Zones</Label>
-                <div className="space-y-2">
+                <Label className="text-xs">Delivery Zones</Label>
+                <div className="space-y-1.5">
                   {[
                     { zone: "Dhaka City", fee: "৳60", enabled: true },
                     { zone: "Dhaka District", fee: "৳100", enabled: true },
                     { zone: "Outside Dhaka", fee: "৳150", enabled: false },
                   ].map((zone) => (
-                    <div key={zone.zone} className="flex items-center justify-between p-3 border rounded-lg">
-                      <div className="flex items-center gap-2">
+                    <div key={zone.zone} className="flex items-center justify-between p-2 border rounded-lg">
+                      <div className="flex items-center gap-1.5">
                         <Switch defaultChecked={zone.enabled} />
                         <div>
-                          <div className="font-medium">{zone.zone}</div>
-                          <div className="text-sm text-muted-foreground">Delivery fee: {zone.fee}</div>
+                          <div className="font-medium text-xs">{zone.zone}</div>
+                          <div className="text-[10px] text-muted-foreground">Delivery fee: {zone.fee}</div>
                         </div>
                       </div>
-                      <Button variant="ghost" size="sm">Edit</Button>
+                      <Button variant="ghost" size="sm" className="h-6 text-[10px] px-2">Edit</Button>
                     </div>
                   ))}
                 </div>
@@ -273,16 +274,16 @@ export default function SettingsPage() {
           </Card>
           {/* Notifications */}
           <Card>
-            <CardHeader>
-              <div className="flex items-center gap-2">
-                <Bell className="h-5 w-5" />
-                <CardTitle>Notifications</CardTitle>
+            <CardHeader className="pb-2">
+              <div className="flex items-center gap-1.5">
+                <Bell className="h-4 w-4" />
+                <CardTitle className="text-sm">Notifications</CardTitle>
               </div>
-              <CardDescription>
+              <CardDescription className="text-xs">
                 Manage your notification preferences
               </CardDescription>
             </CardHeader>
-            <CardContent className="space-y-4">
+            <CardContent className="space-y-3">
               {[
                 { name: "New Orders", description: "Get notified when you receive new orders", enabled: true },
                 { name: "Payment Received", description: "Notification when payments are received", enabled: true },
@@ -291,10 +292,10 @@ export default function SettingsPage() {
                 { name: "Weekly Reports", description: "Weekly business performance digest", enabled: false },
                 { name: "Marketing Reminders", description: "Reminders for marketing activities", enabled: false },
               ].map((notification) => (
-                <div key={notification.name} className="flex items-center justify-between py-2">
+                <div key={notification.name} className="flex items-center justify-between py-1.5">
                   <div className="space-y-0.5">
-                    <Label className="text-base">{notification.name}</Label>
-                    <div className="text-sm text-muted-foreground">{notification.description}</div>
+                    <Label className="text-xs">{notification.name}</Label>
+                    <div className="text-[10px] text-muted-foreground">{notification.description}</div>
                   </div>
                   <Switch defaultChecked={notification.enabled} />
                 </div>
@@ -303,17 +304,17 @@ export default function SettingsPage() {
           </Card>
           {/* Integrations */}
           <Card>
-            <CardHeader>
-              <div className="flex items-center gap-2">
-                <MessageSquare className="h-5 w-5" />
-                <CardTitle>Integrations</CardTitle>
+            <CardHeader className="pb-2">
+              <div className="flex items-center gap-1.5">
+                <MessageSquare className="h-4 w-4" />
+                <CardTitle className="text-sm">Integrations</CardTitle>
               </div>
-              <CardDescription>
+              <CardDescription className="text-xs">
                 Connect with external platforms and services
               </CardDescription>
             </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="space-y-4">
+            <CardContent className="space-y-3">
+              <div className="space-y-3">
                 {[
                   {
                     name: "WhatsApp Business",
@@ -334,15 +335,15 @@ export default function SettingsPage() {
                     connected: false
                   },
                 ].map((integration) => (
-                  <div key={integration.name} className="flex items-center justify-between p-4 border rounded-lg">
+                  <div key={integration.name} className="flex items-center justify-between p-3 border rounded-lg">
                     <div className="space-y-0.5">
-                      <div className="font-medium">{integration.name}</div>
-                      <div className="text-sm text-muted-foreground">{integration.description}</div>
-                      <div className={`text-sm ${integration.connected ? 'text-green-600' : 'text-muted-foreground'}`}>
+                      <div className="font-medium text-xs">{integration.name}</div>
+                      <div className="text-[10px] text-muted-foreground">{integration.description}</div>
+                      <div className={`text-[10px] ${integration.connected ? 'text-green-600' : 'text-muted-foreground'}`}>
                         {integration.status}
                       </div>
                     </div>
-                    <Button variant={integration.connected ? "outline" : "default"}>
+                    <Button variant={integration.connected ? "outline" : "default"} className="h-8 text-xs px-3">
                       {integration.connected ? "Manage" : "Connect"}
                     </Button>
                   </div>
@@ -352,36 +353,36 @@ export default function SettingsPage() {
           </Card>
           {/* Data Management */}
           <Card>
-            <CardHeader>
-              <div className="flex items-center gap-2">
-                <Download className="h-5 w-5" />
-                <CardTitle>Data Management</CardTitle>
+            <CardHeader className="pb-2">
+              <div className="flex items-center gap-1.5">
+                <Download className="h-4 w-4" />
+                <CardTitle className="text-sm">Data Management</CardTitle>
               </div>
-              <CardDescription>
+              <CardDescription className="text-xs">
                 Export, backup, or delete your data
               </CardDescription>
             </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <Button variant="outline" className="flex flex-col items-center gap-2 h-20">
-                  <Download className="h-5 w-5" />
+            <CardContent className="space-y-3">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                <Button variant="outline" className="flex flex-col items-center gap-1.5 h-16 text-xs">
+                  <Download className="h-4 w-4" />
                   <span>Export Data</span>
                 </Button>
-                <Button variant="outline" className="flex flex-col items-center gap-2 h-20">
-                  <Download className="h-5 w-5" />
+                <Button variant="outline" className="flex flex-col items-center gap-1.5 h-16 text-xs">
+                  <Download className="h-4 w-4" />
                   <span>Backup Data</span>
                 </Button>
-                <Button variant="destructive" className="flex flex-col items-center gap-2 h-20">
-                  <Trash2 className="h-5 w-5" />
+                <Button variant="destructive" className="flex flex-col items-center gap-1.5 h-16 text-xs">
+                  <Trash2 className="h-4 w-4" />
                   <span>Delete Account</span>
                 </Button>
               </div>
             </CardContent>
           </Card>
           {/* Save Changes */}
-          <div className="flex justify-end gap-4">
-            <Button variant="outline">Cancel</Button>
-            <Button className="bg-accent hover:bg-accent/90">Save Changes</Button>
+          <div className="flex justify-end gap-3">
+            <Button variant="outline" className="h-8 text-xs px-3">Cancel</Button>
+            <Button className="bg-accent hover:bg-accent/90 h-8 text-xs px-3">Save Changes</Button>
           </div>
         </div>
       </div>

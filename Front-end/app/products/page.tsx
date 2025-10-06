@@ -124,57 +124,57 @@ export default function ProductsPage() {
       ]}
     >
       {/* Summary Cards */}
-      <div className="grid gap-4 md:grid-cols-4">
+      <div className="grid gap-3 md:grid-cols-4">
         <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Total Products</CardTitle>
-            <Package className="h-4 w-4 text-muted-foreground" />
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-1.5">
+            <CardTitle className="text-xs font-medium">Total Products</CardTitle>
+            <Package className="h-3.5 w-3.5 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{mockProducts.length}</div>
-            <p className="text-xs text-muted-foreground">
+            <div className="text-xl font-bold">{mockProducts.length}</div>
+            <p className="text-[10px] text-muted-foreground">
               Active products in inventory
             </p>
           </CardContent>
         </Card>
         <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Total Value</CardTitle>
-            <TrendingUp className="h-4 w-4 text-muted-foreground" />
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-1.5">
+            <CardTitle className="text-xs font-medium">Total Value</CardTitle>
+            <TrendingUp className="h-3.5 w-3.5 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">
+            <div className="text-xl font-bold">
               ৳{mockProducts.reduce((acc, product) => acc + (product.price * product.stock), 0).toLocaleString()}
             </div>
-            <p className="text-xs text-muted-foreground">
+            <p className="text-[10px] text-muted-foreground">
               Total inventory value
             </p>
           </CardContent>
         </Card>
         <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Low Stock</CardTitle>
-            <AlertTriangle className="h-4 w-4 text-muted-foreground" />
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-1.5">
+            <CardTitle className="text-xs font-medium">Low Stock</CardTitle>
+            <AlertTriangle className="h-3.5 w-3.5 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-orange-600">
+            <div className="text-xl font-bold text-orange-600">
               {mockProducts.filter(p => p.stock <= 10 && p.stock > 0).length}
             </div>
-            <p className="text-xs text-muted-foreground">
+            <p className="text-[10px] text-muted-foreground">
               Products need restocking
             </p>
           </CardContent>
         </Card>
         <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Out of Stock</CardTitle>
-            <Package className="h-4 w-4 text-muted-foreground" />
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-1.5">
+            <CardTitle className="text-xs font-medium">Out of Stock</CardTitle>
+            <Package className="h-3.5 w-3.5 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-red-600">
+            <div className="text-xl font-bold text-red-600">
               {mockProducts.filter(p => p.stock === 0).length}
             </div>
-            <p className="text-xs text-muted-foreground">
+            <p className="text-[10px] text-muted-foreground">
               Products unavailable
             </p>
           </CardContent>
@@ -182,18 +182,18 @@ export default function ProductsPage() {
       </div>
       {/* Filter & Search Bar */}
       <Card>
-        <CardContent className="pt-6">
-          <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+        <CardContent className="pt-4">
+          <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
             <div className="flex flex-1 gap-2">
               <div className="relative flex-1 max-w-md">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
                 <Input
                   placeholder="Search products..."
-                  className="pl-10"
+                  className="pl-10 h-8 text-xs"
                 />
               </div>
               <Select>
-                <SelectTrigger className="w-[150px]">
+                <SelectTrigger className="w-[150px] h-8 text-xs">
                   <SelectValue placeholder="Category" />
                 </SelectTrigger>
                 <SelectContent>
@@ -204,7 +204,7 @@ export default function ProductsPage() {
                 </SelectContent>
               </Select>
               <Select>
-                <SelectTrigger className="w-[150px]">
+                <SelectTrigger className="w-[150px] h-8 text-xs">
                   <SelectValue placeholder="Stock Status" />
                 </SelectTrigger>
                 <SelectContent>
@@ -215,7 +215,7 @@ export default function ProductsPage() {
                 </SelectContent>
               </Select>
               <Select>
-                <SelectTrigger className="w-[150px]">
+                <SelectTrigger className="w-[150px] h-8 text-xs">
                   <SelectValue placeholder="Sort by" />
                 </SelectTrigger>
                 <SelectContent>
@@ -227,34 +227,32 @@ export default function ProductsPage() {
               </Select>
             </div>
             <div className="flex gap-2">
-              <Button variant="outline">
-                <Download className="h-4 w-4 mr-2" />
+              <Button variant="outline" className="h-8 text-xs px-3">
+                <Download className="h-3.5 w-3.5 mr-2" />
                 Export
               </Button>
-              <Button variant="outline">
-                <Download className="h-4 w-4 mr-2" />
+              <Button variant="outline" className="h-8 text-xs px-3">
+                <Download className="h-3.5 w-3.5 mr-2" />
                 Import
               </Button>
               <div className="flex rounded-md border">
                 <Button
                   variant={viewMode === "grid" ? "default" : "ghost"}
-                  size="sm"
                   onClick={() => setViewMode("grid")}
-                  className="rounded-r-none"
+                  className="rounded-r-none h-8 px-3"
                 >
-                  <Grid3X3 className="h-4 w-4" />
+                  <Grid3X3 className="h-3.5 w-3.5" />
                 </Button>
                 <Button
                   variant={viewMode === "list" ? "default" : "ghost"}
-                  size="sm"
                   onClick={() => setViewMode("list")}
-                  className="rounded-l-none"
+                  className="rounded-l-none h-8 px-3"
                 >
-                  <List className="h-4 w-4" />
+                  <List className="h-3.5 w-3.5" />
                 </Button>
               </div>
-              <Button className="bg-accent hover:bg-accent/90">
-                <Plus className="h-4 w-4 mr-2" />
+              <Button className="bg-accent hover:bg-accent/90 h-8 text-xs px-3">
+                <Plus className="h-3.5 w-3.5 mr-2" />
                 Add Product
               </Button>
             </div>
@@ -263,64 +261,64 @@ export default function ProductsPage() {
       </Card>
       {/* Products Display */}
       {viewMode === "grid" ? (
-        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+        <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
           {mockProducts.map((product) => (
             <Card key={product.id} className="hover:shadow-md transition-shadow relative">
               {product.stock === 0 && (
                 <div className="absolute inset-0 bg-gray-900/50 rounded-lg flex items-center justify-center z-10">
-                  <Badge className="bg-red-600 text-white">Out of Stock</Badge>
+                  <Badge className="bg-red-600 text-white text-[9px] px-1.5 py-0">Out of Stock</Badge>
                 </div>
               )}
               {product.bestseller && (
-                <Badge className="absolute top-2 left-2 bg-accent text-accent-foreground z-20">
+                <Badge className="absolute top-2 left-2 bg-accent text-accent-foreground z-20 text-[9px] px-1.5 py-0">
                   Bestseller
                 </Badge>
               )}
-              <CardHeader className="pb-3">
+              <CardHeader className="pb-2">
                 {/* Product Image Placeholder */}
-                <div className="w-full h-48 bg-muted rounded-lg flex items-center justify-center mb-3">
-                  <Package className="h-12 w-12 text-muted-foreground" />
+                <div className="w-full h-40 bg-muted rounded-lg flex items-center justify-center mb-2">
+                  <Package className="h-10 w-10 text-muted-foreground" />
                 </div>
-                <CardTitle className="text-lg line-clamp-2">{product.name}</CardTitle>
-                <CardDescription className="line-clamp-2">{product.description}</CardDescription>
+                <CardTitle className="text-sm line-clamp-2">{product.name}</CardTitle>
+                <CardDescription className="line-clamp-2 text-xs">{product.description}</CardDescription>
               </CardHeader>
-              <CardContent className="space-y-3">
+              <CardContent className="space-y-2">
                 <div className="flex items-center justify-between">
-                  <span className="text-sm text-muted-foreground">Category</span>
-                  <span className="text-sm">{product.category}</span>
+                  <span className="text-xs text-muted-foreground">Category</span>
+                  <span className="text-xs">{product.category}</span>
                 </div>
                 <div className="flex items-center justify-between">
-                  <span className="text-sm text-muted-foreground">Price</span>
-                  <span className="font-bold">৳{product.price}</span>
+                  <span className="text-xs text-muted-foreground">Price</span>
+                  <span className="font-bold text-sm">৳{product.price}</span>
                 </div>
                 <div className="flex items-center justify-between">
-                  <span className="text-sm text-muted-foreground">Stock</span>
-                  <Badge className={getStockColor(product.stock)}>
+                  <span className="text-xs text-muted-foreground">Stock</span>
+                  <Badge className={`${getStockColor(product.stock)} text-[9px] px-1.5 py-0`}>
                     {product.stock} units
                   </Badge>
                 </div>
                 <div className="flex items-center justify-between">
-                  <span className="text-sm text-muted-foreground">SKU</span>
-                  <span className="text-sm font-mono">{product.sku}</span>
+                  <span className="text-xs text-muted-foreground">SKU</span>
+                  <span className="text-xs font-mono">{product.sku}</span>
                 </div>
                 {product.stock <= 10 && product.stock > 0 && (
-                  <div className="p-2 bg-yellow-50 border border-yellow-200 rounded-md">
-                    <div className="flex items-center gap-2 text-yellow-800 text-sm">
-                      <AlertTriangle className="h-4 w-4" />
+                  <div className="p-1.5 bg-yellow-50 border border-yellow-200 rounded-md">
+                    <div className="flex items-center gap-1.5 text-yellow-800 text-xs">
+                      <AlertTriangle className="h-3.5 w-3.5" />
                       Low stock warning
                     </div>
                   </div>
                 )}
-                <div className="flex gap-2 pt-2">
-                  <Button variant="outline" size="sm" className="flex-1">
-                    <Edit className="h-4 w-4 mr-2" />
+                <div className="flex gap-1.5 pt-1.5">
+                  <Button variant="outline" className="flex-1 h-6 text-[10px] px-2">
+                    <Edit className="h-3.5 w-3.5 mr-1" />
                     Edit
                   </Button>
-                  <Button variant="outline" size="sm">
-                    <Copy className="h-4 w-4" />
+                  <Button variant="outline" className="h-6 px-2">
+                    <Copy className="h-3.5 w-3.5" />
                   </Button>
-                  <Button variant="outline" size="sm">
-                    <Archive className="h-4 w-4" />
+                  <Button variant="outline" className="h-6 px-2">
+                    <Archive className="h-3.5 w-3.5" />
                   </Button>
                 </div>
               </CardContent>
@@ -329,67 +327,67 @@ export default function ProductsPage() {
         </div>
       ) : (
         <Card>
-          <CardHeader>
-            <CardTitle>Products List</CardTitle>
-            <CardDescription>Manage your product inventory</CardDescription>
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm">Products List</CardTitle>
+            <CardDescription className="text-xs">Manage your product inventory</CardDescription>
           </CardHeader>
           <CardContent>
             <div className="overflow-x-auto">
               <table className="w-full">
                 <thead>
                   <tr className="border-b">
-                    <th className="text-left py-3 px-2">Product</th>
-                    <th className="text-left py-3 px-2">Category</th>
-                    <th className="text-left py-3 px-2">Price</th>
-                    <th className="text-left py-3 px-2">Cost Price</th>
-                    <th className="text-left py-3 px-2">Stock</th>
-                    <th className="text-left py-3 px-2">SKU</th>
-                    <th className="text-left py-3 px-2">Status</th>
-                    <th className="text-left py-3 px-2">Actions</th>
+                    <th className="text-left py-2 px-2 text-xs">Product</th>
+                    <th className="text-left py-2 px-2 text-xs">Category</th>
+                    <th className="text-left py-2 px-2 text-xs">Price</th>
+                    <th className="text-left py-2 px-2 text-xs">Cost Price</th>
+                    <th className="text-left py-2 px-2 text-xs">Stock</th>
+                    <th className="text-left py-2 px-2 text-xs">SKU</th>
+                    <th className="text-left py-2 px-2 text-xs">Status</th>
+                    <th className="text-left py-2 px-2 text-xs">Actions</th>
                   </tr>
                 </thead>
                 <tbody>
                   {mockProducts.map((product) => (
                     <tr key={product.id} className="border-b hover:bg-muted/50">
-                      <td className="py-3 px-2">
-                        <div className="flex items-center gap-3">
-                          <div className="h-10 w-10 bg-muted rounded flex items-center justify-center">
-                            <Package className="h-5 w-5 text-muted-foreground" />
+                      <td className="py-2 px-2">
+                        <div className="flex items-center gap-2">
+                          <div className="h-8 w-8 bg-muted rounded flex items-center justify-center">
+                            <Package className="h-4 w-4 text-muted-foreground" />
                           </div>
                           <div>
-                            <div className="font-medium">{product.name}</div>
-                            <div className="text-sm text-muted-foreground line-clamp-1">{product.description}</div>
+                            <div className="font-medium text-xs">{product.name}</div>
+                            <div className="text-[10px] text-muted-foreground line-clamp-1">{product.description}</div>
                           </div>
                           {product.bestseller && (
-                            <Badge className="bg-accent text-accent-foreground">Bestseller</Badge>
+                            <Badge className="bg-accent text-accent-foreground text-[9px] px-1.5 py-0">Bestseller</Badge>
                           )}
                         </div>
                       </td>
-                      <td className="py-3 px-2 text-sm">{product.category}</td>
-                      <td className="py-3 px-2 font-medium">৳{product.price}</td>
-                      <td className="py-3 px-2 text-sm text-muted-foreground">৳{product.costPrice}</td>
-                      <td className="py-3 px-2">
-                        <span className="font-medium">{product.stock}</span>
+                      <td className="py-2 px-2 text-xs">{product.category}</td>
+                      <td className="py-2 px-2 font-medium text-xs">৳{product.price}</td>
+                      <td className="py-2 px-2 text-xs text-muted-foreground">৳{product.costPrice}</td>
+                      <td className="py-2 px-2">
+                        <span className="font-medium text-xs">{product.stock}</span>
                         {product.stock <= 10 && product.stock > 0 && (
-                          <AlertTriangle className="inline h-4 w-4 ml-1 text-yellow-600" />
+                          <AlertTriangle className="inline h-3.5 w-3.5 ml-1 text-yellow-600" />
                         )}
                       </td>
-                      <td className="py-3 px-2 font-mono text-sm">{product.sku}</td>
-                      <td className="py-3 px-2">
-                        <Badge className={getStockColor(product.stock)}>
+                      <td className="py-2 px-2 font-mono text-xs">{product.sku}</td>
+                      <td className="py-2 px-2">
+                        <Badge className={`${getStockColor(product.stock)} text-[9px] px-1.5 py-0`}>
                           {getStockStatus(product.stock)}
                         </Badge>
                       </td>
-                      <td className="py-3 px-2">
+                      <td className="py-2 px-2">
                         <div className="flex gap-1">
-                          <Button variant="ghost" size="sm">
-                            <Edit className="h-4 w-4" />
+                          <Button variant="ghost" className="h-6 px-2">
+                            <Edit className="h-3.5 w-3.5" />
                           </Button>
-                          <Button variant="ghost" size="sm">
-                            <Copy className="h-4 w-4" />
+                          <Button variant="ghost" className="h-6 px-2">
+                            <Copy className="h-3.5 w-3.5" />
                           </Button>
-                          <Button variant="ghost" size="sm">
-                            <Archive className="h-4 w-4" />
+                          <Button variant="ghost" className="h-6 px-2">
+                            <Archive className="h-3.5 w-3.5" />
                           </Button>
                         </div>
                       </td>

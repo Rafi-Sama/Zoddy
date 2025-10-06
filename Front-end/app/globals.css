@@ -72,7 +72,7 @@
   --input: #ffffff;
   --ring: #3d5a80;
   --chart-1: oklch(0.646 0.222 41.116);
-  --chart-2: oklch(0.6 0.118 184.704);
+  --chart-2: oklch(60.488% 0.10705 184.202);
   --chart-3: oklch(0.398 0.07 227.392);
   --chart-4: oklch(0.828 0.189 84.429);
   --chart-5: oklch(0.769 0.188 70.08);
@@ -127,4 +127,32 @@
   body {
     @apply bg-background text-foreground;
   }
+
+/* ===== Chrome, Edge, Safari ===== */
+*::-webkit-scrollbar {
+  width: 8px;
+  height: 10px;
+}
+
+/* Track */
+*::-webkit-scrollbar-track {
+  background: #1c1c1c;
+  border-radius: 10px 0 0 10px;
+}
+
+/* Thumb */
+*::-webkit-scrollbar-thumb {
+  background: linear-gradient(180deg, #00c6ff, #0072ff);
+  border-radius: 12px;
+  border: 2px solid #1c1c1c;
+  transition: all 0.1s ease;
+}
+
+/* Hover state */
+*::-webkit-scrollbar-thumb:hover {
+  background: linear-gradient(180deg, #339ecf, #006b9f); /* softer blues */
+  box-shadow: 0 0 5px rgba(0, 110, 160, 0.4); /* subtler glow */
+}
+
+
 }

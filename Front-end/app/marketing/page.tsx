@@ -46,40 +46,40 @@ export default function MarketingPage() {
         { label: "Marketing" }
       ]}
     >
-      <div className="space-y-8">
+      <div className="space-y-6">
         {/* Header */}
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-3">
           <div>
-            <h1 className="text-3xl font-bold font-display">Marketing Tools</h1>
-            <p className="text-muted-foreground">
+            <h1 className="text-xl font-bold font-display">Marketing Tools</h1>
+            <p className="text-xs text-muted-foreground">
               Create campaigns, track performance, and grow your customer base
             </p>
           </div>
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-1.5">
           <Dialog>
             <DialogTrigger asChild>
-              <Button>
-                <Plus className="h-4 w-4 mr-2" />
+              <Button className="h-8 text-xs px-3">
+                <Plus className="h-3.5 w-3.5 mr-2" />
                 New Campaign
               </Button>
             </DialogTrigger>
             <DialogContent className="max-w-2xl">
               <DialogHeader>
-                <DialogTitle>Create New Marketing Campaign</DialogTitle>
-                <DialogDescription>
+                <DialogTitle className="text-sm">Create New Marketing Campaign</DialogTitle>
+                <DialogDescription className="text-xs">
                   Set up a new marketing campaign to reach your target audience
                 </DialogDescription>
               </DialogHeader>
-              <div className="space-y-4">
-                <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-3">
+                <div className="grid grid-cols-2 gap-3">
                   <div>
-                    <Label htmlFor="campaign-name">Campaign Name</Label>
-                    <Input id="campaign-name" placeholder="Eid Special Offer 2024" />
+                    <Label htmlFor="campaign-name" className="text-xs">Campaign Name</Label>
+                    <Input id="campaign-name" placeholder="Eid Special Offer 2024" className="h-8 text-xs" />
                   </div>
                   <div>
-                    <Label htmlFor="campaign-type">Campaign Type</Label>
+                    <Label htmlFor="campaign-type" className="text-xs">Campaign Type</Label>
                     <Select>
-                      <SelectTrigger>
+                      <SelectTrigger className="h-8 text-xs">
                         <SelectValue placeholder="Select type" />
                       </SelectTrigger>
                       <SelectContent>
@@ -92,9 +92,9 @@ export default function MarketingPage() {
                   </div>
                 </div>
                 <div>
-                  <Label htmlFor="target-audience">Target Audience</Label>
+                  <Label htmlFor="target-audience" className="text-xs">Target Audience</Label>
                   <Select>
-                    <SelectTrigger>
+                    <SelectTrigger className="h-8 text-xs">
                       <SelectValue placeholder="Select audience" />
                     </SelectTrigger>
                     <SelectContent>
@@ -106,22 +106,22 @@ export default function MarketingPage() {
                   </Select>
                 </div>
                 <div>
-                  <Label htmlFor="message">Campaign Message</Label>
-                  <Textarea id="message" placeholder="Your marketing message..." rows={3} />
+                  <Label htmlFor="message" className="text-xs">Campaign Message</Label>
+                  <Textarea id="message" placeholder="Your marketing message..." rows={3} className="text-xs" />
                 </div>
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-2 gap-3">
                   <div>
-                    <Label htmlFor="start-date">Start Date</Label>
-                    <Input id="start-date" type="date" />
+                    <Label htmlFor="start-date" className="text-xs">Start Date</Label>
+                    <Input id="start-date" type="date" className="h-8 text-xs" />
                   </div>
                   <div>
-                    <Label htmlFor="budget">Budget (৳)</Label>
-                    <Input id="budget" placeholder="5000" />
+                    <Label htmlFor="budget" className="text-xs">Budget (৳)</Label>
+                    <Input id="budget" placeholder="5000" className="h-8 text-xs" />
                   </div>
                 </div>
-                <div className="flex justify-end gap-2">
-                  <Button variant="outline">Save Draft</Button>
-                  <Button>Launch Campaign</Button>
+                <div className="flex justify-end gap-1.5">
+                  <Button variant="outline" className="h-8 text-xs px-3">Save Draft</Button>
+                  <Button className="h-8 text-xs px-3">Launch Campaign</Button>
                 </div>
               </div>
             </DialogContent>
@@ -129,69 +129,69 @@ export default function MarketingPage() {
         </div>
       </div>
       {/* Marketing Overview */}
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+      <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-4">
         <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Active Campaigns</CardTitle>
-            <Megaphone className="h-4 w-4 text-muted-foreground" />
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-1.5">
+            <CardTitle className="text-xs font-medium">Active Campaigns</CardTitle>
+            <Megaphone className="h-3.5 w-3.5 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">8</div>
-            <div className="flex items-center text-xs text-green-600">
-              <TrendingUp className="h-3 w-3 mr-1" />
+            <div className="text-lg font-bold">8</div>
+            <div className="flex items-center text-[10px] text-green-600">
+              <TrendingUp className="h-2.5 w-2.5 mr-1" />
               +2 this week
             </div>
           </CardContent>
         </Card>
         <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Total Reach</CardTitle>
-            <Eye className="h-4 w-4 text-muted-foreground" />
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-1.5">
+            <CardTitle className="text-xs font-medium">Total Reach</CardTitle>
+            <Eye className="h-3.5 w-3.5 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">24,567</div>
-            <div className="flex items-center text-xs text-green-600">
-              <TrendingUp className="h-3 w-3 mr-1" />
+            <div className="text-lg font-bold">24,567</div>
+            <div className="flex items-center text-[10px] text-green-600">
+              <TrendingUp className="h-2.5 w-2.5 mr-1" />
               +18.2% this month
             </div>
           </CardContent>
         </Card>
         <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Conversion Rate</CardTitle>
-            <MousePointer className="h-4 w-4 text-muted-foreground" />
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-1.5">
+            <CardTitle className="text-xs font-medium">Conversion Rate</CardTitle>
+            <MousePointer className="h-3.5 w-3.5 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">4.8%</div>
-            <div className="flex items-center text-xs text-green-600">
-              <TrendingUp className="h-3 w-3 mr-1" />
+            <div className="text-lg font-bold">4.8%</div>
+            <div className="flex items-center text-[10px] text-green-600">
+              <TrendingUp className="h-2.5 w-2.5 mr-1" />
               +0.3% this month
             </div>
           </CardContent>
         </Card>
         <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Marketing ROI</CardTitle>
-            <DollarSign className="h-4 w-4 text-muted-foreground" />
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-1.5">
+            <CardTitle className="text-xs font-medium">Marketing ROI</CardTitle>
+            <DollarSign className="h-3.5 w-3.5 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">4.2x</div>
-            <div className="flex items-center text-xs text-green-600">
-              <TrendingUp className="h-3 w-3 mr-1" />
+            <div className="text-lg font-bold">4.2x</div>
+            <div className="flex items-center text-[10px] text-green-600">
+              <TrendingUp className="h-2.5 w-2.5 mr-1" />
               +0.8x this month
             </div>
           </CardContent>
         </Card>
       </div>
       {/* Active Campaigns & Performance */}
-      <div className="grid gap-6 lg:grid-cols-3">
+      <div className="grid gap-4 lg:grid-cols-3">
         <Card className="lg:col-span-2">
-          <CardHeader className="flex flex-row items-center justify-between">
-            <CardTitle>Active Campaigns</CardTitle>
-            <Button variant="outline" size="sm">View All</Button>
+          <CardHeader className="flex flex-row items-center justify-between pb-2">
+            <CardTitle className="text-sm">Active Campaigns</CardTitle>
+            <Button variant="outline" className="h-6 text-[10px] px-2">View All</Button>
           </CardHeader>
           <CardContent>
-            <div className="space-y-4">
+            <div className="space-y-3">
               {[
                 {
                   name: "Eid Special Discount",
@@ -224,50 +224,50 @@ export default function MarketingPage() {
                   spent: 0
                 }
               ].map((campaign, i) => (
-                <div key={i} className="flex items-center justify-between p-4 border rounded-lg">
-                  <div className="flex items-center space-x-4">
-                    <div className="p-2 bg-primary/10 rounded-full">
-                      <Target className="h-4 w-4 text-primary" />
+                <div key={i} className="flex items-center justify-between p-3 border rounded-lg">
+                  <div className="flex items-center space-x-3">
+                    <div className="p-1.5 bg-primary/10 rounded-full">
+                      <Target className="h-3.5 w-3.5 text-primary" />
                     </div>
                     <div>
-                      <h4 className="font-medium">{campaign.name}</h4>
-                      <p className="text-sm text-muted-foreground">{campaign.type}</p>
+                      <h4 className="font-medium text-xs">{campaign.name}</h4>
+                      <p className="text-[10px] text-muted-foreground">{campaign.type}</p>
                     </div>
                   </div>
-                  <div className="flex items-center space-x-6">
+                  <div className="flex items-center space-x-4">
                     <div className="text-center">
-                      <p className="text-sm font-medium">{campaign.reach.toLocaleString()}</p>
-                      <p className="text-xs text-muted-foreground">Reach</p>
+                      <p className="text-xs font-medium">{campaign.reach.toLocaleString()}</p>
+                      <p className="text-[10px] text-muted-foreground">Reach</p>
                     </div>
                     <div className="text-center">
-                      <p className="text-sm font-medium">{campaign.clicks}</p>
-                      <p className="text-xs text-muted-foreground">Clicks</p>
+                      <p className="text-xs font-medium">{campaign.clicks}</p>
+                      <p className="text-[10px] text-muted-foreground">Clicks</p>
                     </div>
                     <div className="text-center">
-                      <p className="text-sm font-medium">{campaign.conversions}</p>
-                      <p className="text-xs text-muted-foreground">Sales</p>
+                      <p className="text-xs font-medium">{campaign.conversions}</p>
+                      <p className="text-[10px] text-muted-foreground">Sales</p>
                     </div>
                     <div className="text-center">
-                      <p className="text-sm font-medium">৳{campaign.spent}/৳{campaign.budget}</p>
-                      <p className="text-xs text-muted-foreground">Budget</p>
+                      <p className="text-xs font-medium">৳{campaign.spent}/৳{campaign.budget}</p>
+                      <p className="text-[10px] text-muted-foreground">Budget</p>
                     </div>
-                    <Badge variant={campaign.status === 'running' ? 'default' : 'secondary'}>
+                    <Badge variant={campaign.status === 'running' ? 'default' : 'secondary'} className="text-[9px] px-1.5 py-0">
                       {campaign.status === 'running' ? (
-                        <Play className="h-3 w-3 mr-1" />
+                        <Play className="h-2.5 w-2.5 mr-0.5" />
                       ) : (
-                        <Clock className="h-3 w-3 mr-1" />
+                        <Clock className="h-2.5 w-2.5 mr-0.5" />
                       )}
                       {campaign.status}
                     </Badge>
-                    <div className="flex items-center space-x-1">
-                      <Button variant="ghost" size="sm">
-                        <Edit className="h-4 w-4" />
+                    <div className="flex items-center space-x-0.5">
+                      <Button variant="ghost" className="h-6 px-2">
+                        <Edit className="h-3.5 w-3.5" />
                       </Button>
-                      <Button variant="ghost" size="sm">
+                      <Button variant="ghost" className="h-6 px-2">
                         {campaign.status === 'running' ? (
-                          <Pause className="h-4 w-4" />
+                          <Pause className="h-3.5 w-3.5" />
                         ) : (
-                          <Play className="h-4 w-4" />
+                          <Play className="h-3.5 w-3.5" />
                         )}
                       </Button>
                     </div>

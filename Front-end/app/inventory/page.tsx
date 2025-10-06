@@ -163,51 +163,51 @@ export default function InventoryPage() {
       ]}
     >
       {/* Overview Cards */}
-      <div className="grid gap-4 md:grid-cols-4">
+      <div className="grid gap-3 md:grid-cols-4">
         <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Total Inventory Value</CardTitle>
-            <DollarSign className="h-4 w-4 text-muted-foreground" />
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-1.5">
+            <CardTitle className="text-xs font-medium">Total Inventory Value</CardTitle>
+            <DollarSign className="h-2.5 w-2.5 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">৳{totalInventoryValue.toLocaleString()}</div>
-            <p className="text-xs text-muted-foreground">
+            <div className="text-lg font-bold">৳{totalInventoryValue.toLocaleString()}</div>
+            <p className="text-[10px] text-muted-foreground">
               Current stock value
             </p>
           </CardContent>
         </Card>
         <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Low Stock Items</CardTitle>
-            <AlertTriangle className="h-4 w-4 text-muted-foreground" />
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-1.5">
+            <CardTitle className="text-xs font-medium">Low Stock Items</CardTitle>
+            <AlertTriangle className="h-2.5 w-2.5 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-yellow-600">{lowStockItems.length}</div>
-            <p className="text-xs text-muted-foreground">
+            <div className="text-lg font-bold text-yellow-600">{lowStockItems.length}</div>
+            <p className="text-[10px] text-muted-foreground">
               Need restocking soon
             </p>
           </CardContent>
         </Card>
         <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Out of Stock</CardTitle>
-            <Package className="h-4 w-4 text-muted-foreground" />
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-1.5">
+            <CardTitle className="text-xs font-medium">Out of Stock</CardTitle>
+            <Package className="h-2.5 w-2.5 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-red-600">{outOfStockItems.length}</div>
-            <p className="text-xs text-muted-foreground">
+            <div className="text-lg font-bold text-red-600">{outOfStockItems.length}</div>
+            <p className="text-[10px] text-muted-foreground">
               Products unavailable
             </p>
           </CardContent>
         </Card>
         <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Overstocked Items</CardTitle>
-            <TrendingUp className="h-4 w-4 text-muted-foreground" />
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-1.5">
+            <CardTitle className="text-xs font-medium">Overstocked Items</CardTitle>
+            <TrendingUp className="h-2.5 w-2.5 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-blue-600">{overstockedItems.length}</div>
-            <p className="text-xs text-muted-foreground">
+            <div className="text-lg font-bold text-blue-600">{overstockedItems.length}</div>
+            <p className="text-[10px] text-muted-foreground">
               Excess inventory
             </p>
           </CardContent>
@@ -215,22 +215,22 @@ export default function InventoryPage() {
       </div>
       {/* Quick Actions */}
       <Card>
-        <CardContent className="pt-6">
-          <div className="flex flex-wrap gap-3">
-            <Button className="bg-accent hover:bg-accent/90">
-              <Plus className="h-4 w-4 mr-2" />
+        <CardContent className="pt-3">
+          <div className="flex flex-wrap gap-1.5">
+            <Button className="bg-accent hover:bg-accent/90 h-8 text-xs px-3">
+              <Plus className="h-3 w-3 mr-2" />
               Add Stock
             </Button>
-            <Button variant="outline">
-              <RotateCcw className="h-4 w-4 mr-2" />
+            <Button variant="outline" className="h-8 text-xs px-3">
+              <RotateCcw className="h-3 w-3 mr-2" />
               Stock Take
             </Button>
-            <Button variant="outline">
-              <History className="h-4 w-4 mr-2" />
+            <Button variant="outline" className="h-8 text-xs px-3">
+              <History className="h-3 w-3 mr-2" />
               Movement History
             </Button>
-            <Button variant="outline">
-              <Settings className="h-4 w-4 mr-2" />
+            <Button variant="outline" className="h-8 text-xs px-3">
+              <Settings className="h-3 w-3 mr-2" />
               Reorder Settings
             </Button>
           </div>
@@ -238,28 +238,28 @@ export default function InventoryPage() {
       </Card>
       {/* Alerts Section */}
       {(lowStockItems.length > 0 || outOfStockItems.length > 0) && (
-        <div className="grid gap-4 md:grid-cols-2">
+        <div className="grid gap-3 md:grid-cols-2">
           {lowStockItems.length > 0 && (
             <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2 text-yellow-600">
-                  <AlertTriangle className="h-5 w-5" />
+              <CardHeader className="pb-2">
+                <CardTitle className="flex items-center gap-1.5 text-yellow-600 text-sm">
+                  <AlertTriangle className="h-3.5 w-3.5" />
                   Low Stock Alert
                 </CardTitle>
-                <CardDescription>
+                <CardDescription className="text-xs">
                   These items need restocking soon
                 </CardDescription>
               </CardHeader>
-              <CardContent className="space-y-2">
+              <CardContent className="space-y-1.5">
                 {lowStockItems.map((item) => (
-                  <div key={item.id} className="flex items-center justify-between p-2 border rounded-lg">
+                  <div key={item.id} className="flex items-center justify-between p-1.5 border rounded-lg">
                     <div>
-                      <div className="font-medium text-sm">{item.name}</div>
-                      <div className="text-xs text-muted-foreground">
+                      <div className="font-medium text-xs">{item.name}</div>
+                      <div className="text-[10px] text-muted-foreground">
                         {item.currentStock} left (reorder at {item.reorderLevel})
                       </div>
                     </div>
-                    <Button size="sm" variant="outline">
+                    <Button className="h-6 text-[10px] px-2" variant="outline">
                       Reorder
                     </Button>
                   </div>
@@ -269,25 +269,25 @@ export default function InventoryPage() {
           )}
           {outOfStockItems.length > 0 && (
             <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2 text-red-600">
-                  <Package className="h-5 w-5" />
+              <CardHeader className="pb-2">
+                <CardTitle className="flex items-center gap-1.5 text-red-600 text-sm">
+                  <Package className="h-3.5 w-3.5" />
                   Out of Stock
                 </CardTitle>
-                <CardDescription>
+                <CardDescription className="text-xs">
                   These items are completely out of stock
                 </CardDescription>
               </CardHeader>
-              <CardContent className="space-y-2">
+              <CardContent className="space-y-1.5">
                 {outOfStockItems.map((item) => (
-                  <div key={item.id} className="flex items-center justify-between p-2 border rounded-lg">
+                  <div key={item.id} className="flex items-center justify-between p-1.5 border rounded-lg">
                     <div>
-                      <div className="font-medium text-sm">{item.name}</div>
-                      <div className="text-xs text-muted-foreground">
+                      <div className="font-medium text-xs">{item.name}</div>
+                      <div className="text-[10px] text-muted-foreground">
                         Urgent restock needed
                       </div>
                     </div>
-                    <Button size="sm" className="bg-red-600 hover:bg-red-700">
+                    <Button className="bg-red-600 hover:bg-red-700 h-6 text-[10px] px-2">
                       Restock Now
                     </Button>
                   </div>
@@ -299,22 +299,22 @@ export default function InventoryPage() {
       )}
       {/* Inventory Table */}
       <Card>
-        <CardHeader>
+        <CardHeader className="pb-2">
           <div className="flex items-center justify-between">
             <div>
-              <CardTitle>Stock Overview</CardTitle>
-              <CardDescription>Current inventory levels and movements</CardDescription>
+              <CardTitle className="text-sm">Stock Overview</CardTitle>
+              <CardDescription className="text-xs">Current inventory levels and movements</CardDescription>
             </div>
             <div className="flex gap-2">
               <div className="relative">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-3 w-3 text-muted-foreground" />
                 <Input
                   placeholder="Search products..."
-                  className="pl-10 w-64"
+                  className="pl-10 w-64 h-8 text-xs"
                 />
               </div>
               <Select>
-                <SelectTrigger className="w-[150px]">
+                <SelectTrigger className="w-[150px] h-8 text-xs">
                   <SelectValue placeholder="Category" />
                 </SelectTrigger>
                 <SelectContent>
@@ -332,14 +332,14 @@ export default function InventoryPage() {
             <table className="w-full">
               <thead>
                 <tr className="border-b">
-                  <th className="text-left py-3 px-2">Product</th>
-                  <th className="text-left py-3 px-2">SKU</th>
-                  <th className="text-left py-3 px-2">Current Stock</th>
-                  <th className="text-left py-3 px-2">Reorder Level</th>
-                  <th className="text-left py-3 px-2">This Week</th>
-                  <th className="text-left py-3 px-2">Value</th>
-                  <th className="text-left py-3 px-2">Status</th>
-                  <th className="text-left py-3 px-2">Actions</th>
+                  <th className="text-left py-2 px-1.5 text-xs">Product</th>
+                  <th className="text-left py-2 px-1.5 text-xs">SKU</th>
+                  <th className="text-left py-2 px-1.5 text-xs">Current Stock</th>
+                  <th className="text-left py-2 px-1.5 text-xs">Reorder Level</th>
+                  <th className="text-left py-2 px-1.5 text-xs">This Week</th>
+                  <th className="text-left py-2 px-1.5 text-xs">Value</th>
+                  <th className="text-left py-2 px-1.5 text-xs">Status</th>
+                  <th className="text-left py-2 px-1.5 text-xs">Actions</th>
                 </tr>
               </thead>
               <tbody>
@@ -347,48 +347,48 @@ export default function InventoryPage() {
                   const status = getStockStatus(item)
                   return (
                     <tr key={item.id} className="border-b hover:bg-muted/50">
-                      <td className="py-3 px-2">
+                      <td className="py-2 px-1.5">
                         <div>
-                          <div className="font-medium">{item.name}</div>
-                          <div className="text-sm text-muted-foreground">{item.category}</div>
+                          <div className="font-medium text-xs">{item.name}</div>
+                          <div className="text-[10px] text-muted-foreground">{item.category}</div>
                         </div>
                       </td>
-                      <td className="py-3 px-2 font-mono text-sm">{item.sku}</td>
-                      <td className="py-3 px-2">
-                        <div className="font-bold text-lg">{item.currentStock}</div>
+                      <td className="py-2 px-1.5 font-mono text-xs">{item.sku}</td>
+                      <td className="py-2 px-1.5">
+                        <div className="font-bold text-xs">{item.currentStock}</div>
                       </td>
-                      <td className="py-3 px-2">
-                        <div className="text-sm">{item.reorderLevel}</div>
+                      <td className="py-2 px-1.5">
+                        <div className="text-xs">{item.reorderLevel}</div>
                       </td>
-                      <td className="py-3 px-2">
-                        <div className="space-y-1">
-                          <div className="flex items-center gap-1 text-green-600 text-xs">
-                            <TrendingUp className="h-3 w-3" />
+                      <td className="py-2 px-1.5">
+                        <div className="space-y-0.5">
+                          <div className="flex items-center gap-0.5 text-green-600 text-[10px]">
+                            <TrendingUp className="h-2.5 w-2.5" />
                             +{item.movements.thisWeek.in}
                           </div>
-                          <div className="flex items-center gap-1 text-red-600 text-xs">
-                            <TrendingDown className="h-3 w-3" />
+                          <div className="flex items-center gap-0.5 text-red-600 text-[10px]">
+                            <TrendingDown className="h-2.5 w-2.5" />
                             -{item.movements.thisWeek.out}
                           </div>
                         </div>
                       </td>
-                      <td className="py-3 px-2">
-                        <div className="font-medium">৳{item.totalValue.toLocaleString()}</div>
-                        <div className="text-xs text-muted-foreground">
+                      <td className="py-2 px-1.5">
+                        <div className="font-medium text-xs">৳{item.totalValue.toLocaleString()}</div>
+                        <div className="text-[10px] text-muted-foreground">
                           @৳{item.costPrice} each
                         </div>
                       </td>
-                      <td className="py-3 px-2">
-                        <Badge className={status.color}>
+                      <td className="py-2 px-1.5">
+                        <Badge className={`${status.color} text-[9px] px-1.5 py-0`}>
                           {status.status}
                         </Badge>
                       </td>
-                      <td className="py-3 px-2">
+                      <td className="py-2 px-1.5">
                         <Dialog>
                           <DialogTrigger asChild>
                             <Button
                               variant="outline"
-                              size="sm"
+                              className="h-6 text-[10px] px-2"
                               onClick={() => setSelectedProduct(item)}
                             >
                               Adjust
@@ -396,16 +396,16 @@ export default function InventoryPage() {
                           </DialogTrigger>
                           <DialogContent>
                             <DialogHeader>
-                              <DialogTitle>Adjust Stock - {selectedProduct?.name}</DialogTitle>
-                              <DialogDescription>
+                              <DialogTitle className="text-sm">Adjust Stock - {selectedProduct?.name}</DialogTitle>
+                              <DialogDescription className="text-xs">
                                 Update the stock level for this product
                               </DialogDescription>
                             </DialogHeader>
-                            <div className="space-y-4">
+                            <div className="space-y-2">
                               <div>
-                                <Label htmlFor="adjustmentType">Adjustment Type</Label>
+                                <Label htmlFor="adjustmentType" className="text-xs">Adjustment Type</Label>
                                 <Select value={adjustmentType} onValueChange={(value: "add" | "remove" | "set") => setAdjustmentType(value)}>
-                                  <SelectTrigger>
+                                  <SelectTrigger className="h-8 text-xs">
                                     <SelectValue />
                                   </SelectTrigger>
                                   <SelectContent>
@@ -416,19 +416,20 @@ export default function InventoryPage() {
                                 </Select>
                               </div>
                               <div>
-                                <Label htmlFor="quantity">Quantity</Label>
+                                <Label htmlFor="quantity" className="text-xs">Quantity</Label>
                                 <Input
                                   id="quantity"
                                   type="number"
                                   placeholder="Enter quantity"
                                   value={adjustmentQuantity}
                                   onChange={(e) => setAdjustmentQuantity(e.target.value)}
+                                  className="h-8 text-xs"
                                 />
                               </div>
                               <div>
-                                <Label htmlFor="reason">Reason</Label>
+                                <Label htmlFor="reason" className="text-xs">Reason</Label>
                                 <Select value={adjustmentReason} onValueChange={setAdjustmentReason}>
-                                  <SelectTrigger>
+                                  <SelectTrigger className="h-8 text-xs">
                                     <SelectValue placeholder="Select reason" />
                                   </SelectTrigger>
                                   <SelectContent>
@@ -441,17 +442,17 @@ export default function InventoryPage() {
                                   </SelectContent>
                                 </Select>
                               </div>
-                              <div className="flex gap-2 pt-4">
+                              <div className="flex gap-2 pt-2">
                                 <Button
                                   onClick={() => selectedProduct && handleStockAdjustment(selectedProduct)}
-                                  className="flex-1 bg-accent hover:bg-accent/90"
+                                  className="flex-1 bg-accent hover:bg-accent/90 h-8 text-xs px-3"
                                 >
                                   Update Stock
                                 </Button>
                                 <Button
                                   variant="outline"
                                   onClick={() => setSelectedProduct(null)}
-                                  className="flex-1"
+                                  className="flex-1 h-8 text-xs px-3"
                                 >
                                   Cancel
                                 </Button>
@@ -470,34 +471,34 @@ export default function InventoryPage() {
       </Card>
       {/* Stock Movement Summary */}
       <Card>
-        <CardHeader>
-          <CardTitle>Stock Movement Summary</CardTitle>
-          <CardDescription>Weekly stock in/out comparison</CardDescription>
+        <CardHeader className="pb-2">
+          <CardTitle className="text-sm">Stock Movement Summary</CardTitle>
+          <CardDescription className="text-xs">Weekly stock in/out comparison</CardDescription>
         </CardHeader>
         <CardContent>
-          <div className="grid md:grid-cols-2 gap-6">
+          <div className="grid md:grid-cols-2 gap-3">
             <div>
-              <h4 className="font-semibold mb-3 text-green-600">Stock In (This Week)</h4>
-              <div className="space-y-2">
+              <h4 className="font-semibold mb-2 text-green-600 text-xs">Stock In (This Week)</h4>
+              <div className="space-y-1.5">
                 {mockInventory
                   .filter(item => item.movements.thisWeek.in > 0)
                   .map((item) => (
-                    <div key={item.id} className="flex justify-between items-center p-2 border rounded">
-                      <span className="text-sm">{item.name}</span>
-                      <Badge variant="outline" className="text-green-600">+{item.movements.thisWeek.in}</Badge>
+                    <div key={item.id} className="flex justify-between items-center p-1.5 border rounded">
+                      <span className="text-xs">{item.name}</span>
+                      <Badge variant="outline" className="text-green-600 text-[9px] px-1.5 py-0">+{item.movements.thisWeek.in}</Badge>
                     </div>
                   ))}
               </div>
             </div>
             <div>
-              <h4 className="font-semibold mb-3 text-red-600">Stock Out (This Week)</h4>
-              <div className="space-y-2">
+              <h4 className="font-semibold mb-2 text-red-600 text-xs">Stock Out (This Week)</h4>
+              <div className="space-y-1.5">
                 {mockInventory
                   .filter(item => item.movements.thisWeek.out > 0)
                   .map((item) => (
-                    <div key={item.id} className="flex justify-between items-center p-2 border rounded">
-                      <span className="text-sm">{item.name}</span>
-                      <Badge variant="outline" className="text-red-600">-{item.movements.thisWeek.out}</Badge>
+                    <div key={item.id} className="flex justify-between items-center p-1.5 border rounded">
+                      <span className="text-xs">{item.name}</span>
+                      <Badge variant="outline" className="text-red-600 text-[9px] px-1.5 py-0">-{item.movements.thisWeek.out}</Badge>
                     </div>
                   ))}
               </div>

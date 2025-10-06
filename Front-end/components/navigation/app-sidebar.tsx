@@ -87,15 +87,15 @@ const items = [
 ]
 export function AppSidebar() {
   return (
-    <Sidebar>
+    <Sidebar collapsible="icon">
       <SidebarHeader>
-        <div className="flex items-center gap-2 px-3 py-2">
-          <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-accent text-accent-foreground">
-            <TrendingUp className="h-4 w-4" />
+        <div className="flex items-center gap-2 px-2 py-1.5">
+          <div className="flex h-6 w-6 items-center justify-center rounded-lg bg-accent text-accent-foreground">
+            <TrendingUp className="h-3.5 w-3.5" />
           </div>
-          <div className="grid flex-1 text-left text-sm leading-tight">
+          <div className="grid flex-1 text-left text-xs leading-tight">
             <span className="truncate font-bold font-display">Zoddy</span>
-            <span className="truncate text-xs text-muted-foreground">Business Tracker</span>
+            <span className="truncate text-[10px] text-muted-foreground">Business Tracker</span>
           </div>
         </div>
       </SidebarHeader>
@@ -106,7 +106,7 @@ export function AppSidebar() {
             <SidebarMenu>
               {items.map((item) => (
                 <SidebarMenuItem key={item.title}>
-                  <SidebarMenuButton asChild>
+                  <SidebarMenuButton asChild tooltip={item.title}>
                     <a href={item.url}>
                       <item.icon />
                       <span>{item.title}</span>
