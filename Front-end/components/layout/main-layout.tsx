@@ -4,6 +4,8 @@ import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar"
 import { AppSidebar } from "@/components/navigation/app-sidebar"
 import { Separator } from "@/components/ui/separator"
 import { ThemeToggle } from "@/components/theme-toggle"
+import { Notifications } from "@/components/notifications"
+import { CalendarWidget } from "@/components/calendar-widget"
 import {
   Breadcrumb,
   BreadcrumbItem,
@@ -53,7 +55,9 @@ export function MainLayout({ children, breadcrumbs }: MainLayoutProps) {
               </Breadcrumb>
             )}
           </div>
-          <div className="px-3">
+          <div className="flex items-center gap-1 px-3">
+            <CalendarWidget />
+            <Notifications />
             <ThemeToggle />
           </div>
         </header>

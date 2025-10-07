@@ -13,6 +13,8 @@ import {
   Users,
   BarChart3,
   Calendar,
+  Bell,
+  Archive,
 } from "lucide-react"
 import {
   Sidebar,
@@ -78,6 +80,16 @@ const items = [
     title: "Calendar",
     url: "/calendar",
     icon: Calendar,
+  },
+  {
+    title: "Notifications",
+    url: "/notifications",
+    icon: Bell,
+  },
+  {
+    title: "Archive",
+    url: "/archive",
+    icon: Archive,
   },
   {
     title: "Settings",

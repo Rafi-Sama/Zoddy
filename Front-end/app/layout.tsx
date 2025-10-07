@@ -2,6 +2,8 @@ import type { Metadata } from "next";
 import { Shantell_Sans, Inter, DM_Sans } from "next/font/google";
 import { ThemeProvider } from "@/components/theme-provider";
 import { AuthKitProvider } from '@workos-inc/authkit-nextjs/components';
+import { NotificationsProvider } from "@/contexts/notifications-context";
+import { CalendarProvider } from "@/contexts/calendar-context";
 import "./globals.css";
 
 const shantellSans = Shantell_Sans({
@@ -44,7 +46,11 @@ export default function RootLayout({
             enableSystem
             disableTransitionOnChange
           >
-            {children}
+            <NotificationsProvider>
+              <CalendarProvider>
+                {children}
+              </CalendarProvider>
+            </NotificationsProvider>
           </ThemeProvider>
         </AuthKitProvider>
       </body>
