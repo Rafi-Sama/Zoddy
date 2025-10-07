@@ -26,6 +26,7 @@ export function DashboardGridFixed({
   const [mounted, setMounted] = useState(false)
   const [isDragging, setIsDragging] = useState(false)
   const [containerWidth, setContainerWidth] = useState<number | null>(null)
+  const [isMobile, setIsMobile] = useState(false)
   const containerRef = useRef<HTMLDivElement>(null)
 
   // Calculate width after mount
@@ -34,6 +35,8 @@ export function DashboardGridFixed({
       if (containerRef.current) {
         const width = containerRef.current.getBoundingClientRect().width
         setContainerWidth(width)
+        // Check if mobile
+        setIsMobile(window.innerWidth < 768)
       }
     }
 
@@ -94,18 +97,54 @@ export function DashboardGridFixed({
     setIsDragging(false)
   }, [])
 
+  // Mobile layout - vertical stack
+  if (isMobile && mounted) {
+    return (
+      <div ref={containerRef} className="w-full space-y-3">
+        {widgets.map(widget => (
+          <div key={widget.id} className="relative">
+            {isEditMode && !widget.static && (
+              <div className="absolute top-2 right-2 z-10 flex gap-1 bg-background/80 backdrop-blur-sm rounded-md p-1">
+                <Button
+                  variant="secondary"
+                  size="icon"
+                  className="h-6 w-6"
+                  title="Drag to move"
+                  disabled
+                >
+                  <GripVertical className="h-3 w-3" />
+                </Button>
+                <Button
+                  variant="destructive"
+                  size="icon"
+                  className="h-6 w-6"
+                  onClick={() => onRemoveWidget(widget.id)}
+                  title="Remove widget"
+                >
+                  <X className="h-3 w-3" />
+                </Button>
+              </div>
+            )}
+            <div className="w-full">
+              <WidgetFactory type={widget.type} data={widget.data} />
+            </div>
+          </div>
+        ))}
+      </div>
+    )
+  }
+
   // Don't render grid until we have container width
   if (!mounted || containerWidth === null) {
     return (
       <div ref={containerRef} className="min-h-[600px] w-full">
-        <div className="grid gap-4 grid-cols-12">
+        <div className="grid gap-3 grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-12">
           {widgets.map(widget => (
             <div
               key={widget.id}
-              className="relative"
+              className="relative col-span-1 sm:col-span-1 md:col-span-1 lg:col-span-1 xl:col-span-3"
               style={{
-                gridColumn: `span ${widget.w}`,
-                minHeight: `${widget.h * 90}px`
+                minHeight: `${Math.min(widget.h * 90, 200)}px`
               }}
             >
               <WidgetFactory type={widget.type} data={widget.data} />
@@ -154,7 +193,7 @@ export function DashboardGridFixed({
                 <Button
                   variant="secondary"
                   size="icon"
-                  className="h-6 w-6 drag-handle cursor-move"
+                  className="h-6 w-6 drag-handle cursor-move touch-none"
                   title="Drag to move"
                 >
                   <GripVertical className="h-3 w-3" />

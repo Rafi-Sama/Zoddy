@@ -52,7 +52,7 @@ export default function SettingsPage() {
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-3">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div className="space-y-1.5">
                   <Label htmlFor="businessName" className="text-xs">Business Name</Label>
                   <Input id="businessName" className="h-8 text-xs" placeholder="Your Business Name" defaultValue="Zoddy Fashion House" />
@@ -82,7 +82,7 @@ export default function SettingsPage() {
                   defaultValue="123 Dhanmondi Road, Dhaka 1205, Bangladesh"
                 />
               </div>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div className="space-y-1.5">
                   <Label htmlFor="phone" className="text-xs">Phone Number</Label>
                   <Input id="phone" className="h-8 text-xs" placeholder="+880 1xxx-xxxxxx" defaultValue="+880 1712-345678" />
@@ -122,7 +122,7 @@ export default function SettingsPage() {
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-3">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div className="space-y-1.5">
                   <Label htmlFor="currency" className="text-xs">Currency</Label>
                   <Select defaultValue="bdt">
@@ -150,7 +150,7 @@ export default function SettingsPage() {
                   </Select>
                 </div>
               </div>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div className="space-y-1.5">
                   <Label htmlFor="timezone" className="text-xs">Time Zone</Label>
                   <Select defaultValue="dhaka">
@@ -235,7 +235,7 @@ export default function SettingsPage() {
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-3">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div className="space-y-1.5">
                   <Label htmlFor="deliveryFee" className="text-xs">Default Delivery Fee</Label>
                   <Input id="deliveryFee" className="h-8 text-xs" placeholder="60" defaultValue="60" />
@@ -363,7 +363,7 @@ export default function SettingsPage() {
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-3">
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
                 <Button variant="outline" className="flex flex-col items-center gap-1.5 h-16 text-xs">
                   <Download className="h-4 w-4" />
                   <span>Export Data</span>

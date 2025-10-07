@@ -17,13 +17,13 @@ export function MarketingLayout({ children }: MarketingLayoutProps) {
     <div className="min-h-screen bg-background">
       {/* Header */}
       <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-        <div className="container mx-auto px-4 h-16 flex items-center justify-between">
+        <div className="container mx-auto px-4 h-14 sm:h-16 flex items-center justify-between">
           {/* Logo */}
           <Link href="/" className="flex items-center space-x-2">
             <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-accent text-accent-foreground">
               <TrendingUp className="h-4 w-4" />
             </div>
-            <span className="font-bold font-display text-xl">Zoddy</span>
+            <span className="font-bold font-display text-lg sm:text-xl">Zoddy</span>
           </Link>
 
           {/* Desktop Navigation */}
@@ -43,13 +43,13 @@ export function MarketingLayout({ children }: MarketingLayoutProps) {
           </nav>
 
           {/* Desktop Actions */}
-          <div className="hidden md:flex items-center space-x-4">
+          <div className="hidden md:flex items-center space-x-2 lg:space-x-4">
             <ThemeToggle />
             <Link href="/login">
-              <Button variant="ghost">Sign In</Button>
+              <Button variant="ghost" size="sm">Sign In</Button>
             </Link>
             <Link href="/login">
-              <Button className="bg-accent hover:bg-accent/90">Get Started Free</Button>
+              <Button className="bg-accent hover:bg-accent/90" size="sm">Get Started Free</Button>
             </Link>
           </div>
 
@@ -70,24 +70,24 @@ export function MarketingLayout({ children }: MarketingLayoutProps) {
         {mobileMenuOpen && (
           <div className="md:hidden border-t bg-background/95 backdrop-blur">
             <nav className="container mx-auto px-4 py-4 flex flex-col space-y-3">
-              <Link href="#features" className="text-foreground/60 hover:text-foreground transition-colors">
+              <Link href="#features" className="text-foreground/60 hover:text-foreground transition-colors py-2 text-sm">
                 Features
               </Link>
-              <Link href="/pricing" className="text-foreground/60 hover:text-foreground transition-colors">
+              <Link href="/pricing" className="text-foreground/60 hover:text-foreground transition-colors py-2 text-sm">
                 Pricing
               </Link>
-              <Link href="#testimonials" className="text-foreground/60 hover:text-foreground transition-colors">
+              <Link href="#testimonials" className="text-foreground/60 hover:text-foreground transition-colors py-2 text-sm">
                 Success Stories
               </Link>
-              <Link href="#about" className="text-foreground/60 hover:text-foreground transition-colors">
+              <Link href="#about" className="text-foreground/60 hover:text-foreground transition-colors py-2 text-sm">
                 About
               </Link>
               <div className="flex flex-col space-y-2 pt-4 border-t">
                 <Link href="/login">
-                  <Button variant="outline" className="w-full">Sign In</Button>
+                  <Button variant="outline" className="w-full h-11">Sign In</Button>
                 </Link>
                 <Link href="/login">
-                  <Button className="w-full bg-accent hover:bg-accent/90">Get Started Free</Button>
+                  <Button className="w-full bg-accent hover:bg-accent/90 h-11">Get Started Free</Button>
                 </Link>
               </div>
             </nav>
@@ -100,8 +100,8 @@ export function MarketingLayout({ children }: MarketingLayoutProps) {
 
       {/* Footer */}
       <footer className="border-t bg-background">
-        <div className="container mx-auto px-4 py-12">
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
+        <div className="container mx-auto px-4 py-8 sm:py-12">
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-8">
             {/* Company Info */}
             <div className="space-y-4">
               <Link href="/" className="flex items-center space-x-2">

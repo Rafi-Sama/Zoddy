@@ -226,17 +226,17 @@ export default function CustomersPage() {
       {/* Filter & Search Bar */}
       <Card>
         <CardContent className="pt-4">
-          <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
-            <div className="flex flex-1 gap-2">
-              <div className="relative flex-1 max-w-md">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
-                <Input
-                  placeholder="Search by name, phone, email..."
-                  className="pl-10 h-8 text-xs"
-                />
-              </div>
+          <div className="flex flex-col gap-3">
+            <div className="relative w-full">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+              <Input
+                placeholder="Search by name, phone, email..."
+                className="pl-10 h-10 text-sm"
+              />
+            </div>
+            <div className="grid grid-cols-2 sm:flex sm:flex-wrap gap-2">
               <Select>
-                <SelectTrigger className="w-[150px] h-8 text-xs">
+                <SelectTrigger className="w-full sm:w-[140px] h-10 text-sm">
                   <SelectValue placeholder="Status" />
                 </SelectTrigger>
                 <SelectContent>
@@ -248,7 +248,7 @@ export default function CustomersPage() {
                 </SelectContent>
               </Select>
               <Select>
-                <SelectTrigger className="w-[150px] h-8 text-xs">
+                <SelectTrigger className="w-full sm:w-[140px] h-10 text-sm">
                   <SelectValue placeholder="Sort by" />
                 </SelectTrigger>
                 <SelectContent>
@@ -259,14 +259,15 @@ export default function CustomersPage() {
                 </SelectContent>
               </Select>
             </div>
-            <div className="flex gap-2">
-              <Button variant="outline" className="h-8 text-xs px-3">
-                <MessageSquare className="h-3.5 w-3.5 mr-2" />
-                Broadcast Message
+            <div className="flex flex-wrap gap-2">
+              <Button variant="outline" className="h-10 text-sm px-3 flex-1 sm:flex-none">
+                <MessageSquare className="h-4 w-4 sm:mr-2" />
+                <span className="hidden sm:inline">Broadcast</span>
               </Button>
-              <Button className="bg-accent hover:bg-accent/90 h-8 text-xs px-3">
-                <Plus className="h-3.5 w-3.5 mr-2" />
-                Add Customer
+              <Button className="bg-accent hover:bg-accent/90 h-10 text-sm px-3 flex-1 sm:flex-none">
+                <Plus className="h-4 w-4 sm:mr-2" />
+                <span className="hidden sm:inline">Add Customer</span>
+                <span className="sm:hidden">Add</span>
               </Button>
             </div>
           </div>

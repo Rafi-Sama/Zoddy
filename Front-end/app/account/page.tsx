@@ -131,9 +131,9 @@ function AccountContent() {
     toast.success("Profile updated successfully")
   }
 
-  const handleQuickSave = async (field: string, _value: string | boolean | number) => {
+  const handleQuickSave = async (field: string, value: string | boolean | number) => {
     await new Promise(resolve => setTimeout(resolve, 300))
-    toast.success(`${field} updated`)
+    toast.success(`${field} updated with value: ${value}`)
   }
 
   const renderContent = () => {
@@ -210,7 +210,7 @@ function AccountContent() {
               </CardHeader>
               <CardContent className="space-y-4">
                 {/* Personal Info Grid */}
-                <div className="grid gap-4 lg:grid-cols-4">
+                <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
                   <div className="space-y-1.5">
                     <Label htmlFor="firstName" className="text-xs">First Name</Label>
                     <Input
@@ -257,7 +257,7 @@ function AccountContent() {
                 <Separator />
 
                 {/* Business Info Grid */}
-                <div className="grid gap-4 lg:grid-cols-4">
+                <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
                   <div className="space-y-1.5">
                     <Label htmlFor="location" className="text-xs">Location</Label>
                     <Input
@@ -373,7 +373,7 @@ function AccountContent() {
               <p className="text-sm text-muted-foreground">Protect your account</p>
             </div>
 
-            <div className="grid gap-4 lg:grid-cols-2 xl:grid-cols-3">
+            <div className="grid gap-4 sm:grid-cols-1 md:grid-cols-2 xl:grid-cols-3">
               <Card>
                 <CardHeader className="pb-3 pt-4">
                   <CardTitle className="text-sm">Authentication</CardTitle>
@@ -454,7 +454,7 @@ function AccountContent() {
               <p className="text-sm text-muted-foreground">Manage your plan and payments</p>
             </div>
 
-            <div className="grid gap-4 xl:grid-cols-3">
+            <div className="grid gap-4 md:grid-cols-1 xl:grid-cols-3">
               {/* Current Plan - Compact */}
               <Card className="xl:col-span-1">
                 <CardHeader className="pb-3 pt-4">
@@ -531,7 +531,7 @@ function AccountContent() {
                 <CardTitle className="text-sm">Display Settings</CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4 xl:grid-cols-5">
+                <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
                   <div className="space-y-1.5">
                     <Label className="text-xs">Language</Label>
                     <Select defaultValue="en">
@@ -600,7 +600,7 @@ function AccountContent() {
               <p className="text-sm text-muted-foreground">Monitor access and sessions</p>
             </div>
 
-            <div className="grid gap-4 lg:grid-cols-3 xl:grid-cols-3">
+            <div className="grid gap-4 sm:grid-cols-1 md:grid-cols-2 lg:grid-cols-3">
               <Card>
                 <CardHeader className="pb-3 pt-4">
                   <CardTitle className="text-sm">Active Sessions</CardTitle>
@@ -671,7 +671,7 @@ function AccountContent() {
               <p className="text-sm text-muted-foreground">Get help and find answers</p>
             </div>
 
-            <div className="grid gap-3 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 xl:grid-cols-6">
+            <div className="grid gap-3 grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6">
               {[
                 { title: "Docs", icon: FileText, color: "text-blue-600" },
                 { title: "Support", icon: MessageSquare, color: "text-green-600" },
@@ -713,30 +713,30 @@ function AccountContent() {
         { label: "Account Settings" }
       ]}
     >
-      <div className="flex h-[calc(100vh-7rem)] gap-6 w-full">
-        {/* Fixed Sidebar - Better width for readability */}
-        <aside className="w-56 shrink-0">
-          <Card className="h-full">
+      <div className="flex flex-col lg:flex-row h-auto lg:h-[calc(100vh-7rem)] gap-6 w-full">
+        {/* Fixed Sidebar - Better width for readability - Hidden on mobile, shows as tabs */}
+        <aside className="lg:w-56 lg:shrink-0 w-full">
+          <Card className="lg:h-full">
             <CardHeader className="pb-3 pt-4">
               <CardTitle className="text-base">Settings</CardTitle>
             </CardHeader>
             <CardContent className="p-3">
-              <nav className="space-y-1">
+              <nav className="flex lg:flex-col overflow-x-auto lg:space-y-1 gap-2 lg:gap-0 pb-2 lg:pb-0">
                 {navigationItems.map((item) => (
                   <button
                     key={item.id}
                     onClick={() => setActiveSection(item.id)}
                     className={cn(
-                      "w-full flex items-center gap-3 px-3 py-2.5 text-sm rounded-md transition-colors",
+                      "flex items-center gap-2 lg:gap-3 px-3 py-2.5 text-sm rounded-md transition-colors whitespace-nowrap lg:w-full",
                       activeSection === item.id
                         ? "bg-primary text-primary-foreground"
                         : "hover:bg-accent hover:text-accent-foreground"
                     )}
                   >
                     <item.icon className="h-4 w-4 shrink-0" />
-                    <span className="text-left font-medium">{item.label}</span>
+                    <span className="text-left font-medium hidden sm:inline">{item.label}</span>
                     {activeSection === item.id && (
-                      <ChevronRight className="h-3.5 w-3.5 ml-auto" />
+                      <ChevronRight className="h-3.5 w-3.5 ml-auto hidden lg:inline" />
                     )}
                   </button>
                 ))}
@@ -757,7 +757,7 @@ function AccountContent() {
         </aside>
 
         {/* Full Width Content Area */}
-        <main className="flex-1 overflow-y-auto">
+        <main className="flex-1 lg:overflow-y-auto w-full">
           <div className="w-full">
             {renderContent()}
           </div>

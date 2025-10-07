@@ -189,22 +189,22 @@ function SortableItem({ item, onArchive, onUnarchive }: {
           <SidebarMenuItem>
             <SidebarMenuButton asChild tooltip={item.title}>
               <a href={item.url} className="relative group/item flex items-center">
-                <item.icon className="group-data-[collapsible=icon]/sidebar:mx-auto" />
-                <span className="group-data-[collapsible=icon]/sidebar:hidden">{item.title}</span>
-                <div className="ml-auto flex items-center gap-1 group-data-[collapsible=icon]/sidebar:hidden">
+                <item.icon className="group-data-[collapsible=icon]/sidebar:mx-auto h-4 w-4 flex-shrink-0" />
+                <span className="group-data-[collapsible=icon]/sidebar:hidden truncate">{item.title}</span>
+                <div className="ml-auto flex items-center gap-0.5 group-data-[collapsible=icon]/sidebar:hidden">
                   <div
-                    className="cursor-move opacity-0 group-hover/item:opacity-100 transition-opacity"
+                    className="cursor-move opacity-0 group-hover/item:opacity-100 transition-opacity hidden md:block touch-none"
                     {...attributes}
                     {...listeners}
                   >
-                    <GripVertical className="h-4 w-4 text-muted-foreground" />
+                    <GripVertical className="h-3.5 w-3.5 text-muted-foreground" />
                   </div>
                   <DropdownMenu>
                     <DropdownMenuTrigger asChild onClick={(e) => e.preventDefault()}>
                       <Button
                         variant="ghost"
                         size="icon"
-                        className="h-6 w-6 opacity-0 group-hover/item:opacity-100 transition-opacity"
+                        className="h-6 w-6 md:opacity-0 md:group-hover/item:opacity-100 transition-opacity"
                       >
                         <MoreVertical className="h-3 w-3" />
                       </Button>
@@ -277,7 +277,8 @@ export function AppSidebarEnhanced() {
   // Save to localStorage whenever items change
   useEffect(() => {
     if (typeof window !== 'undefined') {
-      const toSave = items.map(({ icon: _icon, ...rest }) => rest)
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
+      const toSave = items.map(({ icon, ...rest }) => rest)
       localStorage.setItem('sidebarItems', JSON.stringify(toSave))
     }
   }, [items])
@@ -352,13 +353,13 @@ export function AppSidebarEnhanced() {
     >
       <Sidebar collapsible="icon">
         <SidebarHeader>
-          <div className="flex items-center gap-2 px-2 py-1.5">
-            <div className="flex h-6 w-6 items-center justify-center rounded-lg bg-accent text-accent-foreground">
+          <div className="flex items-center gap-1.5 md:gap-2 px-2 py-1.5">
+            <div className="flex h-6 w-6 items-center justify-center rounded-lg bg-accent text-accent-foreground flex-shrink-0">
               <TrendingUp className="h-3.5 w-3.5" />
             </div>
-            <div className="grid flex-1 text-left text-xs leading-tight">
+            <div className="grid flex-1 text-left text-xs leading-tight min-w-0">
               <span className="truncate font-bold font-display">Zoddy</span>
-              <span className="truncate text-[10px] text-muted-foreground">Business Tracker</span>
+              <span className="truncate text-[10px] text-muted-foreground group-data-[collapsible=icon]/sidebar:hidden">Business Tracker</span>
             </div>
           </div>
         </SidebarHeader>

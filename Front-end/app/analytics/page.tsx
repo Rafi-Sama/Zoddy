@@ -29,35 +29,35 @@ export default function AnalyticsPage() {
     >
       <div className="space-y-6">
         {/* Header */}
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-3">
+        <div className="flex flex-col gap-3">
           <div>
             <h1 className="text-xl font-bold font-display">Analytics &amp; Insights</h1>
             <p className="text-xs text-muted-foreground">
               Comprehensive business intelligence for data-driven decisions
             </p>
           </div>
-        <div className="flex items-center gap-1.5">
-          <Select defaultValue="30days">
-            <SelectTrigger className="w-40 h-8 text-xs">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="7days">Last 7 days</SelectItem>
-              <SelectItem value="30days">Last 30 days</SelectItem>
-              <SelectItem value="90days">Last 90 days</SelectItem>
-              <SelectItem value="1year">Last year</SelectItem>
-            </SelectContent>
-          </Select>
-          <Button variant="outline" className="h-8 text-xs px-3">
-            <Filter className="h-3.5 w-3.5 mr-2" />
-            Filter
-          </Button>
-          <Button variant="outline" className="h-8 text-xs px-3">
-            <Download className="h-3.5 w-3.5 mr-2" />
-            Export
-          </Button>
+          <div className="flex flex-wrap items-center gap-2">
+            <Select defaultValue="30days">
+              <SelectTrigger className="w-full sm:w-40 h-10 text-sm">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="7days">Last 7 days</SelectItem>
+                <SelectItem value="30days">Last 30 days</SelectItem>
+                <SelectItem value="90days">Last 90 days</SelectItem>
+                <SelectItem value="1year">Last year</SelectItem>
+              </SelectContent>
+            </Select>
+            <Button variant="outline" className="h-10 text-sm px-3 flex-1 sm:flex-none">
+              <Filter className="h-4 w-4 sm:mr-2" />
+              <span className="hidden sm:inline">Filter</span>
+            </Button>
+            <Button variant="outline" className="h-10 text-sm px-3 flex-1 sm:flex-none">
+              <Download className="h-4 w-4 sm:mr-2" />
+              <span className="hidden sm:inline">Export</span>
+            </Button>
+          </div>
         </div>
-      </div>
       {/* Key Metrics Overview */}
       <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-4">
         <Card>
@@ -114,7 +114,7 @@ export default function AnalyticsPage() {
         </Card>
       </div>
       {/* Revenue & Sales Charts */}
-      <div className="grid gap-4 lg:grid-cols-2">
+      <div className="grid gap-4 md:grid-cols-1 lg:grid-cols-2">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between pb-2">
             <CardTitle className="flex items-center gap-1.5 text-sm">
@@ -204,7 +204,7 @@ export default function AnalyticsPage() {
         </Card>
       </div>
       {/* Customer & Marketing Analytics */}
-      <div className="grid gap-4 lg:grid-cols-3">
+      <div className="grid gap-4 sm:grid-cols-1 md:grid-cols-2 lg:grid-cols-3">
         <Card>
           <CardHeader className="pb-2">
             <CardTitle className="flex items-center gap-1.5 text-sm">

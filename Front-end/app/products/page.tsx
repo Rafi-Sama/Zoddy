@@ -183,17 +183,20 @@ export default function ProductsPage() {
       {/* Filter & Search Bar */}
       <Card>
         <CardContent className="pt-4">
-          <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
-            <div className="flex flex-1 gap-2">
-              <div className="relative flex-1 max-w-md">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
-                <Input
-                  placeholder="Search products..."
-                  className="pl-10 h-8 text-xs"
-                />
-              </div>
+          <div className="flex flex-col gap-3">
+            {/* Search Input - Full width on mobile */}
+            <div className="relative w-full">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+              <Input
+                placeholder="Search products..."
+                className="pl-10 h-10 text-sm"
+              />
+            </div>
+
+            {/* Filters - Stack vertically on mobile */}
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:flex md:flex-wrap gap-2">
               <Select>
-                <SelectTrigger className="w-[150px] h-8 text-xs">
+                <SelectTrigger className="w-full md:w-[140px] h-10 text-sm">
                   <SelectValue placeholder="Category" />
                 </SelectTrigger>
                 <SelectContent>
@@ -204,7 +207,7 @@ export default function ProductsPage() {
                 </SelectContent>
               </Select>
               <Select>
-                <SelectTrigger className="w-[150px] h-8 text-xs">
+                <SelectTrigger className="w-full md:w-[140px] h-10 text-sm">
                   <SelectValue placeholder="Stock Status" />
                 </SelectTrigger>
                 <SelectContent>
@@ -215,7 +218,7 @@ export default function ProductsPage() {
                 </SelectContent>
               </Select>
               <Select>
-                <SelectTrigger className="w-[150px] h-8 text-xs">
+                <SelectTrigger className="w-full md:w-[140px] h-10 text-sm col-span-2 sm:col-span-1">
                   <SelectValue placeholder="Sort by" />
                 </SelectTrigger>
                 <SelectContent>
@@ -226,34 +229,37 @@ export default function ProductsPage() {
                 </SelectContent>
               </Select>
             </div>
-            <div className="flex gap-2">
-              <Button variant="outline" className="h-8 text-xs px-3">
-                <Download className="h-3.5 w-3.5 mr-2" />
-                Export
+
+            {/* Action Buttons - Stack on mobile */}
+            <div className="flex flex-wrap gap-2">
+              <Button variant="outline" className="h-10 text-sm px-3 flex-1 sm:flex-none">
+                <Download className="h-4 w-4 sm:mr-2" />
+                <span className="hidden sm:inline">Export</span>
               </Button>
-              <Button variant="outline" className="h-8 text-xs px-3">
-                <Download className="h-3.5 w-3.5 mr-2" />
-                Import
+              <Button variant="outline" className="h-10 text-sm px-3 flex-1 sm:flex-none">
+                <Download className="h-4 w-4 sm:mr-2" />
+                <span className="hidden sm:inline">Import</span>
               </Button>
-              <div className="flex rounded-md border">
+              <div className="flex rounded-md border flex-1 sm:flex-none">
                 <Button
                   variant={viewMode === "grid" ? "default" : "ghost"}
                   onClick={() => setViewMode("grid")}
-                  className="rounded-r-none h-8 px-3"
+                  className="rounded-r-none h-10 px-3 flex-1"
                 >
-                  <Grid3X3 className="h-3.5 w-3.5" />
+                  <Grid3X3 className="h-4 w-4" />
                 </Button>
                 <Button
                   variant={viewMode === "list" ? "default" : "ghost"}
                   onClick={() => setViewMode("list")}
-                  className="rounded-l-none h-8 px-3"
+                  className="rounded-l-none h-10 px-3 flex-1"
                 >
-                  <List className="h-3.5 w-3.5" />
+                  <List className="h-4 w-4" />
                 </Button>
               </div>
-              <Button className="bg-accent hover:bg-accent/90 h-8 text-xs px-3">
-                <Plus className="h-3.5 w-3.5 mr-2" />
-                Add Product
+              <Button className="bg-accent hover:bg-accent/90 h-10 text-sm px-3 flex-1 sm:flex-none">
+                <Plus className="h-4 w-4 sm:mr-2" />
+                <span className="hidden sm:inline">Add Product</span>
+                <span className="sm:hidden">Add</span>
               </Button>
             </div>
           </div>

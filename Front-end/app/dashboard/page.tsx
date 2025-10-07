@@ -6,6 +6,8 @@ import { DashboardGridFixed } from "@/components/dashboard/dashboard-grid-fixed"
 import { Widget, WidgetType, WIDGET_DEFINITIONS } from "@/types/dashboard"
 import { findOptimalPosition, resolveOverlaps, adjustToGridBounds } from "@/lib/dashboard-utils"
 import { v4 as uuidv4 } from 'uuid'
+import { Button } from "@/components/ui/button"
+import { Save, RotateCcw } from "lucide-react"
 
 // Default layout configuration
 const DEFAULT_WIDGETS: Widget[] = [
@@ -211,8 +213,33 @@ export default function DashboardPage() {
       hasUnsavedChanges={hasUnsavedChanges}
     >
       {isEditMode && (
-        <div className="bg-muted/50 border border-dashed rounded-lg p-2 text-xs text-muted-foreground text-center">
-          Edit Mode: Drag widgets to reorder • Click X to remove • Click Save when done
+        <div className="bg-muted/50 border border-dashed rounded-lg p-2 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+          <div className="text-xs text-muted-foreground">
+            <span className="hidden sm:inline">Edit Mode: Drag widgets to reorder • Click X to remove • Click Save when done</span>
+            <span className="sm:hidden">Edit Mode: Drag to reorder, X to remove</span>
+          </div>
+          <div className="flex items-center gap-2 justify-end">
+            {hasUnsavedChanges && (
+              <Button
+                variant="default"
+                size="sm"
+                className="h-7 px-2 gap-1"
+                onClick={handleSaveLayout}
+              >
+                <Save className="h-3.5 w-3.5" />
+                <span className="hidden sm:inline">Save</span>
+              </Button>
+            )}
+            <Button
+              variant="ghost"
+              size="sm"
+              className="h-7 px-2 gap-1"
+              onClick={handleResetLayout}
+            >
+              <RotateCcw className="h-3.5 w-3.5" />
+              <span className="hidden sm:inline">Reset</span>
+            </Button>
+          </div>
         </div>
       )}
 

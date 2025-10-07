@@ -161,17 +161,20 @@ export default function OrdersPage() {
       {/* Filter & Search Bar */}
       <Card>
         <CardContent className="pt-4">
-          <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
-            <div className="flex flex-1 gap-2">
-              <div className="relative flex-1 max-w-md">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
-                <Input
-                  placeholder="Search by customer, order ID, phone..."
-                  className="pl-10 h-8 text-xs"
-                />
-              </div>
+          <div className="flex flex-col gap-3">
+            {/* Search Input - Full width on mobile */}
+            <div className="relative w-full">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+              <Input
+                placeholder="Search by customer, order ID, phone..."
+                className="pl-10 h-10 text-sm"
+              />
+            </div>
+
+            {/* Filters - Stack vertically on mobile */}
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:flex md:flex-wrap gap-2">
               <Select>
-                <SelectTrigger className="w-[150px] h-8 text-xs">
+                <SelectTrigger className="w-full md:w-[140px] h-10 text-sm">
                   <SelectValue placeholder="Status" />
                 </SelectTrigger>
                 <SelectContent>
@@ -183,7 +186,7 @@ export default function OrdersPage() {
                 </SelectContent>
               </Select>
               <Select>
-                <SelectTrigger className="w-[150px] h-8 text-xs">
+                <SelectTrigger className="w-full md:w-[140px] h-10 text-sm">
                   <SelectValue placeholder="Payment" />
                 </SelectTrigger>
                 <SelectContent>
@@ -193,37 +196,40 @@ export default function OrdersPage() {
                   <SelectItem value="partial">Partial</SelectItem>
                 </SelectContent>
               </Select>
-              <Button variant="outline" className="h-8 text-xs px-3">
-                <Calendar className="h-3.5 w-3.5 mr-2" />
-                Date Range
+              <Button variant="outline" className="h-10 text-sm px-3 col-span-2 sm:col-span-1 md:col-auto">
+                <Calendar className="h-4 w-4 sm:mr-2" />
+                <span className="hidden sm:inline">Date Range</span>
               </Button>
             </div>
-            <div className="flex gap-2">
-              <Button variant="outline" className="h-8 text-xs px-3">
-                <Download className="h-3.5 w-3.5 mr-2" />
-                Export
+
+            {/* Action Buttons - Stack on mobile */}
+            <div className="flex flex-wrap gap-2">
+              <Button variant="outline" className="h-10 text-sm px-3 flex-1 sm:flex-none">
+                <Download className="h-4 w-4 sm:mr-2" />
+                <span className="hidden sm:inline">Export</span>
               </Button>
-              <div className="flex rounded-md border">
+              <div className="flex rounded-md border flex-1 sm:flex-none">
                 <Button
                   variant={viewMode === "list" ? "default" : "ghost"}
                   size="sm"
                   onClick={() => setViewMode("list")}
-                  className="rounded-r-none h-8 px-3"
+                  className="rounded-r-none h-10 px-3 flex-1"
                 >
-                  <List className="h-3.5 w-3.5" />
+                  <List className="h-4 w-4" />
                 </Button>
                 <Button
                   variant={viewMode === "grid" ? "default" : "ghost"}
                   size="sm"
                   onClick={() => setViewMode("grid")}
-                  className="rounded-l-none h-8 px-3"
+                  className="rounded-l-none h-10 px-3 flex-1"
                 >
-                  <Grid3X3 className="h-3.5 w-3.5" />
+                  <Grid3X3 className="h-4 w-4" />
                 </Button>
               </div>
-              <Button className="bg-accent hover:bg-accent/90 h-8 text-xs px-3">
-                <Plus className="h-3.5 w-3.5 mr-2" />
-                New Order
+              <Button className="bg-accent hover:bg-accent/90 h-10 text-sm px-3 flex-1 sm:flex-none">
+                <Plus className="h-4 w-4 sm:mr-2" />
+                <span className="hidden sm:inline">New Order</span>
+                <span className="sm:hidden">New</span>
               </Button>
             </div>
           </div>
@@ -233,138 +239,142 @@ export default function OrdersPage() {
       {viewMode === "list" ? (
         <Card>
           <CardHeader>
-            <CardTitle className="text-lg">Orders List</CardTitle>
+            <CardTitle className="text-base sm:text-lg">Orders List</CardTitle>
             <CardDescription className="text-xs">Manage and track all your orders</CardDescription>
           </CardHeader>
           <CardContent>
-            <div className="overflow-x-auto">
-              <table className="w-full">
-                <thead>
-                  <tr className="border-b">
-                    <th className="text-left py-2 px-1.5 text-xs">Order ID</th>
-                    <th className="text-left py-2 px-1.5 text-xs">Customer</th>
-                    <th className="text-left py-2 px-1.5 text-xs">Date</th>
-                    <th className="text-left py-2 px-1.5 text-xs">Items</th>
-                    <th className="text-left py-2 px-1.5 text-xs">Amount</th>
-                    <th className="text-left py-2 px-1.5 text-xs">Status</th>
-                    <th className="text-left py-2 px-1.5 text-xs">Payment</th>
-                    <th className="text-left py-2 px-1.5 text-xs">Actions</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {mockOrders.map((order) => (
-                    <tr key={order.id} className="border-b hover:bg-muted/50">
-                      <td className="py-2 px-1.5 font-medium text-xs">{order.id}</td>
-                      <td className="py-2 px-1.5">
-                        <div>
-                          <div className="font-medium text-xs">{order.customer.name}</div>
-                          <div className="text-[10px] text-muted-foreground">{order.customer.phone}</div>
-                        </div>
-                      </td>
-                      <td className="py-2 px-1.5 text-xs">{order.date}</td>
-                      <td className="py-2 px-1.5 text-xs">{order.items.length} items</td>
-                      <td className="py-2 px-1.5 font-medium text-xs">৳{order.amount}</td>
-                      <td className="py-2 px-1.5">
-                        <Badge className={getStatusColor(order.status) + " text-[9px] px-1.5 py-0"}>
-                          {getStatusIcon(order.status)}
-                          <span className="ml-1 capitalize">{order.status}</span>
-                        </Badge>
-                      </td>
-                      <td className="py-2 px-1.5">
-                        <Badge className={getPaymentStatusColor(order.paymentStatus) + " text-[9px] px-1.5 py-0"}>
-                          {order.paymentStatus}
-                        </Badge>
-                      </td>
-                      <td className="py-2 px-1.5">
-                        <div className="flex gap-1">
-                          <Dialog>
-                            <DialogTrigger asChild>
-                              <Button
-                                variant="ghost"
-                                size="sm"
-                                onClick={() => setSelectedOrder(order)}
-                                className="h-6 px-2"
-                              >
-                                <Eye className="h-3.5 w-3.5" />
+            <div className="overflow-x-auto -mx-4 sm:mx-0">
+              <div className="inline-block min-w-full align-middle">
+                <div className="overflow-hidden">
+                  <table className="min-w-full divide-y divide-border">
+                    <thead className="bg-muted/50">
+                      <tr>
+                        <th className="text-left py-3 px-3 text-xs font-medium text-muted-foreground">Order ID</th>
+                        <th className="text-left py-3 px-3 text-xs font-medium text-muted-foreground">Customer</th>
+                        <th className="text-left py-3 px-3 text-xs font-medium text-muted-foreground hidden sm:table-cell">Date</th>
+                        <th className="text-left py-3 px-3 text-xs font-medium text-muted-foreground hidden md:table-cell">Items</th>
+                        <th className="text-left py-3 px-3 text-xs font-medium text-muted-foreground">Amount</th>
+                        <th className="text-left py-3 px-3 text-xs font-medium text-muted-foreground">Status</th>
+                        <th className="text-left py-3 px-3 text-xs font-medium text-muted-foreground hidden lg:table-cell">Payment</th>
+                        <th className="text-left py-3 px-3 text-xs font-medium text-muted-foreground">Actions</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-border bg-background">
+                      {mockOrders.map((order) => (
+                        <tr key={order.id} className="hover:bg-muted/50">
+                          <td className="py-3 px-3 font-medium text-xs whitespace-nowrap">{order.id}</td>
+                          <td className="py-3 px-3">
+                            <div>
+                              <div className="font-medium text-xs">{order.customer.name}</div>
+                              <div className="text-[10px] text-muted-foreground truncate max-w-[120px]">{order.customer.phone}</div>
+                            </div>
+                          </td>
+                          <td className="py-3 px-3 text-xs hidden sm:table-cell whitespace-nowrap">{order.date}</td>
+                          <td className="py-3 px-3 text-xs hidden md:table-cell">{order.items.length} items</td>
+                          <td className="py-3 px-3 font-medium text-xs whitespace-nowrap">৳{order.amount}</td>
+                          <td className="py-3 px-3">
+                            <Badge className={getStatusColor(order.status) + " text-[9px] px-2 py-1 whitespace-nowrap"}>
+                              {getStatusIcon(order.status)}
+                              <span className="ml-1 capitalize hidden sm:inline">{order.status}</span>
+                            </Badge>
+                          </td>
+                          <td className="py-3 px-3 hidden lg:table-cell">
+                            <Badge className={getPaymentStatusColor(order.paymentStatus) + " text-[9px] px-2 py-1 capitalize"}>
+                              {order.paymentStatus}
+                            </Badge>
+                          </td>
+                          <td className="py-3 px-3">
+                            <div className="flex gap-1">
+                              <Dialog>
+                                <DialogTrigger asChild>
+                                  <Button
+                                    variant="ghost"
+                                    size="sm"
+                                    onClick={() => setSelectedOrder(order)}
+                                    className="h-9 w-9 p-0"
+                                  >
+                                    <Eye className="h-4 w-4" />
+                                  </Button>
+                                </DialogTrigger>
+                                <DialogContent className="sm:max-w-2xl">
+                                  <OrderDetailsModal order={selectedOrder} />
+                                </DialogContent>
+                              </Dialog>
+                              <Button variant="ghost" size="sm" className="h-9 w-9 p-0 hidden sm:inline-flex">
+                                <Edit className="h-4 w-4" />
                               </Button>
-                            </DialogTrigger>
-                            <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
-                              <OrderDetailsModal order={selectedOrder} />
-                            </DialogContent>
-                          </Dialog>
-                          <Button variant="ghost" size="sm" className="h-6 px-2">
-                            <Edit className="h-3.5 w-3.5" />
-                          </Button>
-                          {order.paymentStatus === "pending" && (
-                            <Button variant="ghost" size="sm" className="h-6 px-2">
-                              <CheckCircle className="h-3.5 w-3.5" />
-                            </Button>
-                          )}
-                        </div>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
+                              {order.paymentStatus === "pending" && (
+                                <Button variant="ghost" size="sm" className="h-9 w-9 p-0 hidden md:inline-flex">
+                                  <CheckCircle className="h-4 w-4" />
+                                </Button>
+                              )}
+                            </div>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
             </div>
           </CardContent>
         </Card>
       ) : (
-        <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-3">
+        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
           {mockOrders.map((order) => (
             <Card key={order.id} className="hover:shadow-md transition-shadow">
-              <CardHeader className="pb-2">
-                <div className="flex items-center justify-between">
-                  <CardTitle className="text-sm">{order.id}</CardTitle>
-                  <Badge className={getStatusColor(order.status) + " text-[9px] px-1.5 py-0"}>
+              <CardHeader className="pb-3">
+                <div className="flex items-center justify-between gap-2">
+                  <CardTitle className="text-sm truncate">{order.id}</CardTitle>
+                  <Badge className={getStatusColor(order.status) + " text-[9px] px-2 py-1 shrink-0"}>
                     {getStatusIcon(order.status)}
                     <span className="ml-1 capitalize">{order.status}</span>
                   </Badge>
                 </div>
-                <CardDescription className="text-xs">{order.customer.name}</CardDescription>
+                <CardDescription className="text-xs truncate">{order.customer.name}</CardDescription>
               </CardHeader>
               <CardContent className="space-y-2">
                 <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                  <Phone className="h-3.5 w-3.5" />
-                  {order.customer.phone}
+                  <Phone className="h-4 w-4 shrink-0" />
+                  <span className="truncate">{order.customer.phone}</span>
                 </div>
                 <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                  <Calendar className="h-3.5 w-3.5" />
+                  <Calendar className="h-4 w-4 shrink-0" />
                   {order.date}
                 </div>
                 <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                  <Package className="h-3.5 w-3.5" />
+                  <Package className="h-4 w-4 shrink-0" />
                   {order.items.length} items
                 </div>
-                <div className="flex items-center justify-between">
+                <div className="flex items-center justify-between pt-1">
                   <div className="flex items-center gap-2">
-                    <DollarSign className="h-3.5 w-3.5" />
-                    <span className="font-bold text-xs">৳{order.amount}</span>
+                    <DollarSign className="h-4 w-4 shrink-0" />
+                    <span className="font-bold text-sm">৳{order.amount}</span>
                   </div>
-                  <Badge className={getPaymentStatusColor(order.paymentStatus) + " text-[9px] px-1.5 py-0"}>
+                  <Badge className={getPaymentStatusColor(order.paymentStatus) + " text-[9px] px-2 py-1 capitalize"}>
                     {order.paymentStatus}
                   </Badge>
                 </div>
-                <div className="flex gap-2 pt-1.5">
+                <div className="flex gap-2 pt-2">
                   <Dialog>
                     <DialogTrigger asChild>
                       <Button
                         variant="outline"
                         size="sm"
-                        className="flex-1 h-8 text-xs px-3"
+                        className="flex-1 h-10 text-sm"
                         onClick={() => setSelectedOrder(order)}
                       >
-                        <Eye className="h-3.5 w-3.5 mr-2" />
-                        View
+                        <Eye className="h-4 w-4 sm:mr-2" />
+                        <span className="hidden sm:inline">View</span>
                       </Button>
                     </DialogTrigger>
-                    <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+                    <DialogContent className="sm:max-w-2xl">
                       <OrderDetailsModal order={selectedOrder} />
                     </DialogContent>
                   </Dialog>
-                  <Button variant="outline" size="sm" className="flex-1 h-8 text-xs px-3">
-                    <Edit className="h-3.5 w-3.5 mr-2" />
-                    Edit
+                  <Button variant="outline" size="sm" className="flex-1 h-10 text-sm">
+                    <Edit className="h-4 w-4 sm:mr-2" />
+                    <span className="hidden sm:inline">Edit</span>
                   </Button>
                 </div>
               </CardContent>
