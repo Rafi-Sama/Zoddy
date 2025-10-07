@@ -1,0 +1,167 @@
+/* React Grid Layout Overrides */
+.react-grid-layout {
+  position: relative;
+  transition: height 200ms ease;
+  width: 100% !important;
+}
+
+.react-grid-item {
+  transition: all 200ms ease;
+  transition-property: left, top;
+}
+
+.react-grid-item img {
+  pointer-events: none;
+  user-select: none;
+}
+
+.react-grid-item.cssTransforms {
+  transition-property: transform;
+}
+
+.react-grid-item.resizing {
+  z-index: 1;
+  will-change: width, height;
+}
+
+.react-grid-item.react-draggable-dragging {
+  transition: none;
+  z-index: 3;
+  will-change: transform;
+  opacity: 0.9;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.15);
+}
+
+.react-grid-item.dropping {
+  visibility: hidden;
+}
+
+.react-grid-item.react-grid-placeholder {
+  background: hsl(var(--accent) / 0.3);
+  opacity: 0.5;
+  transition-duration: 100ms;
+  z-index: 2;
+  border-radius: 8px;
+  border: 2px dashed hsl(var(--accent));
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  -o-user-select: none;
+  user-select: none;
+}
+
+.react-grid-item > .react-resizable-handle {
+  position: absolute;
+  width: 20px;
+  height: 20px;
+}
+
+.react-grid-item > .react-resizable-handle::after {
+  content: "";
+  position: absolute;
+  right: 3px;
+  bottom: 3px;
+  width: 5px;
+  height: 5px;
+  border-right: 2px solid hsl(var(--muted-foreground) / 0.4);
+  border-bottom: 2px solid hsl(var(--muted-foreground) / 0.4);
+}
+
+.react-resizable-handle-se {
+  cursor: se-resize;
+  right: 0;
+  bottom: 0;
+}
+
+.react-resizable-handle-sw {
+  cursor: sw-resize;
+  left: 0;
+  bottom: 0;
+}
+
+.react-resizable-handle-nw {
+  cursor: nw-resize;
+  left: 0;
+  top: 0;
+}
+
+.react-resizable-handle-ne {
+  cursor: ne-resize;
+  right: 0;
+  top: 0;
+}
+
+.react-resizable-handle-w,
+.react-resizable-handle-e {
+  cursor: ew-resize;
+  top: 50%;
+  margin-top: -10px;
+}
+
+.react-resizable-handle-w {
+  left: 0;
+}
+
+.react-resizable-handle-e {
+  right: 0;
+}
+
+.react-resizable-handle-n,
+.react-resizable-handle-s {
+  cursor: ns-resize;
+  left: 50%;
+  margin-left: -10px;
+}
+
+.react-resizable-handle-n {
+  top: 0;
+}
+
+.react-resizable-handle-s {
+  bottom: 0;
+}
+
+/* Custom drag handle styling */
+.drag-handle {
+  cursor: move;
+}
+
+.drag-handle:hover {
+  background: hsl(var(--accent));
+}
+
+/* Dashboard container */
+.dashboard-container {
+  width: 100%;
+  max-width: 100%;
+  overflow-x: hidden;
+}
+
+/* Ensure grid items don't overflow */
+.react-grid-layout > .react-grid-item {
+  overflow: hidden;
+}
+
+/* Hide scrollbars on widgets while keeping them scrollable */
+.react-grid-item .overflow-auto::-webkit-scrollbar,
+.react-grid-item *::-webkit-scrollbar {
+  display: none; /* Chrome, Safari and Opera */
+}
+
+.react-grid-item .overflow-auto,
+.react-grid-item * {
+  -ms-overflow-style: none;  /* IE and Edge */
+  scrollbar-width: none;  /* Firefox */
+}
+
+/* Specific for cards that might have overflow */
+.react-grid-item .card-content-scrollable {
+  overflow-y: auto;
+  overflow-x: hidden;
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+.react-grid-item .card-content-scrollable::-webkit-scrollbar {
+  display: none;
+}

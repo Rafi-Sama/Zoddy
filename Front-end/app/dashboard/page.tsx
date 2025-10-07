@@ -1,313 +1,229 @@
-import { MainLayout } from "@/components/layout/main-layout"
-import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Badge } from "@/components/ui/badge"
-import { withAuth } from '@workos-inc/authkit-nextjs'
-import {
-  TrendingUp,
-  ShoppingCart,
-  Package,
-  DollarSign,
-  Clock,
-  AlertTriangle,
-  Plus,
-  Eye,
-  Edit,
-  CheckCircle,
-  MessageSquare,
-  Search,
-  Star
-} from "lucide-react"
+"use client"
 
-export default async function DashboardPage() {
-  // Ensure user is authenticated and get user data
-  const { user } = await withAuth();
+import { useState, useEffect, useCallback } from "react"
+import { MainLayoutDashboard } from "@/components/layout/main-layout-dashboard"
+import { DashboardGridFixed } from "@/components/dashboard/dashboard-grid-fixed"
+import { Widget, WidgetType, WIDGET_DEFINITIONS } from "@/types/dashboard"
+import { findOptimalPosition, resolveOverlaps, adjustToGridBounds } from "@/lib/dashboard-utils"
+import { v4 as uuidv4 } from 'uuid'
 
-  // Sync user to Supabase (this is idempotent - safe to run on every page load)
-  if (user) {
-    try {
-      const { syncWorkOSUserToSupabase } = await import('@/lib/sync-user');
-      await syncWorkOSUserToSupabase(user);
-    } catch (error) {
-      console.error('Failed to sync user to Supabase:', error);
-    }
+// Default layout configuration
+const DEFAULT_WIDGETS: Widget[] = [
+  {
+    id: "revenue-1",
+    type: "revenue",
+    title: "Total Revenue",
+    x: 0,
+    y: 0,
+    w: 3,
+    h: 2
+  },
+  {
+    id: "orders-1",
+    type: "orders",
+    title: "Orders",
+    x: 3,
+    y: 0,
+    w: 3,
+    h: 2
+  },
+  {
+    id: "pending-payments-1",
+    type: "pending-payments",
+    title: "Pending Payments",
+    x: 6,
+    y: 0,
+    w: 3,
+    h: 2
+  },
+  {
+    id: "low-stock-1",
+    type: "low-stock",
+    title: "Low Stock Alert",
+    x: 9,
+    y: 0,
+    w: 3,
+    h: 2
+  },
+  {
+    id: "quick-actions-1",
+    type: "quick-actions",
+    title: "Quick Actions",
+    x: 0,
+    y: 2,
+    w: 12,
+    h: 1,
+    static: true
+  },
+  {
+    id: "insights-1",
+    type: "insights",
+    title: "Business Insights",
+    description: "Your day-1 ROI dashboard",
+    x: 0,
+    y: 3,
+    w: 6,
+    h: 3
+  },
+  {
+    id: "recent-activity-1",
+    type: "recent-activity",
+    title: "Recent Activity",
+    description: "Last 5 orders",
+    x: 9,
+    y: 3,
+    w: 3,
+    h: 4
+  },
+  {
+    id: "revenue-chart-1",
+    type: "revenue-chart",
+    title: "Revenue Trend",
+    description: "Daily revenue for the last 30 days",
+    x: 0,
+    y: 6,
+    w: 6,
+    h: 4
+  },
+  {
+    id: "cash-flow-1",
+    type: "cash-flow",
+    title: "Cash Flow Forecast",
+    description: "Your real wealth calculation",
+    x: 6,
+    y: 3,
+    w: 3,
+    h: 3
+  },
+  {
+    id: "top-product-1",
+    type: "top-product",
+    title: "Top Product",
+    x: 6,
+    y: 6,
+    w: 3,
+    h: 2
   }
+]
 
-  // Example: You can now use user data and Supabase
-  // const supabase = await createSupabaseClient();
-  // const { data } = await supabase.from('orders').select('*').eq('user_id', user.id);
+export default function DashboardPage() {
+  const [widgets, setWidgets] = useState<Widget[]>([])
+  const [savedWidgets, setSavedWidgets] = useState<Widget[]>([])
+  const [isEditMode, setIsEditMode] = useState(false)
+  const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false)
+
+  // Load widgets from localStorage on mount
+  useEffect(() => {
+    const loadWidgets = () => {
+      const stored = localStorage.getItem('dashboardWidgets')
+      if (stored) {
+        try {
+          const parsed = JSON.parse(stored)
+          setWidgets(parsed)
+          setSavedWidgets(parsed)
+        } catch (e) {
+          console.error('Failed to load dashboard layout:', e)
+          setWidgets(DEFAULT_WIDGETS)
+          setSavedWidgets(DEFAULT_WIDGETS)
+        }
+      } else {
+        setWidgets(DEFAULT_WIDGETS)
+        setSavedWidgets(DEFAULT_WIDGETS)
+      }
+    }
+
+    loadWidgets()
+  }, [])
+
+  // Check for unsaved changes
+  useEffect(() => {
+    const hasChanges = JSON.stringify(widgets) !== JSON.stringify(savedWidgets)
+    setHasUnsavedChanges(hasChanges)
+  }, [widgets, savedWidgets])
+
+  const handleAddWidget = useCallback((type: WidgetType) => {
+    const definition = WIDGET_DEFINITIONS[type]
+    if (!definition) return
+
+    // Find optimal position for the new widget
+    const { x, y } = findOptimalPosition(
+      widgets,
+      definition.w || 3,
+      definition.h || 2
+    )
+
+    const newWidget: Widget = {
+      id: `${type}-${uuidv4()}`,
+      type,
+      title: definition.title!,
+      description: definition.description,
+      x,
+      y,
+      w: definition.w || 3,
+      h: definition.h || 2,
+      static: definition.static
+    }
+
+    // Add widget and resolve any potential overlaps
+    const updatedWidgets = resolveOverlaps([...widgets, newWidget])
+    setWidgets(updatedWidgets)
+  }, [widgets])
+
+  const handleLayoutChange = useCallback((updatedWidgets: Widget[]) => {
+    // Ensure all widgets are within bounds and not overlapping
+    const adjustedWidgets = updatedWidgets.map(w => adjustToGridBounds(w))
+    setWidgets(adjustedWidgets)
+  }, [])
+
+  const handleRemoveWidget = useCallback((id: string) => {
+    setWidgets(prev => prev.filter(w => w.id !== id))
+  }, [])
+
+  const handleToggleEditMode = useCallback(() => {
+    setIsEditMode(prev => !prev)
+  }, [])
+
+  const handleSaveLayout = useCallback(() => {
+    localStorage.setItem('dashboardWidgets', JSON.stringify(widgets))
+    setSavedWidgets(widgets)
+    setHasUnsavedChanges(false)
+  }, [widgets])
+
+  const handleResetLayout = useCallback(() => {
+    const confirmReset = window.confirm('Are you sure you want to reset to the default layout? This will remove all customizations.')
+    if (confirmReset) {
+      setWidgets(DEFAULT_WIDGETS)
+      setSavedWidgets(DEFAULT_WIDGETS)
+      localStorage.setItem('dashboardWidgets', JSON.stringify(DEFAULT_WIDGETS))
+      setIsEditMode(false)
+    }
+  }, [])
+
   return (
-    <MainLayout
-      breadcrumbs={[
-        { label: "Dashboard" }
-      ]}
+    <MainLayoutDashboard
+      breadcrumbs={[{ label: "Dashboard" }]}
+      onAddWidget={handleAddWidget}
+      existingWidgets={widgets.map(w => w.type)}
+      isEditMode={isEditMode}
+      onToggleEditMode={handleToggleEditMode}
+      onSaveLayout={handleSaveLayout}
+      onResetLayout={handleResetLayout}
+      hasUnsavedChanges={hasUnsavedChanges}
     >
-      {/* Top Stats Row - Hero Cards */}
-      <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-4">
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-1.5">
-            <CardTitle className="text-xs font-medium">Total Revenue</CardTitle>
-            <DollarSign className="h-3.5 w-3.5 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-xl font-bold">৳45,231</div>
-            <div className="flex items-center text-[10px] text-muted-foreground">
-              <TrendingUp className="h-2.5 w-2.5 mr-1 text-green-500" />
-              +20.1% from last month
-            </div>
-            {/* Mini sparkline placeholder */}
-            <div className="h-[24px] mt-1.5 flex items-end space-x-1">
-              {[8, 12, 6, 15, 10, 18, 14, 22, 16, 28, 20, 35].map((height, i) => (
-                <div key={i} className="bg-accent/30 rounded-sm flex-1" style={{height: `${height}%`}} />
-              ))}
-            </div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-1.5">
-            <CardTitle className="text-xs font-medium">Orders</CardTitle>
-            <ShoppingCart className="h-3.5 w-3.5 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-xl font-bold">+152</div>
-            <div className="flex items-center gap-1.5 text-[10px]">
-              <Badge variant="default" className="bg-yellow-100 text-yellow-800 text-[9px] px-1.5 py-0">12 Pending</Badge>
-              <Badge variant="default" className="bg-green-100 text-green-800 text-[9px] px-1.5 py-0">140 Completed</Badge>
-            </div>
-            <div className="flex items-center text-[10px] text-muted-foreground mt-1">
-              <TrendingUp className="h-2.5 w-2.5 mr-1 text-green-500" />
-              +5 from yesterday
-            </div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-1.5">
-            <CardTitle className="text-xs font-medium">Pending Payments</CardTitle>
-            <Clock className="h-3.5 w-3.5 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-xl font-bold text-orange-600">৳8,450</div>
-            <div className="text-[10px] text-muted-foreground">5 customers</div>
-            <Button variant="outline" size="sm" className="mt-1.5 h-6 text-[10px] px-2">
-              Send Reminders
-            </Button>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-1.5">
-            <CardTitle className="text-xs font-medium">Low Stock Alert</CardTitle>
-            <AlertTriangle className="h-3.5 w-3.5 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-xl font-bold text-red-600">7</div>
-            <div className="text-[10px] text-muted-foreground">Products need restock</div>
-            <Button variant="outline" size="sm" className="mt-1.5 h-6 text-[10px] px-2">
-              View Items
-            </Button>
-          </CardContent>
-        </Card>
-      </div>
-      {/* Quick Actions Bar */}
-      <Card>
-        <CardContent className="pt-4">
-          <div className="flex flex-wrap gap-2">
-            <Button className="bg-accent hover:bg-accent/90 h-8 text-xs px-3">
-              <Plus className="h-3.5 w-3.5 mr-1.5" />
-              New Order
-            </Button>
-            <Button variant="outline" className="h-8 text-xs px-3">
-              <Package className="h-3.5 w-3.5 mr-1.5" />
-              Add Product
-            </Button>
-            <Button variant="outline" className="h-8 text-xs px-3">
-              <MessageSquare className="h-3.5 w-3.5 mr-1.5" />
-              Send Message
-            </Button>
-            <div className="flex-1 min-w-[180px] max-w-md">
-              <div className="relative">
-                <Search className="absolute left-2.5 top-1/2 transform -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
-                <input
-                  placeholder="Search orders, customers, products..."
-                  className="w-full pl-8 pr-3 py-1.5 border border-input rounded-md bg-background text-xs"
-                />
-              </div>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
-      <div className="grid gap-3 lg:grid-cols-3">
-        {/* Left Column - Insights */}
-        <div className="lg:col-span-2 space-y-3">
-          {/* Insights Section */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-sm">📊 Business Insights</CardTitle>
-              <CardDescription className="text-xs">Your day-1 ROI dashboard</CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-3">
-              <div className="grid gap-3 md:grid-cols-2">
-                <div className="p-3 border rounded-lg bg-green-50 border-green-200">
-                  <div className="flex items-center gap-1.5 mb-1.5">
-                    <Clock className="h-3 w-3 text-green-600" />
-                    <span className="text-xs font-medium text-green-800">Time Saved</span>
-                  </div>
-                  <div className="text-lg font-bold text-green-700">4.5 hours</div>
-                  <div className="text-[10px] text-green-600">This month vs manual tracking</div>
-                </div>
-                <div className="p-3 border rounded-lg bg-blue-50 border-blue-200">
-                  <div className="flex items-center gap-1.5 mb-1.5">
-                    <Star className="h-3 w-3 text-blue-600" />
-                    <span className="text-xs font-medium text-blue-800">Best Customer</span>
-                  </div>
-                  <div className="text-sm font-bold text-blue-700">Ayesha Rahman</div>
-                  <div className="text-[10px] text-blue-600">3 orders • ৳8,000 total</div>
-                </div>
-              </div>
-              <div className="p-3 border rounded-lg bg-orange-50 border-orange-200">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <div className="text-xs font-medium text-orange-800">Customer Retention Alert</div>
-                    <div className="text-xs text-orange-700">5 customers havent ordered in 30 days</div>
-                  </div>
-                  <Button size="sm" variant="outline" className="border-orange-300 text-orange-700 h-7 text-[10px] px-2">
-                    Send Message
-                  </Button>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-          {/* Revenue Chart */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-sm">Revenue Trend</CardTitle>
-              <CardDescription className="text-xs">Daily revenue for the last 30 days</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="flex gap-1.5 mb-3">
-                <Button variant="outline" size="sm" className="h-6 text-[10px] px-2">7d</Button>
-                <Button variant="outline" size="sm" className="bg-accent text-accent-foreground h-6 text-[10px] px-2">30d</Button>
-                <Button variant="outline" size="sm" className="h-6 text-[10px] px-2">90d</Button>
-                <Button variant="outline" size="sm" className="h-6 text-[10px] px-2">1y</Button>
-              </div>
-              {/* Chart placeholder */}
-              <div className="h-[160px] flex items-end justify-between space-x-2 border rounded-lg p-3 bg-muted/20">
-                {Array.from({length: 30}, (_, i) => (
-                  <div
-                    key={i}
-                    className="bg-accent/60 rounded-sm flex-1 max-w-2"
-                    style={{height: `${Math.random() * 80 + 20}%`}}
-                  />
-                ))}
-              </div>
-              <div className="flex justify-between text-[10px] text-muted-foreground mt-1.5">
-                <span>30 days ago</span>
-                <span>Today</span>
-              </div>
-            </CardContent>
-          </Card>
+      {isEditMode && (
+        <div className="bg-muted/50 border border-dashed rounded-lg p-2 text-xs text-muted-foreground text-center">
+          Edit Mode: Drag widgets to reorder • Click X to remove • Click Save when done
         </div>
-        {/* Right Column */}
-        <div className="space-y-3">
-          {/* Recent Activity Feed */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-sm">Recent Activity</CardTitle>
-              <CardDescription className="text-xs">Last 5 orders</CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-2">
-              {[
-                { id: "#1234", customer: "Fatima Khan", amount: "৳2,450", status: "paid", time: "2 min ago" },
-                { id: "#1233", customer: "Rahman Ali", amount: "৳1,200", status: "pending", time: "15 min ago" },
-                { id: "#1232", customer: "Nusrat Jahan", amount: "৳3,800", status: "paid", time: "1 hour ago" },
-                { id: "#1231", customer: "Sakib Ahmed", amount: "৳950", status: "pending", time: "2 hours ago" },
-                { id: "#1230", customer: "Ruma Begum", amount: "৳1,750", status: "paid", time: "3 hours ago" },
-              ].map((order, i) => (
-                <div key={i} className="flex items-center justify-between py-1.5 border-b last:border-b-0">
-                  <div className="flex-1">
-                    <div className="flex items-center gap-1.5">
-                      <span className="font-medium text-xs">{order.id}</span>
-                      <Badge
-                        variant={order.status === "paid" ? "default" : "secondary"}
-                        className={order.status === "paid" ? "bg-green-100 text-green-800 text-[9px] px-1.5 py-0" : "bg-yellow-100 text-yellow-800 text-[9px] px-1.5 py-0"}
-                      >
-                        {order.status}
-                      </Badge>
-                    </div>
-                    <div className="text-xs text-muted-foreground">{order.customer}</div>
-                    <div className="text-[10px] text-muted-foreground">{order.time}</div>
-                  </div>
-                  <div className="text-right">
-                    <div className="font-medium text-xs">{order.amount}</div>
-                    <div className="flex gap-0.5">
-                      <Button variant="ghost" size="sm" className="h-5 w-5 p-0">
-                        <Eye className="h-2.5 w-2.5" />
-                      </Button>
-                      <Button variant="ghost" size="sm" className="h-5 w-5 p-0">
-                        <Edit className="h-2.5 w-2.5" />
-                      </Button>
-                      {order.status === "pending" && (
-                        <Button variant="ghost" size="sm" className="h-5 w-5 p-0">
-                          <CheckCircle className="h-2.5 w-2.5" />
-                        </Button>
-                      )}
-                    </div>
-                  </div>
-                </div>
-              ))}
-            </CardContent>
-          </Card>
-          {/* Cash Flow Forecast */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-sm">Cash Flow Forecast</CardTitle>
-              <CardDescription className="text-xs">Your real wealth calculation</CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-3">
-              <div className="space-y-1.5">
-                <div className="flex justify-between text-xs">
-                  <span>Pending Payments</span>
-                  <span className="font-medium">৳8,450</span>
-                </div>
-                <div className="flex justify-between text-xs">
-                  <span>Inventory Value</span>
-                  <span className="font-medium">৳15,000</span>
-                </div>
-                <div className="border-t pt-1.5">
-                  <div className="flex justify-between font-medium text-xs">
-                    <span>Expected Income</span>
-                    <span className="text-green-600">৳23,450</span>
-                  </div>
-                </div>
-              </div>
-              <div className="space-y-1.5">
-                <div className="text-xs text-muted-foreground">Progress to next goal</div>
-                <div className="w-full bg-muted rounded-full h-1.5">
-                  <div className="bg-accent h-1.5 rounded-full" style={{width: "68%"}}></div>
-                </div>
-                <div className="text-[10px] text-muted-foreground">৳23,450 / ৳35,000 monthly target</div>
-              </div>
-            </CardContent>
-          </Card>
-          {/* Top Selling Product */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-sm">🏆 Top Product</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="flex items-center gap-2">
-                <div className="h-10 w-10 bg-muted rounded-lg flex items-center justify-center">
-                  <Package className="h-5 w-5 text-muted-foreground" />
-                </div>
-                <div className="flex-1">
-                  <div className="font-medium text-xs">Cotton Kurti - Blue</div>
-                  <div className="text-[10px] text-muted-foreground">25 sold this month</div>
-                  <div className="text-xs font-medium text-accent">৳1,200 each</div>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        </div>
+      )}
+
+      <div className="dashboard-container">
+        <DashboardGridFixed
+          widgets={widgets}
+          onLayoutChange={handleLayoutChange}
+          onRemoveWidget={handleRemoveWidget}
+          isEditMode={isEditMode}
+        />
       </div>
-    </MainLayout>
+    </MainLayoutDashboard>
   )
 }

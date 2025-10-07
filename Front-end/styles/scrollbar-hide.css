@@ -1,0 +1,30 @@
+/* Utility class to hide scrollbars while maintaining scroll */
+.scrollbar-hide {
+  -ms-overflow-style: none;  /* IE and Edge */
+  scrollbar-width: none;  /* Firefox */
+}
+
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;  /* Chrome, Safari and Opera */
+}
+
+/* Apply to all card components in the dashboard */
+.dashboard-container .card {
+  overflow: hidden;
+}
+
+.dashboard-container .card-content {
+  overflow-y: auto;
+  overflow-x: hidden;
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+.dashboard-container .card-content::-webkit-scrollbar {
+  display: none;
+}
+
+/* Ensure smooth scrolling */
+.dashboard-container .card-content {
+  scroll-behavior: smooth;
+}
