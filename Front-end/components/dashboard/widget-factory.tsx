@@ -14,7 +14,10 @@ import {
   Search,
   Eye,
   Edit,
-  CheckCircle
+  CheckCircle,
+  TrendingDown,
+  MousePointer,
+  PieChart
 } from "lucide-react"
 
 interface WidgetFactoryProps {
@@ -34,6 +37,73 @@ export function WidgetFactory({ type, data }: WidgetFactoryProps) {
 
     case 'orders':
       return <OrdersWidget />
+
+    case 'conversion-rate':
+      return (
+        <Card className="h-full overflow-hidden">
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-1.5">
+            <CardTitle className="text-xs font-medium">Conversion Rate</CardTitle>
+            <MousePointer className="h-3.5 w-3.5 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-xl font-bold">3.4%</div>
+            <div className="flex items-center text-[10px] text-red-600">
+              <TrendingDown className="h-2.5 w-2.5 mr-1" />
+              -2.1% from last month
+            </div>
+            <div className="mt-1 text-[10px] text-muted-foreground">
+              1,247 orders / 36,676 visitors
+            </div>
+          </CardContent>
+        </Card>
+      )
+
+    case 'sales-category':
+      return (
+        <Card className="h-full overflow-hidden">
+          <CardHeader className="pb-1.5">
+            <CardTitle className="flex items-center gap-1.5 text-sm">
+              <PieChart className="h-3.5 w-3.5" />
+              Sales by Category
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-2">
+            <div className="space-y-1.5">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center space-x-1.5">
+                  <div className="w-2 h-2 bg-primary rounded-full" />
+                  <span className="text-xs">Electronics</span>
+                </div>
+                <div className="text-xs font-medium">৳98,500 (40%)</div>
+              </div>
+              <div className="flex items-center justify-between">
+                <div className="flex items-center space-x-1.5">
+                  <div className="w-2 h-2 bg-accent rounded-full" />
+                  <span className="text-xs">Fashion</span>
+                </div>
+                <div className="text-xs font-medium">৳73,750 (30%)</div>
+              </div>
+              <div className="flex items-center justify-between">
+                <div className="flex items-center space-x-1.5">
+                  <div className="w-2 h-2 bg-secondary rounded-full" />
+                  <span className="text-xs">Home & Garden</span>
+                </div>
+                <div className="text-xs font-medium">৳49,000 (20%)</div>
+              </div>
+              <div className="flex items-center justify-between">
+                <div className="flex items-center space-x-1.5">
+                  <div className="w-2 h-2 bg-muted rounded-full" />
+                  <span className="text-xs">Others</span>
+                </div>
+                <div className="text-xs font-medium">৳24,500 (10%)</div>
+              </div>
+            </div>
+            <Button variant="outline" size="sm" className="w-full mt-2 h-6 text-[10px]">
+              View Details
+            </Button>
+          </CardContent>
+        </Card>
+      )
 
     case 'pending-payments':
       return (

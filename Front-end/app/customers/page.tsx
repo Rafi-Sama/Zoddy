@@ -33,7 +33,10 @@ import {
   MessageSquare,
   Phone,
   MapPin,
-  Calendar
+  Grid3X3,
+  List,
+  Mail,
+  Edit
 } from "lucide-react"
 const mockCustomers = [
   {
@@ -125,6 +128,17 @@ interface Customer {
 
 export default function CustomersPage() {
   const [selectedCustomer, setSelectedCustomer] = useState<Customer | null>(null)
+  const [viewMode, setViewMode] = useState<"grid" | "list">("list")
+  const [searchTerm, setSearchTerm] = useState("")
+  const [statusFilter, setStatusFilter] = useState("all")
+  const [sortBy, setSortBy] = useState("name")
+
+  // Customer analytics
+  const totalCustomers = mockCustomers.length
+  const newCustomersThisMonth = 2 // This would be calculated from real data
+  const retentionRate = 87.5 // From analytics page
+  const churnRate = 12.5
+  const customerLifetimeValue = 8450
   const getStatusColor = (status: string) => {
     switch (status) {
       case "VIP":
@@ -160,24 +174,77 @@ export default function CustomersPage() {
     const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24))
     return diffDays
   }
+
+  // Filter and sort customers
+  const filteredCustomers = mockCustomers
+    .filter(customer => {
+      const matchesSearch = searchTerm === "" ||
+        customer.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        customer.phone.includes(searchTerm) ||
+        customer.email.toLowerCase().includes(searchTerm.toLowerCase())
+
+      const matchesStatus = statusFilter === "all" ||
+        customer.status.toLowerCase() === statusFilter.toLowerCase()
+
+      return matchesSearch && matchesStatus
+    })
+    .sort((a, b) => {
+      switch (sortBy) {
+        case "name":
+          return a.name.localeCompare(b.name)
+        case "totalSpent":
+          return b.totalSpent - a.totalSpent
+        case "lastOrder":
+          return new Date(b.lastOrder).getTime() - new Date(a.lastOrder).getTime()
+        case "totalOrders":
+          return b.totalOrders - a.totalOrders
+        default:
+          return 0
+      }
+    })
   return (
     <MainLayout
       breadcrumbs={[
         { label: "Customers" }
       ]}
     >
-      {/* Summary Cards */}
-      <div className="grid gap-4 md:grid-cols-4">
+      {/* Summary Cards with Analytics */}
+      <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-5">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-1.5">
             <CardTitle className="text-xs font-medium">Total Customers</CardTitle>
             <Users className="h-3.5 w-3.5 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-xl font-bold">{mockCustomers.length}</div>
-            <p className="text-[10px] text-muted-foreground">
-              +2 new this month
-            </p>
+            <div className="text-lg font-bold">{totalCustomers}</div>
+            <div className="flex items-center text-[10px] text-green-600">
+              <TrendingUp className="h-2.5 w-2.5 mr-1" />
+              +{newCustomersThisMonth} this month
+            </div>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-1.5">
+            <CardTitle className="text-xs font-medium">Retention Rate</CardTitle>
+            <Users className="h-3.5 w-3.5 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-lg font-bold text-green-600">{retentionRate}%</div>
+            <div className="text-[10px] text-muted-foreground">
+              Churn: {churnRate}%
+            </div>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-1.5">
+            <CardTitle className="text-xs font-medium">Lifetime Value</CardTitle>
+            <DollarSign className="h-3.5 w-3.5 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-lg font-bold">৳{customerLifetimeValue.toLocaleString()}</div>
+            <div className="text-[10px] text-muted-foreground">
+              Per customer avg
+            </div>
           </CardContent>
         </Card>
         <Card>
@@ -186,57 +253,46 @@ export default function CustomersPage() {
             <Crown className="h-3.5 w-3.5 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-xl font-bold text-purple-600">
+            <div className="text-lg font-bold text-purple-600">
               {mockCustomers.filter(c => c.status === "VIP").length}
             </div>
-            <p className="text-[10px] text-muted-foreground">
-              High-value customers
-            </p>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-1.5">
-            <CardTitle className="text-xs font-medium">Avg Order Value</CardTitle>
-            <DollarSign className="h-3.5 w-3.5 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-xl font-bold">
-              ৳{Math.round(mockCustomers.reduce((acc, customer) => acc + customer.averageOrderValue, 0) / mockCustomers.length).toLocaleString()}
+            <div className="text-[10px] text-muted-foreground">
+              High-value segment
             </div>
-            <p className="text-[10px] text-muted-foreground">
-              Across all customers
-            </p>
           </CardContent>
         </Card>
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-1.5">
-            <CardTitle className="text-xs font-medium">Inactive Customers</CardTitle>
+            <CardTitle className="text-xs font-medium">Need Attention</CardTitle>
             <AlertTriangle className="h-3.5 w-3.5 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-xl font-bold text-orange-600">
+            <div className="text-lg font-bold text-orange-600">
               {mockCustomers.filter(c => getDaysSinceLastOrder(c.lastOrder) > 30).length}
             </div>
-            <p className="text-[10px] text-muted-foreground">
-              No orders in 30+ days
-            </p>
+            <div className="text-[10px] text-muted-foreground">
+              No orders 30+ days
+            </div>
           </CardContent>
         </Card>
       </div>
       {/* Filter & Search Bar */}
       <Card>
-        <CardContent className="pt-4">
-          <div className="flex flex-col gap-3">
-            <div className="relative w-full">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-              <Input
-                placeholder="Search by name, phone, email..."
-                className="pl-10 h-10 text-sm"
-              />
-            </div>
-            <div className="grid grid-cols-2 sm:flex sm:flex-wrap gap-2">
-              <Select>
-                <SelectTrigger className="w-full sm:w-[140px] h-10 text-sm">
+        <CardContent className="pt-3">
+          <div className="space-y-3">
+            {/* Search and Filters */}
+            <div className="flex flex-col sm:flex-row gap-2">
+              <div className="relative flex-1">
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-3 w-3 text-muted-foreground" />
+                <Input
+                  placeholder="Search by name, phone, email..."
+                  className="pl-10 h-8 text-xs"
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                />
+              </div>
+              <Select value={statusFilter} onValueChange={setStatusFilter}>
+                <SelectTrigger className="w-full sm:w-[120px] h-8 text-xs">
                   <SelectValue placeholder="Status" />
                 </SelectTrigger>
                 <SelectContent>
@@ -247,8 +303,8 @@ export default function CustomersPage() {
                   <SelectItem value="inactive">Inactive</SelectItem>
                 </SelectContent>
               </Select>
-              <Select>
-                <SelectTrigger className="w-full sm:w-[140px] h-10 text-sm">
+              <Select value={sortBy} onValueChange={setSortBy}>
+                <SelectTrigger className="w-full sm:w-[120px] h-8 text-xs">
                   <SelectValue placeholder="Sort by" />
                 </SelectTrigger>
                 <SelectContent>
@@ -258,16 +314,35 @@ export default function CustomersPage() {
                   <SelectItem value="totalOrders">Order Count</SelectItem>
                 </SelectContent>
               </Select>
+              <div className="flex rounded-md border">
+                <Button
+                  variant={viewMode === "list" ? "default" : "ghost"}
+                  onClick={() => setViewMode("list")}
+                  className="rounded-r-none h-8 px-2"
+                  size="sm"
+                >
+                  <List className="h-3 w-3" />
+                </Button>
+                <Button
+                  variant={viewMode === "grid" ? "default" : "ghost"}
+                  onClick={() => setViewMode("grid")}
+                  className="rounded-l-none h-8 px-2"
+                  size="sm"
+                >
+                  <Grid3X3 className="h-3 w-3" />
+                </Button>
+              </div>
             </div>
-            <div className="flex flex-wrap gap-2">
-              <Button variant="outline" className="h-10 text-sm px-3 flex-1 sm:flex-none">
-                <MessageSquare className="h-4 w-4 sm:mr-2" />
-                <span className="hidden sm:inline">Broadcast</span>
+
+            {/* Quick Actions */}
+            <div className="flex flex-wrap gap-1.5">
+              <Button variant="outline" className="h-8 text-xs px-3">
+                <MessageSquare className="h-3 w-3 mr-2" />
+                Broadcast
               </Button>
-              <Button className="bg-accent hover:bg-accent/90 h-10 text-sm px-3 flex-1 sm:flex-none">
-                <Plus className="h-4 w-4 sm:mr-2" />
-                <span className="hidden sm:inline">Add Customer</span>
-                <span className="sm:hidden">Add</span>
+              <Button className="bg-accent hover:bg-accent/90 h-8 text-xs px-3">
+                <Plus className="h-3 w-3 mr-2" />
+                Add Customer
               </Button>
             </div>
           </div>
@@ -354,75 +429,65 @@ export default function CustomersPage() {
           </CardContent>
         </Card>
       </div>
-      {/* Customers List */}
-      <Card>
-        <CardHeader className="pb-2">
-          <CardTitle className="text-sm">All Customers</CardTitle>
-          <CardDescription className="text-xs">Complete customer database</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-3">
-            {mockCustomers.map((customer) => (
+      {/* Customers Display - Grid or List View */}
+      {viewMode === "grid" ? (
+        <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+          {filteredCustomers.map((customer) => (
               <Card key={customer.id} className="hover:shadow-md transition-shadow">
-                <CardHeader className="pb-2">
+                <CardHeader className="pb-1.5">
                   <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-2">
-                      <div className="w-10 h-10 rounded-full bg-accent/10 flex items-center justify-center">
-                        <span className="font-bold text-accent text-sm">{customer.name[0]}</span>
+                    <div className="flex items-center gap-1.5">
+                      <div className="w-8 h-8 rounded-full bg-accent/10 flex items-center justify-center">
+                        <span className="font-bold text-accent text-xs">{customer.name[0]}</span>
                       </div>
                       <div>
-                        <div className="font-semibold text-sm">{customer.name}</div>
-                        <div className="text-xs text-muted-foreground">{customer.favoriteCategory}</div>
+                        <div className="font-semibold text-xs">{customer.name}</div>
+                        <div className="text-[10px] text-muted-foreground">{customer.favoriteCategory}</div>
                       </div>
                     </div>
-                    <Badge className={`${getStatusColor(customer.status)} text-[9px] px-1.5 py-0`}>
-                      {getStatusIcon(customer.status)}
-                      <span className="ml-1">{customer.status}</span>
+                    <Badge className={`${getStatusColor(customer.status)} text-[9px] px-1 py-0`}>
+                      {customer.status}
                     </Badge>
                   </div>
                 </CardHeader>
-                <CardContent className="space-y-2">
-                  <div className="grid grid-cols-2 gap-3 text-xs">
+                <CardContent className="space-y-1.5">
+                  <div className="grid grid-cols-2 gap-2 text-[10px]">
                     <div>
                       <div className="text-muted-foreground">Total Orders</div>
-                      <div className="font-semibold">{customer.totalOrders}</div>
+                      <div className="font-semibold text-xs">{customer.totalOrders}</div>
                     </div>
                     <div>
                       <div className="text-muted-foreground">Total Spent</div>
-                      <div className="font-semibold">৳{customer.totalSpent.toLocaleString()}</div>
+                      <div className="font-semibold text-xs">৳{customer.totalSpent.toLocaleString()}</div>
                     </div>
                     <div>
                       <div className="text-muted-foreground">Avg Order</div>
-                      <div className="font-semibold">৳{customer.averageOrderValue.toLocaleString()}</div>
+                      <div className="font-semibold text-xs">৳{Math.round(customer.averageOrderValue).toLocaleString()}</div>
                     </div>
                     <div>
                       <div className="text-muted-foreground">Last Order</div>
-                      <div className="font-semibold">{getDaysSinceLastOrder(customer.lastOrder)}d ago</div>
+                      <div className="font-semibold text-xs">{getDaysSinceLastOrder(customer.lastOrder)}d ago</div>
                     </div>
                   </div>
-                  <div className="space-y-1.5 text-xs">
-                    <div className="flex items-center gap-1.5 text-muted-foreground">
-                      <Phone className="h-3.5 w-3.5" />
-                      <span>{customer.phone}</span>
+                  <div className="space-y-1 text-[10px]">
+                    <div className="flex items-center gap-1 text-muted-foreground">
+                      <Phone className="h-3 w-3" />
+                      <span className="truncate">{customer.phone}</span>
                     </div>
-                    <div className="flex items-center gap-1.5 text-muted-foreground">
-                      <MapPin className="h-3.5 w-3.5" />
-                      <span>{customer.address}</span>
-                    </div>
-                    <div className="flex items-center gap-1.5 text-muted-foreground">
-                      <Calendar className="h-3.5 w-3.5" />
-                      <span>Customer since {customer.joinDate}</span>
+                    <div className="flex items-center gap-1 text-muted-foreground">
+                      <MapPin className="h-3 w-3" />
+                      <span className="truncate">{customer.address}</span>
                     </div>
                   </div>
                   {getDaysSinceLastOrder(customer.lastOrder) > 30 && (
-                    <div className="p-1.5 bg-orange-50 border border-orange-200 rounded-md">
-                      <div className="flex items-center gap-1.5 text-orange-800 text-xs">
-                        <AlertTriangle className="h-3.5 w-3.5" />
-                        Inactive customer - consider outreach
+                    <div className="p-1 bg-orange-50 border border-orange-200 rounded">
+                      <div className="flex items-center gap-1 text-orange-800 text-[10px]">
+                        <AlertTriangle className="h-3 w-3" />
+                        Inactive - needs outreach
                       </div>
                     </div>
                   )}
-                  <div className="flex gap-1.5 pt-1.5">
+                  <div className="flex gap-1 pt-1">
                     <Dialog>
                       <DialogTrigger asChild>
                         <Button
@@ -430,26 +495,127 @@ export default function CustomersPage() {
                           className="flex-1 h-6 text-[10px] px-2"
                           onClick={() => setSelectedCustomer(customer)}
                         >
-                          View Details
+                          <Edit className="h-3 w-3 mr-1" />
+                          Details
                         </Button>
                       </DialogTrigger>
                       <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
                         <CustomerDetailsModal customer={selectedCustomer} />
                       </DialogContent>
                     </Dialog>
-                    <Button variant="outline" className="h-6 px-2">
-                      <MessageSquare className="h-3.5 w-3.5" />
+                    <Button variant="outline" className="h-6 px-1.5">
+                      <MessageSquare className="h-3 w-3" />
                     </Button>
-                    <Button variant="outline" className="h-6 px-2">
-                      <ShoppingCart className="h-3.5 w-3.5" />
+                    <Button variant="outline" className="h-6 px-1.5">
+                      <ShoppingCart className="h-3 w-3" />
                     </Button>
                   </div>
                 </CardContent>
-              </Card>
-            ))}
-          </div>
-        </CardContent>
-      </Card>
+            </Card>
+          ))}
+        </div>
+      ) : (
+        <Card>
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm">Customer Management</CardTitle>
+            <CardDescription className="text-xs">Complete customer database with analytics</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="overflow-x-auto">
+              <table className="w-full">
+                <thead>
+                  <tr className="border-b">
+                    <th className="text-left py-2 px-1.5 text-xs">Customer</th>
+                    <th className="text-left py-2 px-1.5 text-xs">Contact</th>
+                    <th className="text-left py-2 px-1.5 text-xs">Orders</th>
+                    <th className="text-left py-2 px-1.5 text-xs">Total Spent</th>
+                    <th className="text-left py-2 px-1.5 text-xs">Avg Order</th>
+                    <th className="text-left py-2 px-1.5 text-xs">Last Order</th>
+                    <th className="text-left py-2 px-1.5 text-xs">Status</th>
+                    <th className="text-left py-2 px-1.5 text-xs">Actions</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {filteredCustomers.map((customer) => {
+                    const daysSinceLastOrder = getDaysSinceLastOrder(customer.lastOrder)
+                    return (
+                      <tr key={customer.id} className="border-b hover:bg-muted/50">
+                        <td className="py-2 px-1.5">
+                          <div className="flex items-center gap-2">
+                            <div className="w-8 h-8 rounded-full bg-accent/10 flex items-center justify-center">
+                              <span className="font-bold text-accent text-xs">{customer.name[0]}</span>
+                            </div>
+                            <div>
+                              <div className="font-medium text-xs">{customer.name}</div>
+                              <div className="text-[10px] text-muted-foreground">{customer.favoriteCategory}</div>
+                            </div>
+                          </div>
+                        </td>
+                        <td className="py-2 px-1.5">
+                          <div className="space-y-0.5">
+                            <div className="flex items-center gap-1 text-[10px] text-muted-foreground">
+                              <Phone className="h-2.5 w-2.5" />
+                              {customer.phone}
+                            </div>
+                            <div className="flex items-center gap-1 text-[10px] text-muted-foreground">
+                              <Mail className="h-2.5 w-2.5" />
+                              {customer.email}
+                            </div>
+                          </div>
+                        </td>
+                        <td className="py-2 px-1.5">
+                          <div className="font-medium text-xs">{customer.totalOrders}</div>
+                        </td>
+                        <td className="py-2 px-1.5">
+                          <div className="font-medium text-xs">৳{customer.totalSpent.toLocaleString()}</div>
+                        </td>
+                        <td className="py-2 px-1.5">
+                          <div className="text-xs">৳{customer.averageOrderValue.toLocaleString()}</div>
+                        </td>
+                        <td className="py-2 px-1.5">
+                          <div className="text-xs">{daysSinceLastOrder}d ago</div>
+                          {daysSinceLastOrder > 30 && (
+                            <AlertTriangle className="h-3 w-3 text-yellow-600 mt-0.5" />
+                          )}
+                        </td>
+                        <td className="py-2 px-1.5">
+                          <Badge className={`${getStatusColor(customer.status)} text-[9px] px-1.5 py-0`}>
+                            {customer.status}
+                          </Badge>
+                        </td>
+                        <td className="py-2 px-1.5">
+                          <div className="flex gap-1">
+                            <Dialog>
+                              <DialogTrigger asChild>
+                                <Button
+                                  variant="ghost"
+                                  className="h-6 px-1.5"
+                                  onClick={() => setSelectedCustomer(customer)}
+                                >
+                                  <Edit className="h-3 w-3" />
+                                </Button>
+                              </DialogTrigger>
+                              <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+                                <CustomerDetailsModal customer={selectedCustomer} />
+                              </DialogContent>
+                            </Dialog>
+                            <Button variant="ghost" className="h-6 px-1.5">
+                              <MessageSquare className="h-3 w-3" />
+                            </Button>
+                            <Button variant="ghost" className="h-6 px-1.5">
+                              <ShoppingCart className="h-3 w-3" />
+                            </Button>
+                          </div>
+                        </td>
+                      </tr>
+                    )
+                  })}
+                </tbody>
+              </table>
+            </div>
+          </CardContent>
+        </Card>
+      )}
     </MainLayout>
   )
 }

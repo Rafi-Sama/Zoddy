@@ -4,6 +4,7 @@ import { ThemeProvider } from "@/components/theme-provider";
 import { AuthKitProvider } from '@workos-inc/authkit-nextjs/components';
 import { NotificationsProvider } from "@/contexts/notifications-context";
 import { CalendarProvider } from "@/contexts/calendar-context";
+import { ClearOldSidebarCache } from "@/components/utils/clear-old-sidebar-cache";
 import "./globals.css";
 
 const shantellSans = Shantell_Sans({
@@ -48,6 +49,7 @@ export default function RootLayout({
           >
             <NotificationsProvider>
               <CalendarProvider>
+                <ClearOldSidebarCache />
                 {children}
               </CalendarProvider>
             </NotificationsProvider>

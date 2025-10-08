@@ -4,7 +4,6 @@ import {
   ChevronUp,
   ChevronDown,
   Home,
-  Inbox,
   Package,
   Settings,
   ShoppingCart,
@@ -13,7 +12,6 @@ import {
   TrendingUp,
   User2,
   Users,
-  BarChart3,
   Calendar,
   Bell,
   Archive,
@@ -90,12 +88,6 @@ const initialItems: MenuItem[] = [
     icon: ShoppingCart,
   },
   {
-    id: "products",
-    title: "Products",
-    url: "/products",
-    icon: Package,
-  },
-  {
     id: "customers",
     title: "Customers",
     url: "/customers",
@@ -105,13 +97,7 @@ const initialItems: MenuItem[] = [
     id: "inventory",
     title: "Inventory",
     url: "/inventory",
-    icon: Inbox,
-  },
-  {
-    id: "analytics",
-    title: "Analytics",
-    url: "/analytics",
-    icon: BarChart3,
+    icon: Package,
   },
   {
     id: "payments",
@@ -258,12 +244,22 @@ export function AppSidebarEnhanced() {
       if (saved) {
         try {
           const parsed = JSON.parse(saved)
-          // Reconstruct icon references
-          return parsed.map((item: MenuItem) => ({
+          // Filter out removed items (products and analytics) and reconstruct icon references
+          const validIds = initialItems.map(item => item.id)
+          const filtered = parsed.filter((item: MenuItem) => validIds.includes(item.id))
+
+          // If we filtered out any items, clear localStorage to use fresh data
+          if (filtered.length !== parsed.length) {
+            localStorage.removeItem('sidebarItems')
+            return initialItems
+          }
+
+          return filtered.map((item: MenuItem) => ({
             ...item,
             icon: initialItems.find(i => i.id === item.id)?.icon || Home
           }))
         } catch {
+          localStorage.removeItem('sidebarItems')
           return initialItems
         }
       }
@@ -274,11 +270,27 @@ export function AppSidebarEnhanced() {
   const [archiveExpanded, setArchiveExpanded] = useState(false)
   const [activeId, setActiveId] = useState<string | null>(null)
 
+  // Clean up any invalid items on mount
+  useEffect(() => {
+    const validIds = initialItems.map(item => item.id)
+    const hasInvalidItems = items.some(item => !validIds.includes(item.id))
+
+    if (hasInvalidItems) {
+      const validItems = items.filter(item => validIds.includes(item.id))
+      setItems(validItems.length > 0 ? validItems : initialItems)
+      localStorage.removeItem('sidebarItems')
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
+
   // Save to localStorage whenever items change
   useEffect(() => {
     if (typeof window !== 'undefined') {
+      // Only save valid items
+      const validIds = initialItems.map(item => item.id)
+      const validItems = items.filter(item => validIds.includes(item.id))
       // eslint-disable-next-line @typescript-eslint/no-unused-vars
-      const toSave = items.map(({ icon, ...rest }) => rest)
+      const toSave = validItems.map(({ icon, ...rest }) => rest)
       localStorage.setItem('sidebarItems', JSON.stringify(toSave))
     }
   }, [items])

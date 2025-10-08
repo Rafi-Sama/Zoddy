@@ -33,6 +33,8 @@ import {
 const WIDGET_ICONS: Record<WidgetType, React.ReactNode> = {
   revenue: <DollarSign className="h-4 w-4" />,
   orders: <ShoppingCart className="h-4 w-4" />,
+  'conversion-rate': <TrendingUp className="h-4 w-4" />,
+  'sales-category': <PieChart className="h-4 w-4" />,
   'pending-payments': <Clock className="h-4 w-4" />,
   'low-stock': <AlertTriangle className="h-4 w-4" />,
   insights: <BarChart3 className="h-4 w-4" />,
@@ -48,8 +50,8 @@ const WIDGET_ICONS: Record<WidgetType, React.ReactNode> = {
 }
 
 const WIDGET_CATEGORIES = {
-  'Key Metrics': ['revenue', 'orders', 'pending-payments', 'low-stock'],
-  'Analytics': ['insights', 'revenue-chart', 'cash-flow'],
+  'Key Metrics': ['revenue', 'orders', 'conversion-rate', 'pending-payments', 'low-stock'],
+  'Analytics': ['insights', 'revenue-chart', 'sales-category', 'cash-flow'],
   'Activity': ['recent-activity', 'top-product'],
   'Alerts': ['retention-alert'],
   'Actions': ['quick-actions'],

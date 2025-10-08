@@ -17,16 +17,25 @@ const DEFAULT_WIDGETS: Widget[] = [
     title: "Total Revenue",
     x: 0,
     y: 0,
-    w: 3,
+    w: 2,
     h: 2
   },
   {
     id: "orders-1",
     type: "orders",
     title: "Orders",
-    x: 3,
+    x: 2,
     y: 0,
-    w: 3,
+    w: 2,
+    h: 2
+  },
+  {
+    id: "conversion-rate-1",
+    type: "conversion-rate",
+    title: "Conversion Rate",
+    x: 4,
+    y: 0,
+    w: 2,
     h: 2
   },
   {

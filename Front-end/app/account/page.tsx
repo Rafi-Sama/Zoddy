@@ -24,7 +24,6 @@ import {
   Key,
   Smartphone,
   LogOut,
-  Trash2,
   Save,
   Edit2,
   ChevronRight,
@@ -715,7 +714,7 @@ function AccountContent() {
     >
       <div className="flex flex-col lg:flex-row h-auto lg:h-[calc(100vh-7rem)] gap-6 w-full">
         {/* Fixed Sidebar - Better width for readability - Hidden on mobile, shows as tabs */}
-        <aside className="lg:w-56 lg:shrink-0 w-full">
+        <aside className="lg:w-64 lg:shrink-0 w-full">
           <Card className="lg:h-full">
             <CardHeader className="pb-3 pt-4">
               <CardTitle className="text-base">Settings</CardTitle>
@@ -741,17 +740,6 @@ function AccountContent() {
                   </button>
                 ))}
               </nav>
-
-              <Separator className="my-4" />
-
-              <Button
-                variant="ghost"
-                className="w-full justify-start text-destructive hover:text-destructive hover:bg-destructive/10"
-                size="sm"
-              >
-                <Trash2 className="mr-2 h-4 w-4" />
-                Delete Account
-              </Button>
             </CardContent>
           </Card>
         </aside>

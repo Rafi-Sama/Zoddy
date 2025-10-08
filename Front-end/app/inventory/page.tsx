@@ -31,12 +31,19 @@ import {
   History,
   Settings,
   Search,
-  TrendingDown
+  TrendingDown,
+  Grid3X3,
+  List,
+  Download,
+  Edit,
+  Copy,
+  Archive
 } from "lucide-react"
 const mockInventory = [
   {
     id: "1",
     name: "Cotton Kurti - Blue",
+    description: "Premium cotton kurti with traditional embroidery",
     sku: "CK001",
     category: "Women's Fashion",
     currentStock: 25,
@@ -44,6 +51,8 @@ const mockInventory = [
     costPrice: 800,
     sellingPrice: 1200,
     totalValue: 20000,
+    image: null,
+    bestseller: true,
     movements: {
       thisWeek: { in: 50, out: 25 },
       lastWeek: { in: 30, out: 35 }
@@ -52,6 +61,7 @@ const mockInventory = [
   {
     id: "2",
     name: "Silk Scarf - Red",
+    description: "Elegant silk scarf with floral patterns",
     sku: "SS002",
     category: "Accessories",
     currentStock: 8,
@@ -59,6 +69,8 @@ const mockInventory = [
     costPrice: 300,
     sellingPrice: 500,
     totalValue: 2400,
+    image: null,
+    bestseller: false,
     movements: {
       thisWeek: { in: 0, out: 12 },
       lastWeek: { in: 20, out: 8 }
@@ -67,6 +79,7 @@ const mockInventory = [
   {
     id: "3",
     name: "Designer Saree",
+    description: "Handwoven designer saree with golden work",
     sku: "DS003",
     category: "Women's Fashion",
     currentStock: 12,
@@ -74,6 +87,8 @@ const mockInventory = [
     costPrice: 2200,
     sellingPrice: 3500,
     totalValue: 26400,
+    image: null,
+    bestseller: true,
     movements: {
       thisWeek: { in: 5, out: 3 },
       lastWeek: { in: 0, out: 7 }
@@ -82,6 +97,7 @@ const mockInventory = [
   {
     id: "4",
     name: "Casual T-shirt",
+    description: "Comfortable cotton t-shirt for everyday wear",
     sku: "CT004",
     category: "Men's Fashion",
     currentStock: 0,
@@ -89,6 +105,8 @@ const mockInventory = [
     costPrice: 250,
     sellingPrice: 450,
     totalValue: 0,
+    image: null,
+    bestseller: false,
     movements: {
       thisWeek: { in: 0, out: 0 },
       lastWeek: { in: 0, out: 15 }
@@ -97,6 +115,7 @@ const mockInventory = [
   {
     id: "5",
     name: "Embroidered Shirt",
+    description: "Traditional shirt with intricate embroidery",
     sku: "ES005",
     category: "Men's Fashion",
     currentStock: 35,
@@ -104,6 +123,8 @@ const mockInventory = [
     costPrice: 1200,
     sellingPrice: 1800,
     totalValue: 42000,
+    image: null,
+    bestseller: false,
     movements: {
       thisWeek: { in: 25, out: 10 },
       lastWeek: { in: 20, out: 15 }
@@ -114,6 +135,7 @@ const mockInventory = [
 interface InventoryItem {
   id: string
   name: string
+  description: string
   sku: string
   category: string
   currentStock: number
@@ -121,6 +143,8 @@ interface InventoryItem {
   costPrice: number
   sellingPrice: number
   totalValue: number
+  image: string | null
+  bestseller: boolean
   movements: {
     thisWeek: { in: number; out: number }
     lastWeek: { in: number; out: number }
@@ -132,10 +156,27 @@ export default function InventoryPage() {
   const [adjustmentType, setAdjustmentType] = useState<"add" | "remove" | "set">("add")
   const [adjustmentQuantity, setAdjustmentQuantity] = useState("")
   const [adjustmentReason, setAdjustmentReason] = useState("")
+  const [viewMode, setViewMode] = useState<"grid" | "list">("list")
+  const [searchTerm, setSearchTerm] = useState("")
+  const [categoryFilter, setCategoryFilter] = useState("all")
+  const [stockFilter, setStockFilter] = useState("all")
+
   const totalInventoryValue = mockInventory.reduce((sum, item) => sum + item.totalValue, 0)
   const lowStockItems = mockInventory.filter(item => item.currentStock <= item.reorderLevel && item.currentStock > 0)
   const outOfStockItems = mockInventory.filter(item => item.currentStock === 0)
   const overstockedItems = mockInventory.filter(item => item.currentStock > item.reorderLevel * 3)
+
+  // Filter products based on search and filters
+  const filteredProducts = mockInventory.filter(item => {
+    const matchesSearch = item.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                          item.sku.toLowerCase().includes(searchTerm.toLowerCase())
+    const matchesCategory = categoryFilter === "all" || item.category === categoryFilter
+    const matchesStock = stockFilter === "all" ||
+                        (stockFilter === "instock" && item.currentStock > item.reorderLevel) ||
+                        (stockFilter === "lowstock" && item.currentStock <= item.reorderLevel && item.currentStock > 0) ||
+                        (stockFilter === "outofstock" && item.currentStock === 0)
+    return matchesSearch && matchesCategory && matchesStock
+  })
   const getStockStatus = (item: InventoryItem) => {
     if (item.currentStock === 0) return { status: "Out of Stock", color: "bg-red-100 text-red-800" }
     if (item.currentStock <= item.reorderLevel) return { status: "Low Stock", color: "bg-yellow-100 text-yellow-800" }
@@ -213,26 +254,90 @@ export default function InventoryPage() {
           </CardContent>
         </Card>
       </div>
-      {/* Quick Actions */}
+      {/* Search, Filter & Actions */}
       <Card>
         <CardContent className="pt-3">
-          <div className="flex flex-wrap gap-1.5">
-            <Button className="bg-accent hover:bg-accent/90 h-8 text-xs px-3">
-              <Plus className="h-3 w-3 mr-2" />
-              Add Stock
-            </Button>
-            <Button variant="outline" className="h-8 text-xs px-3">
-              <RotateCcw className="h-3 w-3 mr-2" />
-              Stock Take
-            </Button>
-            <Button variant="outline" className="h-8 text-xs px-3">
-              <History className="h-3 w-3 mr-2" />
-              Movement History
-            </Button>
-            <Button variant="outline" className="h-8 text-xs px-3">
-              <Settings className="h-3 w-3 mr-2" />
-              Reorder Settings
-            </Button>
+          <div className="space-y-3">
+            {/* Search and Filters */}
+            <div className="flex flex-col sm:flex-row gap-2">
+              <div className="relative flex-1">
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-3 w-3 text-muted-foreground" />
+                <Input
+                  placeholder="Search products..."
+                  className="pl-10 h-8 text-xs"
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                />
+              </div>
+              <Select value={categoryFilter} onValueChange={setCategoryFilter}>
+                <SelectTrigger className="w-full sm:w-[140px] h-8 text-xs">
+                  <SelectValue placeholder="Category" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Categories</SelectItem>
+                  <SelectItem value="Women's Fashion">Women&apos;s Fashion</SelectItem>
+                  <SelectItem value="Men's Fashion">Men&apos;s Fashion</SelectItem>
+                  <SelectItem value="Accessories">Accessories</SelectItem>
+                </SelectContent>
+              </Select>
+              <Select value={stockFilter} onValueChange={setStockFilter}>
+                <SelectTrigger className="w-full sm:w-[140px] h-8 text-xs">
+                  <SelectValue placeholder="Stock Status" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Stock</SelectItem>
+                  <SelectItem value="instock">In Stock</SelectItem>
+                  <SelectItem value="lowstock">Low Stock</SelectItem>
+                  <SelectItem value="outofstock">Out of Stock</SelectItem>
+                </SelectContent>
+              </Select>
+              <div className="flex rounded-md border">
+                <Button
+                  variant={viewMode === "list" ? "default" : "ghost"}
+                  onClick={() => setViewMode("list")}
+                  className="rounded-r-none h-8 px-2"
+                  size="sm"
+                >
+                  <List className="h-3 w-3" />
+                </Button>
+                <Button
+                  variant={viewMode === "grid" ? "default" : "ghost"}
+                  onClick={() => setViewMode("grid")}
+                  className="rounded-l-none h-8 px-2"
+                  size="sm"
+                >
+                  <Grid3X3 className="h-3 w-3" />
+                </Button>
+              </div>
+            </div>
+
+            {/* Quick Actions */}
+            <div className="flex flex-wrap gap-1.5">
+              <Button className="bg-accent hover:bg-accent/90 h-8 text-xs px-3">
+                <Plus className="h-3 w-3 mr-2" />
+                Add Product
+              </Button>
+              <Button variant="outline" className="h-8 text-xs px-3">
+                <RotateCcw className="h-3 w-3 mr-2" />
+                Stock Take
+              </Button>
+              <Button variant="outline" className="h-8 text-xs px-3">
+                <History className="h-3 w-3 mr-2" />
+                Movement History
+              </Button>
+              <Button variant="outline" className="h-8 text-xs px-3">
+                <Download className="h-3 w-3 mr-2" />
+                Export
+              </Button>
+              <Button variant="outline" className="h-8 text-xs px-3">
+                <Download className="h-3 w-3 mr-2" />
+                Import
+              </Button>
+              <Button variant="outline" className="h-8 text-xs px-3">
+                <Settings className="h-3 w-3 mr-2" />
+                Settings
+              </Button>
+            </div>
           </div>
         </CardContent>
       </Card>
@@ -297,178 +402,325 @@ export default function InventoryPage() {
           )}
         </div>
       )}
-      {/* Inventory Table */}
-      <Card>
-        <CardHeader className="pb-2">
-          <div className="flex items-center justify-between">
-            <div>
-              <CardTitle className="text-sm">Stock Overview</CardTitle>
-              <CardDescription className="text-xs">Current inventory levels and movements</CardDescription>
-            </div>
-            <div className="flex gap-2">
-              <div className="relative">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-3 w-3 text-muted-foreground" />
-                <Input
-                  placeholder="Search products..."
-                  className="pl-10 w-64 h-8 text-xs"
-                />
-              </div>
-              <Select>
-                <SelectTrigger className="w-[150px] h-8 text-xs">
-                  <SelectValue placeholder="Category" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All Categories</SelectItem>
-                  <SelectItem value="fashion">Fashion</SelectItem>
-                  <SelectItem value="accessories">Accessories</SelectItem>
-                  <SelectItem value="electronics">Electronics</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-          </div>
-        </CardHeader>
-        <CardContent>
-          <div className="overflow-x-auto">
-            <table className="w-full">
-              <thead>
-                <tr className="border-b">
-                  <th className="text-left py-2 px-1.5 text-xs">Product</th>
-                  <th className="text-left py-2 px-1.5 text-xs">SKU</th>
-                  <th className="text-left py-2 px-1.5 text-xs">Current Stock</th>
-                  <th className="text-left py-2 px-1.5 text-xs">Reorder Level</th>
-                  <th className="text-left py-2 px-1.5 text-xs">This Week</th>
-                  <th className="text-left py-2 px-1.5 text-xs">Value</th>
-                  <th className="text-left py-2 px-1.5 text-xs">Status</th>
-                  <th className="text-left py-2 px-1.5 text-xs">Actions</th>
-                </tr>
-              </thead>
-              <tbody>
-                {mockInventory.map((item) => {
-                  const status = getStockStatus(item)
-                  return (
-                    <tr key={item.id} className="border-b hover:bg-muted/50">
-                      <td className="py-2 px-1.5">
-                        <div>
-                          <div className="font-medium text-xs">{item.name}</div>
-                          <div className="text-[10px] text-muted-foreground">{item.category}</div>
-                        </div>
-                      </td>
-                      <td className="py-2 px-1.5 font-mono text-xs">{item.sku}</td>
-                      <td className="py-2 px-1.5">
-                        <div className="font-bold text-xs">{item.currentStock}</div>
-                      </td>
-                      <td className="py-2 px-1.5">
-                        <div className="text-xs">{item.reorderLevel}</div>
-                      </td>
-                      <td className="py-2 px-1.5">
-                        <div className="space-y-0.5">
-                          <div className="flex items-center gap-0.5 text-green-600 text-[10px]">
-                            <TrendingUp className="h-2.5 w-2.5" />
-                            +{item.movements.thisWeek.in}
+      {/* Products Display - Grid or List View */}
+      {viewMode === "grid" ? (
+        <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+          {filteredProducts.map((item) => {
+            const status = getStockStatus(item)
+            return (
+              <Card key={item.id} className="hover:shadow-md transition-shadow relative">
+                {item.currentStock === 0 && (
+                  <div className="absolute inset-0 bg-gray-900/50 rounded-lg flex items-center justify-center z-10">
+                    <Badge className="bg-red-600 text-white text-[9px] px-1.5 py-0">Out of Stock</Badge>
+                  </div>
+                )}
+                {item.bestseller && (
+                  <Badge className="absolute top-2 left-2 bg-accent text-accent-foreground z-20 text-[9px] px-1.5 py-0">
+                    Bestseller
+                  </Badge>
+                )}
+                <CardHeader className="pb-2">
+                  {/* Product Image Placeholder */}
+                  <div className="w-full h-32 bg-muted rounded-lg flex items-center justify-center mb-2">
+                    <Package className="h-8 w-8 text-muted-foreground" />
+                  </div>
+                  <CardTitle className="text-sm line-clamp-1">{item.name}</CardTitle>
+                  <CardDescription className="line-clamp-2 text-xs">{item.description}</CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-1.5">
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs text-muted-foreground">SKU</span>
+                    <span className="text-xs font-mono">{item.sku}</span>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs text-muted-foreground">Price</span>
+                    <span className="font-bold text-xs">৳{item.sellingPrice}</span>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs text-muted-foreground">Stock</span>
+                    <Badge className={`${status.color} text-[9px] px-1.5 py-0`}>
+                      {item.currentStock} units
+                    </Badge>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs text-muted-foreground">This Week</span>
+                    <div className="flex items-center gap-2">
+                      <span className="text-green-600 text-[10px]">+{item.movements.thisWeek.in}</span>
+                      <span className="text-red-600 text-[10px]">-{item.movements.thisWeek.out}</span>
+                    </div>
+                  </div>
+                  {item.currentStock <= item.reorderLevel && item.currentStock > 0 && (
+                    <div className="p-1 bg-yellow-50 border border-yellow-200 rounded-md">
+                      <div className="flex items-center gap-1 text-yellow-800 text-[10px]">
+                        <AlertTriangle className="h-3 w-3" />
+                        Low stock warning
+                      </div>
+                    </div>
+                  )}
+                  <div className="flex gap-1 pt-1">
+                    <Dialog>
+                      <DialogTrigger asChild>
+                        <Button
+                          variant="outline"
+                          className="flex-1 h-6 text-[10px] px-2"
+                          onClick={() => setSelectedProduct(item)}
+                        >
+                          <Edit className="h-3 w-3 mr-1" />
+                          Adjust
+                        </Button>
+                      </DialogTrigger>
+                      <DialogContent>
+                        <DialogHeader>
+                          <DialogTitle className="text-sm">Adjust Stock - {selectedProduct?.name}</DialogTitle>
+                          <DialogDescription className="text-xs">
+                            Update the stock level for this product
+                          </DialogDescription>
+                        </DialogHeader>
+                        <div className="space-y-2">
+                          <div>
+                            <Label htmlFor="adjustmentType" className="text-xs">Adjustment Type</Label>
+                            <Select value={adjustmentType} onValueChange={(value: "add" | "remove" | "set") => setAdjustmentType(value)}>
+                              <SelectTrigger className="h-8 text-xs">
+                                <SelectValue />
+                              </SelectTrigger>
+                              <SelectContent>
+                                <SelectItem value="add">Add Stock</SelectItem>
+                                <SelectItem value="remove">Remove Stock</SelectItem>
+                                <SelectItem value="set">Set Stock Level</SelectItem>
+                              </SelectContent>
+                            </Select>
                           </div>
-                          <div className="flex items-center gap-0.5 text-red-600 text-[10px]">
-                            <TrendingDown className="h-2.5 w-2.5" />
-                            -{item.movements.thisWeek.out}
+                          <div>
+                            <Label htmlFor="quantity" className="text-xs">Quantity</Label>
+                            <Input
+                              id="quantity"
+                              type="number"
+                              placeholder="Enter quantity"
+                              value={adjustmentQuantity}
+                              onChange={(e) => setAdjustmentQuantity(e.target.value)}
+                              className="h-8 text-xs"
+                            />
                           </div>
-                        </div>
-                      </td>
-                      <td className="py-2 px-1.5">
-                        <div className="font-medium text-xs">৳{item.totalValue.toLocaleString()}</div>
-                        <div className="text-[10px] text-muted-foreground">
-                          @৳{item.costPrice} each
-                        </div>
-                      </td>
-                      <td className="py-2 px-1.5">
-                        <Badge className={`${status.color} text-[9px] px-1.5 py-0`}>
-                          {status.status}
-                        </Badge>
-                      </td>
-                      <td className="py-2 px-1.5">
-                        <Dialog>
-                          <DialogTrigger asChild>
+                          <div>
+                            <Label htmlFor="reason" className="text-xs">Reason</Label>
+                            <Select value={adjustmentReason} onValueChange={setAdjustmentReason}>
+                              <SelectTrigger className="h-8 text-xs">
+                                <SelectValue placeholder="Select reason" />
+                              </SelectTrigger>
+                              <SelectContent>
+                                <SelectItem value="restock">New Stock Arrival</SelectItem>
+                                <SelectItem value="damage">Damaged Items</SelectItem>
+                                <SelectItem value="theft">Theft/Loss</SelectItem>
+                                <SelectItem value="return">Customer Return</SelectItem>
+                                <SelectItem value="correction">Stock Correction</SelectItem>
+                                <SelectItem value="transfer">Transfer</SelectItem>
+                              </SelectContent>
+                            </Select>
+                          </div>
+                          <div className="flex gap-2 pt-2">
+                            <Button
+                              onClick={() => selectedProduct && handleStockAdjustment(selectedProduct)}
+                              className="flex-1 bg-accent hover:bg-accent/90 h-8 text-xs px-3"
+                            >
+                              Update Stock
+                            </Button>
                             <Button
                               variant="outline"
-                              className="h-6 text-[10px] px-2"
-                              onClick={() => setSelectedProduct(item)}
+                              onClick={() => setSelectedProduct(null)}
+                              className="flex-1 h-8 text-xs px-3"
                             >
-                              Adjust
+                              Cancel
                             </Button>
-                          </DialogTrigger>
-                          <DialogContent>
-                            <DialogHeader>
-                              <DialogTitle className="text-sm">Adjust Stock - {selectedProduct?.name}</DialogTitle>
-                              <DialogDescription className="text-xs">
-                                Update the stock level for this product
-                              </DialogDescription>
-                            </DialogHeader>
-                            <div className="space-y-2">
-                              <div>
-                                <Label htmlFor="adjustmentType" className="text-xs">Adjustment Type</Label>
-                                <Select value={adjustmentType} onValueChange={(value: "add" | "remove" | "set") => setAdjustmentType(value)}>
-                                  <SelectTrigger className="h-8 text-xs">
-                                    <SelectValue />
-                                  </SelectTrigger>
-                                  <SelectContent>
-                                    <SelectItem value="add">Add Stock</SelectItem>
-                                    <SelectItem value="remove">Remove Stock</SelectItem>
-                                    <SelectItem value="set">Set Stock Level</SelectItem>
-                                  </SelectContent>
-                                </Select>
-                              </div>
-                              <div>
-                                <Label htmlFor="quantity" className="text-xs">Quantity</Label>
-                                <Input
-                                  id="quantity"
-                                  type="number"
-                                  placeholder="Enter quantity"
-                                  value={adjustmentQuantity}
-                                  onChange={(e) => setAdjustmentQuantity(e.target.value)}
-                                  className="h-8 text-xs"
-                                />
-                              </div>
-                              <div>
-                                <Label htmlFor="reason" className="text-xs">Reason</Label>
-                                <Select value={adjustmentReason} onValueChange={setAdjustmentReason}>
-                                  <SelectTrigger className="h-8 text-xs">
-                                    <SelectValue placeholder="Select reason" />
-                                  </SelectTrigger>
-                                  <SelectContent>
-                                    <SelectItem value="restock">New Stock Arrival</SelectItem>
-                                    <SelectItem value="damage">Damaged Items</SelectItem>
-                                    <SelectItem value="theft">Theft/Loss</SelectItem>
-                                    <SelectItem value="return">Customer Return</SelectItem>
-                                    <SelectItem value="correction">Stock Correction</SelectItem>
-                                    <SelectItem value="transfer">Transfer</SelectItem>
-                                  </SelectContent>
-                                </Select>
-                              </div>
-                              <div className="flex gap-2 pt-2">
-                                <Button
-                                  onClick={() => selectedProduct && handleStockAdjustment(selectedProduct)}
-                                  className="flex-1 bg-accent hover:bg-accent/90 h-8 text-xs px-3"
-                                >
-                                  Update Stock
-                                </Button>
-                                <Button
-                                  variant="outline"
-                                  onClick={() => setSelectedProduct(null)}
-                                  className="flex-1 h-8 text-xs px-3"
-                                >
-                                  Cancel
-                                </Button>
-                              </div>
+                          </div>
+                        </div>
+                      </DialogContent>
+                    </Dialog>
+                    <Button variant="outline" className="h-6 px-2">
+                      <Copy className="h-3 w-3" />
+                    </Button>
+                    <Button variant="outline" className="h-6 px-2">
+                      <Archive className="h-3 w-3" />
+                    </Button>
+                  </div>
+                </CardContent>
+              </Card>
+            )
+          })}
+        </div>
+      ) : (
+        <Card>
+          <CardHeader className="pb-2">
+            <div className="flex items-center justify-between">
+              <div>
+                <CardTitle className="text-sm">Inventory Management</CardTitle>
+                <CardDescription className="text-xs">Complete product inventory with stock movements</CardDescription>
+              </div>
+            </div>
+          </CardHeader>
+          <CardContent>
+            <div className="overflow-x-auto">
+              <table className="w-full">
+                <thead>
+                  <tr className="border-b">
+                    <th className="text-left py-2 px-1.5 text-xs">Product</th>
+                    <th className="text-left py-2 px-1.5 text-xs">SKU</th>
+                    <th className="text-left py-2 px-1.5 text-xs">Price</th>
+                    <th className="text-left py-2 px-1.5 text-xs">Stock</th>
+                    <th className="text-left py-2 px-1.5 text-xs">Reorder</th>
+                    <th className="text-left py-2 px-1.5 text-xs">This Week</th>
+                    <th className="text-left py-2 px-1.5 text-xs">Value</th>
+                    <th className="text-left py-2 px-1.5 text-xs">Status</th>
+                    <th className="text-left py-2 px-1.5 text-xs">Actions</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {filteredProducts.map((item) => {
+                    const status = getStockStatus(item)
+                    return (
+                      <tr key={item.id} className="border-b hover:bg-muted/50">
+                        <td className="py-2 px-1.5">
+                          <div className="flex items-center gap-2">
+                            <div className="h-8 w-8 bg-muted rounded flex items-center justify-center">
+                              <Package className="h-4 w-4 text-muted-foreground" />
                             </div>
-                          </DialogContent>
-                        </Dialog>
-                      </td>
-                    </tr>
-                  )
-                })}
-              </tbody>
-            </table>
-          </div>
-        </CardContent>
-      </Card>
+                            <div>
+                              <div className="font-medium text-xs">{item.name}</div>
+                              <div className="text-[10px] text-muted-foreground line-clamp-1">{item.description}</div>
+                            </div>
+                            {item.bestseller && (
+                              <Badge className="bg-accent text-accent-foreground text-[9px] px-1.5 py-0">Best</Badge>
+                            )}
+                          </div>
+                        </td>
+                        <td className="py-2 px-1.5 font-mono text-xs">{item.sku}</td>
+                        <td className="py-2 px-1.5">
+                          <div className="font-medium text-xs">৳{item.sellingPrice}</div>
+                          <div className="text-[10px] text-muted-foreground">৳{item.costPrice}</div>
+                        </td>
+                        <td className="py-2 px-1.5">
+                          <div className="font-bold text-xs">{item.currentStock}</div>
+                          {item.currentStock <= item.reorderLevel && item.currentStock > 0 && (
+                            <AlertTriangle className="h-3 w-3 text-yellow-600 mt-0.5" />
+                          )}
+                        </td>
+                        <td className="py-2 px-1.5">
+                          <div className="text-xs">{item.reorderLevel}</div>
+                        </td>
+                        <td className="py-2 px-1.5">
+                          <div className="space-y-0.5">
+                            <div className="flex items-center gap-0.5 text-green-600 text-[10px]">
+                              <TrendingUp className="h-2.5 w-2.5" />
+                              +{item.movements.thisWeek.in}
+                            </div>
+                            <div className="flex items-center gap-0.5 text-red-600 text-[10px]">
+                              <TrendingDown className="h-2.5 w-2.5" />
+                              -{item.movements.thisWeek.out}
+                            </div>
+                          </div>
+                        </td>
+                        <td className="py-2 px-1.5">
+                          <div className="font-medium text-xs">৳{item.totalValue.toLocaleString()}</div>
+                        </td>
+                        <td className="py-2 px-1.5">
+                          <Badge className={`${status.color} text-[9px] px-1.5 py-0`}>
+                            {status.status}
+                          </Badge>
+                        </td>
+                        <td className="py-2 px-1.5">
+                          <div className="flex gap-1">
+                            <Dialog>
+                              <DialogTrigger asChild>
+                                <Button
+                                  variant="ghost"
+                                  className="h-6 px-1.5"
+                                  onClick={() => setSelectedProduct(item)}
+                                >
+                                  <Edit className="h-3 w-3" />
+                                </Button>
+                              </DialogTrigger>
+                              <DialogContent>
+                                <DialogHeader>
+                                  <DialogTitle className="text-sm">Adjust Stock - {selectedProduct?.name}</DialogTitle>
+                                  <DialogDescription className="text-xs">
+                                    Update the stock level for this product
+                                  </DialogDescription>
+                                </DialogHeader>
+                                <div className="space-y-2">
+                                  <div>
+                                    <Label htmlFor="adjustmentType" className="text-xs">Adjustment Type</Label>
+                                    <Select value={adjustmentType} onValueChange={(value: "add" | "remove" | "set") => setAdjustmentType(value)}>
+                                      <SelectTrigger className="h-8 text-xs">
+                                        <SelectValue />
+                                      </SelectTrigger>
+                                      <SelectContent>
+                                        <SelectItem value="add">Add Stock</SelectItem>
+                                        <SelectItem value="remove">Remove Stock</SelectItem>
+                                        <SelectItem value="set">Set Stock Level</SelectItem>
+                                      </SelectContent>
+                                    </Select>
+                                  </div>
+                                  <div>
+                                    <Label htmlFor="quantity" className="text-xs">Quantity</Label>
+                                    <Input
+                                      id="quantity"
+                                      type="number"
+                                      placeholder="Enter quantity"
+                                      value={adjustmentQuantity}
+                                      onChange={(e) => setAdjustmentQuantity(e.target.value)}
+                                      className="h-8 text-xs"
+                                    />
+                                  </div>
+                                  <div>
+                                    <Label htmlFor="reason" className="text-xs">Reason</Label>
+                                    <Select value={adjustmentReason} onValueChange={setAdjustmentReason}>
+                                      <SelectTrigger className="h-8 text-xs">
+                                        <SelectValue placeholder="Select reason" />
+                                      </SelectTrigger>
+                                      <SelectContent>
+                                        <SelectItem value="restock">New Stock Arrival</SelectItem>
+                                        <SelectItem value="damage">Damaged Items</SelectItem>
+                                        <SelectItem value="theft">Theft/Loss</SelectItem>
+                                        <SelectItem value="return">Customer Return</SelectItem>
+                                        <SelectItem value="correction">Stock Correction</SelectItem>
+                                        <SelectItem value="transfer">Transfer</SelectItem>
+                                      </SelectContent>
+                                    </Select>
+                                  </div>
+                                  <div className="flex gap-2 pt-2">
+                                    <Button
+                                      onClick={() => selectedProduct && handleStockAdjustment(selectedProduct)}
+                                      className="flex-1 bg-accent hover:bg-accent/90 h-8 text-xs px-3"
+                                    >
+                                      Update Stock
+                                    </Button>
+                                    <Button
+                                      variant="outline"
+                                      onClick={() => setSelectedProduct(null)}
+                                      className="flex-1 h-8 text-xs px-3"
+                                    >
+                                      Cancel
+                                    </Button>
+                                  </div>
+                                </div>
+                              </DialogContent>
+                            </Dialog>
+                            <Button variant="ghost" className="h-6 px-1.5">
+                              <Copy className="h-3 w-3" />
+                            </Button>
+                            <Button variant="ghost" className="h-6 px-1.5">
+                              <Archive className="h-3 w-3" />
+                            </Button>
+                          </div>
+                        </td>
+                      </tr>
+                    )
+                  })}
+                </tbody>
+              </table>
+            </div>
+          </CardContent>
+        </Card>
+      )}
       {/* Stock Movement Summary */}
       <Card>
         <CardHeader className="pb-2">

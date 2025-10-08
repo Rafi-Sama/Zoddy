@@ -30,12 +30,15 @@ import {
   BarChart3,
   PieChart,
   Layers,
-  Check
+  Check,
+  MousePointer
 } from "lucide-react"
 
 const WIDGET_ICONS: Record<WidgetType, React.ReactNode> = {
   revenue: <DollarSign className="h-3.5 w-3.5" />,
   orders: <ShoppingCart className="h-3.5 w-3.5" />,
+  'conversion-rate': <MousePointer className="h-3.5 w-3.5" />,
+  'sales-category': <PieChart className="h-3.5 w-3.5" />,
   'pending-payments': <Clock className="h-3.5 w-3.5" />,
   'low-stock': <AlertTriangle className="h-3.5 w-3.5" />,
   insights: <BarChart3 className="h-3.5 w-3.5" />,
@@ -51,8 +54,8 @@ const WIDGET_ICONS: Record<WidgetType, React.ReactNode> = {
 }
 
 const WIDGET_CATEGORIES = {
-  'Key Metrics': ['revenue', 'orders', 'pending-payments', 'low-stock'],
-  'Analytics': ['insights', 'revenue-chart', 'cash-flow'],
+  'Key Metrics': ['revenue', 'orders', 'conversion-rate', 'pending-payments', 'low-stock'],
+  'Analytics': ['insights', 'revenue-chart', 'sales-category', 'cash-flow'],
   'Activity': ['recent-activity', 'top-product'],
   'Alerts': ['retention-alert'],
   'Actions': ['quick-actions'],

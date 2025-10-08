@@ -2,7 +2,6 @@
 import {
   ChevronUp,
   Home,
-  Inbox,
   Package,
   Settings,
   ShoppingCart,
@@ -11,7 +10,6 @@ import {
   TrendingUp,
   User2,
   Users,
-  BarChart3,
   Calendar,
   Bell,
   Archive,
@@ -47,11 +45,6 @@ const items = [
     icon: ShoppingCart,
   },
   {
-    title: "Products",
-    url: "/products",
-    icon: Package,
-  },
-  {
     title: "Customers",
     url: "/customers",
     icon: Users,
@@ -59,12 +52,7 @@ const items = [
   {
     title: "Inventory",
     url: "/inventory",
-    icon: Inbox,
-  },
-  {
-    title: "Analytics",
-    url: "/analytics",
-    icon: BarChart3,
+    icon: Package,
   },
   {
     title: "Payments",

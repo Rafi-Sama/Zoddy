@@ -1,6 +1,8 @@
 export type WidgetType =
   | 'revenue'
   | 'orders'
+  | 'conversion-rate'
+  | 'sales-category'
   | 'pending-payments'
   | 'low-stock'
   | 'insights'
@@ -49,6 +51,16 @@ export const WIDGET_DEFINITIONS: Record<WidgetType, Partial<Widget>> = {
     title: 'Orders',
     w: 3,
     h: 2
+  },
+  'conversion-rate': {
+    title: 'Conversion Rate',
+    w: 2,
+    h: 2
+  },
+  'sales-category': {
+    title: 'Sales by Category',
+    w: 3,
+    h: 3
   },
   'pending-payments': {
     title: 'Pending Payments',
