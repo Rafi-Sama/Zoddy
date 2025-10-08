@@ -5,6 +5,7 @@ import { AuthKitProvider } from '@workos-inc/authkit-nextjs/components';
 import { NotificationsProvider } from "@/contexts/notifications-context";
 import { CalendarProvider } from "@/contexts/calendar-context";
 import { ClearOldSidebarCache } from "@/components/utils/clear-old-sidebar-cache";
+import { ErrorBoundary } from "@/components/error-boundary";
 import "./globals.css";
 
 const shantellSans = Shantell_Sans({
@@ -40,21 +41,23 @@ export default function RootLayout({
       <body
         className={`${shantellSans.variable} ${inter.variable} ${dmSans.variable} antialiased font-sans`}
       >
-        <AuthKitProvider>
-          <ThemeProvider
-            attribute="class"
-            defaultTheme="light"
-            enableSystem
-            disableTransitionOnChange
-          >
-            <NotificationsProvider>
-              <CalendarProvider>
-                <ClearOldSidebarCache />
-                {children}
-              </CalendarProvider>
-            </NotificationsProvider>
-          </ThemeProvider>
-        </AuthKitProvider>
+        <ErrorBoundary>
+          <AuthKitProvider>
+            <ThemeProvider
+              attribute="class"
+              defaultTheme="light"
+              enableSystem
+              disableTransitionOnChange
+            >
+              <NotificationsProvider>
+                <CalendarProvider>
+                  <ClearOldSidebarCache />
+                  {children}
+                </CalendarProvider>
+              </NotificationsProvider>
+            </ThemeProvider>
+          </AuthKitProvider>
+        </ErrorBoundary>
       </body>
     </html>
   );

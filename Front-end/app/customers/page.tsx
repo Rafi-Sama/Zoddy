@@ -36,7 +36,8 @@ import {
   Grid3X3,
   List,
   Mail,
-  Edit
+  Edit,
+  CheckCircle
 } from "lucide-react"
 const mockCustomers = [
   {
@@ -132,6 +133,44 @@ export default function CustomersPage() {
   const [searchTerm, setSearchTerm] = useState("")
   const [statusFilter, setStatusFilter] = useState("all")
   const [sortBy, setSortBy] = useState("name")
+  const [isAddingCustomer, setIsAddingCustomer] = useState(false)
+  const [successMessage, setSuccessMessage] = useState("")
+
+  const handleBroadcast = () => {
+    const message = prompt("Enter broadcast message to send to all customers:")
+    if (message) {
+      // Simulate sending broadcast
+      setTimeout(() => {
+        setSuccessMessage(`Broadcast message sent to ${mockCustomers.length} customers`)
+        setTimeout(() => setSuccessMessage(""), 3000)
+      }, 500)
+    }
+  }
+
+  const handleAddCustomer = () => {
+    setIsAddingCustomer(true)
+    // Simulate adding customer
+    setTimeout(() => {
+      setIsAddingCustomer(false)
+      alert("Add Customer feature will be fully implemented soon!")
+    }, 500)
+  }
+
+  const handleSendMessage = (customer: Customer) => {
+    const message = prompt(`Enter message to send to ${customer.name}:`)
+    if (message) {
+      setSuccessMessage(`Message sent to ${customer.name}`)
+      setTimeout(() => setSuccessMessage(""), 3000)
+    }
+  }
+
+  const handleNewOrder = (customer: Customer) => {
+    alert(`Creating new order for ${customer.name} - Feature coming soon!`)
+  }
+
+  const handleViewOrders = (customer: Customer) => {
+    alert(`Viewing orders for ${customer.name} - Feature coming soon!`)
+  }
 
   // Customer analytics
   const totalCustomers = mockCustomers.length
@@ -208,6 +247,14 @@ export default function CustomersPage() {
         { label: "Customers" }
       ]}
     >
+      {/* Success Message */}
+      {successMessage && (
+        <div className="p-3 bg-green-50 border border-green-200 rounded-lg flex items-center gap-2 text-green-700">
+          <CheckCircle className="h-4 w-4" />
+          <span className="text-sm">{successMessage}</span>
+        </div>
+      )}
+
       {/* Summary Cards with Analytics */}
       <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-5">
         <Card>
@@ -336,13 +383,30 @@ export default function CustomersPage() {
 
             {/* Quick Actions */}
             <div className="flex flex-wrap gap-1.5">
-              <Button variant="outline" className="h-8 text-xs px-3">
+              <Button
+                variant="outline"
+                className="h-8 text-xs px-3"
+                onClick={handleBroadcast}
+              >
                 <MessageSquare className="h-3 w-3 mr-2" />
                 Broadcast
               </Button>
-              <Button className="bg-accent hover:bg-accent/90 h-8 text-xs px-3">
-                <Plus className="h-3 w-3 mr-2" />
-                Add Customer
+              <Button
+                className="bg-accent hover:bg-accent/90 h-8 text-xs px-3"
+                onClick={handleAddCustomer}
+                disabled={isAddingCustomer}
+              >
+                {isAddingCustomer ? (
+                  <>
+                    <span className="animate-spin h-3 w-3 mr-2 border-2 border-white border-t-transparent rounded-full inline-block" />
+                    Adding...
+                  </>
+                ) : (
+                  <>
+                    <Plus className="h-3 w-3 mr-2" />
+                    Add Customer
+                  </>
+                )}
               </Button>
             </div>
           </div>
@@ -420,7 +484,7 @@ export default function CustomersPage() {
                       Last order: {getDaysSinceLastOrder(customer.lastOrder)} days ago
                     </div>
                   </div>
-                  <Button className="h-6 text-[10px] px-2" variant="outline">
+                  <Button className="h-6 text-[10px] px-2" variant="outline" onClick={() => handleSendMessage(customer)}>
                     <MessageSquare className="h-3 w-3 mr-1" />
                     Message
                   </Button>
@@ -500,13 +564,18 @@ export default function CustomersPage() {
                         </Button>
                       </DialogTrigger>
                       <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
-                        <CustomerDetailsModal customer={selectedCustomer} />
+                        <CustomerDetailsModal
+                          customer={selectedCustomer}
+                          onSendMessage={handleSendMessage}
+                          onNewOrder={handleNewOrder}
+                          onViewOrders={handleViewOrders}
+                        />
                       </DialogContent>
                     </Dialog>
-                    <Button variant="outline" className="h-6 px-1.5">
+                    <Button variant="outline" className="h-6 px-1.5" onClick={() => handleSendMessage(customer)}>
                       <MessageSquare className="h-3 w-3" />
                     </Button>
-                    <Button variant="outline" className="h-6 px-1.5">
+                    <Button variant="outline" className="h-6 px-1.5" onClick={() => handleNewOrder(customer)}>
                       <ShoppingCart className="h-3 w-3" />
                     </Button>
                   </div>
@@ -596,13 +665,18 @@ export default function CustomersPage() {
                                 </Button>
                               </DialogTrigger>
                               <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
-                                <CustomerDetailsModal customer={selectedCustomer} />
+                                <CustomerDetailsModal
+                          customer={selectedCustomer}
+                          onSendMessage={handleSendMessage}
+                          onNewOrder={handleNewOrder}
+                          onViewOrders={handleViewOrders}
+                        />
                               </DialogContent>
                             </Dialog>
-                            <Button variant="ghost" className="h-6 px-1.5">
+                            <Button variant="ghost" className="h-6 px-1.5" onClick={() => handleSendMessage(customer)}>
                               <MessageSquare className="h-3 w-3" />
                             </Button>
-                            <Button variant="ghost" className="h-6 px-1.5">
+                            <Button variant="ghost" className="h-6 px-1.5" onClick={() => handleNewOrder(customer)}>
                               <ShoppingCart className="h-3 w-3" />
                             </Button>
                           </div>
@@ -619,7 +693,17 @@ export default function CustomersPage() {
     </MainLayout>
   )
 }
-function CustomerDetailsModal({ customer }: { customer: Customer | null }) {
+function CustomerDetailsModal({
+  customer,
+  onSendMessage,
+  onNewOrder,
+  onViewOrders
+}: {
+  customer: Customer | null
+  onSendMessage?: (customer: Customer) => void
+  onNewOrder?: (customer: Customer) => void
+  onViewOrders?: (customer: Customer) => void
+}) {
   if (!customer) return null
   return (
     <>
@@ -688,15 +772,15 @@ function CustomerDetailsModal({ customer }: { customer: Customer | null }) {
         </Card>
         {/* Quick Actions */}
         <div className="flex gap-1.5">
-          <Button className="flex-1 bg-accent hover:bg-accent/90 h-8 text-xs px-3">
+          <Button className="flex-1 bg-accent hover:bg-accent/90 h-8 text-xs px-3" onClick={() => onSendMessage?.(customer)}>
             <MessageSquare className="h-3.5 w-3.5 mr-2" />
             Send Message
           </Button>
-          <Button variant="outline" className="flex-1 h-8 text-xs px-3">
+          <Button variant="outline" className="flex-1 h-8 text-xs px-3" onClick={() => onNewOrder?.(customer)}>
             <ShoppingCart className="h-3.5 w-3.5 mr-2" />
             New Order
           </Button>
-          <Button variant="outline" className="flex-1 h-8 text-xs px-3">
+          <Button variant="outline" className="flex-1 h-8 text-xs px-3" onClick={() => onViewOrders?.(customer)}>
             <TrendingUp className="h-3.5 w-3.5 mr-2" />
             View Orders
           </Button>

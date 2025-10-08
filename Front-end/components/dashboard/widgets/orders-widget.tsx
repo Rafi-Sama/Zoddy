@@ -1,8 +1,9 @@
+import { memo } from "react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { ShoppingCart, TrendingUp } from "lucide-react"
 
-export function OrdersWidget() {
+export const OrdersWidget = memo(function OrdersWidget() {
   return (
     <Card className="h-full overflow-hidden">
       <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-1.5 p-3 sm:p-6">
@@ -22,4 +23,4 @@ export function OrdersWidget() {
       </CardContent>
     </Card>
   )
-}
+})

@@ -1,6 +1,6 @@
 "use client"
 
-import { createContext, useContext, useState, ReactNode } from "react"
+import { createContext, useContext, useState, ReactNode, useCallback, useMemo } from "react"
 import { ShoppingCart, DollarSign, AlertTriangle, Clock, Info } from "lucide-react"
 
 export interface Notification {
@@ -95,76 +95,90 @@ const initialNotifications: Notification[] = [
 export function NotificationsProvider({ children }: { children: ReactNode }) {
   const [notifications, setNotifications] = useState<Notification[]>(initialNotifications)
 
-  const addNotification = (notification: Omit<Notification, "id">) => {
+  const addNotification = useCallback((notification: Omit<Notification, "id">) => {
     const newNotification: Notification = {
       ...notification,
       id: Date.now().toString(),
       archived: false
     }
     setNotifications(prev => [newNotification, ...prev])
-  }
+  }, [])
 
-  const markAsRead = (id: string) => {
+  const markAsRead = useCallback((id: string) => {
     setNotifications(prev =>
       prev.map(notif =>
         notif.id === id ? { ...notif, read: true } : notif
       )
     )
-  }
+  }, [])
 
-  const markAllAsRead = () => {
+  const markAllAsRead = useCallback(() => {
     setNotifications(prev =>
       prev.map(notif => ({ ...notif, read: true }))
     )
-  }
+  }, [])
 
-  const deleteNotification = (id: string) => {
+  const deleteNotification = useCallback((id: string) => {
     setNotifications(prev => prev.filter(notif => notif.id !== id))
-  }
+  }, [])
 
-  const archiveNotification = (id: string) => {
+  const archiveNotification = useCallback((id: string) => {
     setNotifications(prev =>
       prev.map(notif =>
         notif.id === id ? { ...notif, archived: true, read: true } : notif
       )
     )
-  }
+  }, [])
 
-  const unarchiveNotification = (id: string) => {
+  const unarchiveNotification = useCallback((id: string) => {
     setNotifications(prev =>
       prev.map(notif =>
         notif.id === id ? { ...notif, archived: false } : notif
       )
     )
-  }
+  }, [])
 
-  const getUnreadCount = () => {
+  const getUnreadCount = useCallback(() => {
     return notifications.filter(n => !n.read && !n.archived).length
-  }
+  }, [notifications])
 
-  const getActiveNotifications = () => {
+  const getActiveNotifications = useCallback(() => {
     return notifications.filter(n => !n.archived)
-  }
+  }, [notifications])
 
-  const getArchivedNotifications = () => {
+  const getArchivedNotifications = useCallback(() => {
     return notifications.filter(n => n.archived)
-  }
+  }, [notifications])
+
+  const contextValue = useMemo(
+    () => ({
+      notifications,
+      addNotification,
+      markAsRead,
+      markAllAsRead,
+      deleteNotification,
+      archiveNotification,
+      unarchiveNotification,
+      getUnreadCount,
+      getActiveNotifications,
+      getArchivedNotifications
+    }),
+    [
+      notifications,
+      addNotification,
+      markAsRead,
+      markAllAsRead,
+      deleteNotification,
+      archiveNotification,
+      unarchiveNotification,
+      getUnreadCount,
+      getActiveNotifications,
+      getArchivedNotifications
+    ]
+  )
 
   return (
-    <NotificationsContext.Provider
-      value={{
-        notifications,
-        addNotification,
-        markAsRead,
-        markAllAsRead,
-        deleteNotification,
-        archiveNotification,
-        unarchiveNotification,
-        getUnreadCount,
-        getActiveNotifications,
-        getArchivedNotifications
-      }}
-    >
+    <NotificationsContext.Provider value={contextValue}>
       {children}
     </NotificationsContext.Provider>
   )

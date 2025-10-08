@@ -1,7 +1,8 @@
+import { memo } from "react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { DollarSign, TrendingUp } from "lucide-react"
 
-export function RevenueWidget() {
+export const RevenueWidget = memo(function RevenueWidget() {
   return (
     <Card className="h-full overflow-hidden">
       <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-1.5 p-3 sm:p-6">
@@ -22,4 +23,4 @@ export function RevenueWidget() {
       </CardContent>
     </Card>
   )
-}
+})

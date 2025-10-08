@@ -37,6 +37,7 @@ import {
   Phone,
   MapPin
 } from "lucide-react"
+import { toast } from "sonner"
 const mockOrders = [
   {
     id: "#1234",
@@ -115,6 +116,8 @@ export default function OrdersPage() {
   const [searchTerm, setSearchTerm] = useState("")
   const [statusFilter, setStatusFilter] = useState("all")
   const [paymentFilter, setPaymentFilter] = useState("all")
+  const [orders, setOrders] = useState<Order[]>(mockOrders)
+  const [isProcessing, setIsProcessing] = useState(false)
   const getStatusColor = (status: string) => {
     switch (status) {
       case "delivered":
@@ -156,8 +159,72 @@ export default function OrdersPage() {
     }
   }
 
+  // Handler functions for button actions
+  const handleImport = () => {
+    toast.info("Import feature coming soon", {
+      description: "CSV/Excel import functionality will be available in the next update"
+    })
+  }
+
+  const handleNewOrder = () => {
+    toast.info("New order form coming soon", {
+      description: "The order creation interface is under development"
+    })
+  }
+
+  const handleDateRangePicker = () => {
+    toast.info("Date range picker coming soon", {
+      description: "Filter orders by date range functionality will be available soon"
+    })
+  }
+
+  const handleEditOrder = (order: Order) => {
+    setSelectedOrder(order)
+    toast.info("Edit order feature coming soon", {
+      description: `Edit functionality for order ${order.id} is under development`
+    })
+  }
+
+  const handleMarkPaid = async (orderId: string) => {
+    setIsProcessing(true)
+    try {
+      // Simulate API call
+      await new Promise(resolve => setTimeout(resolve, 1000))
+
+      // Update order payment status
+      setOrders(prevOrders =>
+        prevOrders.map(order =>
+          order.id === orderId
+            ? { ...order, paymentStatus: "paid" }
+            : order
+        )
+      )
+
+      // Update selected order if it's the one being modified
+      if (selectedOrder?.id === orderId) {
+        setSelectedOrder(prev => prev ? { ...prev, paymentStatus: "paid" } : null)
+      }
+
+      toast.success("Payment status updated", {
+        description: `Order ${orderId} has been marked as paid`
+      })
+    } catch {
+      toast.error("Failed to update payment status", {
+        description: "Please try again later"
+      })
+    } finally {
+      setIsProcessing(false)
+    }
+  }
+
+  const handlePrintReceipt = (order: Order) => {
+    toast.info("Print receipt feature coming soon", {
+      description: `Receipt generation for order ${order.id} is under development`
+    })
+  }
+
   // Filter orders based on search and filters
-  const filteredOrders = mockOrders.filter(order => {
+  const filteredOrders = orders.filter(order => {
     // Search filter
     const matchesSearch = searchTerm === "" ||
       order.id.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -223,7 +290,11 @@ export default function OrdersPage() {
                     <SelectItem value="partial">Partial</SelectItem>
                   </SelectContent>
                 </Select>
-                <Button variant="outline" className="h-10 text-sm px-3">
+                <Button
+                  variant="outline"
+                  className="h-10 text-sm px-3"
+                  onClick={handleDateRangePicker}
+                >
                   <Calendar className="h-4 w-4 sm:mr-2" />
                   <span className="hidden sm:inline">Date Range</span>
                 </Button>
@@ -252,11 +323,18 @@ export default function OrdersPage() {
 
             {/* Action Buttons - Stack on mobile */}
             <div className="flex flex-wrap gap-2">
-              <Button variant="outline" className="h-10 text-sm px-3 flex-1 sm:flex-none">
+              <Button
+                variant="outline"
+                className="h-10 text-sm px-3 flex-1 sm:flex-none"
+                onClick={handleImport}
+              >
                 <Download className="h-4 w-4 sm:mr-2" />
                 <span className="hidden sm:inline">Import</span>
               </Button>
-              <Button className="bg-accent hover:bg-accent/90 h-10 text-sm px-3 flex-1 sm:flex-none">
+              <Button
+                className="bg-accent hover:bg-accent/90 h-10 text-sm px-3 flex-1 sm:flex-none"
+                onClick={handleNewOrder}
+              >
                 <Plus className="h-4 w-4 sm:mr-2" />
                 <span className="hidden sm:inline">New Order</span>
                 <span className="sm:hidden">New</span>
@@ -327,14 +405,31 @@ export default function OrdersPage() {
                                   </Button>
                                 </DialogTrigger>
                                 <DialogContent className="sm:max-w-2xl">
-                                  <OrderDetailsModal order={selectedOrder} />
+                                  <OrderDetailsModal
+                                    order={selectedOrder}
+                                    onEditOrder={handleEditOrder}
+                                    onPrintReceipt={handlePrintReceipt}
+                                    onMarkPaid={handleMarkPaid}
+                                    isProcessing={isProcessing}
+                                  />
                                 </DialogContent>
                               </Dialog>
-                              <Button variant="ghost" size="sm" className="h-9 w-9 p-0 hidden sm:inline-flex">
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                className="h-9 w-9 p-0 hidden sm:inline-flex"
+                                onClick={() => handleEditOrder(order)}
+                              >
                                 <Edit className="h-4 w-4" />
                               </Button>
                               {order.paymentStatus === "pending" && (
-                                <Button variant="ghost" size="sm" className="h-9 w-9 p-0 hidden md:inline-flex">
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  className="h-9 w-9 p-0 hidden md:inline-flex"
+                                  onClick={() => handleMarkPaid(order.id)}
+                                  disabled={isProcessing}
+                                >
                                   <CheckCircle className="h-4 w-4" />
                                 </Button>
                               )}
@@ -399,10 +494,21 @@ export default function OrdersPage() {
                       </Button>
                     </DialogTrigger>
                     <DialogContent className="sm:max-w-2xl">
-                      <OrderDetailsModal order={selectedOrder} />
+                      <OrderDetailsModal
+                        order={selectedOrder}
+                        onEditOrder={handleEditOrder}
+                        onPrintReceipt={handlePrintReceipt}
+                        onMarkPaid={handleMarkPaid}
+                        isProcessing={isProcessing}
+                      />
                     </DialogContent>
                   </Dialog>
-                  <Button variant="outline" size="sm" className="flex-1 h-10 text-sm">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="flex-1 h-10 text-sm"
+                    onClick={() => handleEditOrder(order)}
+                  >
                     <Edit className="h-4 w-4 sm:mr-2" />
                     <span className="hidden sm:inline">Edit</span>
                   </Button>
@@ -415,7 +521,21 @@ export default function OrdersPage() {
     </MainLayout>
   )
 }
-function OrderDetailsModal({ order }: { order: Order | null }) {
+interface OrderDetailsModalProps {
+  order: Order | null
+  onEditOrder: (order: Order) => void
+  onPrintReceipt: (order: Order) => void
+  onMarkPaid: (orderId: string) => void
+  isProcessing: boolean
+}
+
+function OrderDetailsModal({
+  order,
+  onEditOrder,
+  onPrintReceipt,
+  onMarkPaid,
+  isProcessing
+}: OrderDetailsModalProps) {
   if (!order) return null
   return (
     <>
@@ -504,16 +624,28 @@ function OrderDetailsModal({ order }: { order: Order | null }) {
         </Card>
         {/* Action Buttons */}
         <div className="flex gap-2 pt-3">
-          <Button variant="outline" className="flex-1 h-8 text-xs px-3">
+          <Button
+            variant="outline"
+            className="flex-1 h-8 text-xs px-3"
+            onClick={() => onEditOrder(order)}
+          >
             <Edit className="h-3.5 w-3.5 mr-2" />
             Edit Order
           </Button>
-          <Button variant="outline" className="flex-1 h-8 text-xs px-3">
+          <Button
+            variant="outline"
+            className="flex-1 h-8 text-xs px-3"
+            onClick={() => onPrintReceipt(order)}
+          >
             <Download className="h-3.5 w-3.5 mr-2" />
             Print Receipt
           </Button>
           {order.paymentStatus === "pending" && (
-            <Button className="flex-1 bg-accent hover:bg-accent/90 h-8 text-xs px-3">
+            <Button
+              className="flex-1 bg-accent hover:bg-accent/90 h-8 text-xs px-3"
+              onClick={() => onMarkPaid(order.id)}
+              disabled={isProcessing}
+            >
               <CheckCircle className="h-3.5 w-3.5 mr-2" />
               Mark Paid
             </Button>

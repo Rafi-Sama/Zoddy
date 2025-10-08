@@ -8,6 +8,7 @@ import { findOptimalPosition, resolveOverlaps, adjustToGridBounds } from "@/lib/
 import { v4 as uuidv4 } from 'uuid'
 import { Button } from "@/components/ui/button"
 import { Save, RotateCcw } from "lucide-react"
+import { storage } from "@/lib/storage"
 
 // Default layout configuration
 const DEFAULT_WIDGETS: Widget[] = [
@@ -126,17 +127,10 @@ export default function DashboardPage() {
   // Load widgets from localStorage on mount
   useEffect(() => {
     const loadWidgets = () => {
-      const stored = localStorage.getItem('dashboardWidgets')
+      const stored = storage.get<Widget[]>('dashboardWidgets')
       if (stored) {
-        try {
-          const parsed = JSON.parse(stored)
-          setWidgets(parsed)
-          setSavedWidgets(parsed)
-        } catch (e) {
-          console.error('Failed to load dashboard layout:', e)
-          setWidgets(DEFAULT_WIDGETS)
-          setSavedWidgets(DEFAULT_WIDGETS)
-        }
+        setWidgets(stored)
+        setSavedWidgets(stored)
       } else {
         setWidgets(DEFAULT_WIDGETS)
         setSavedWidgets(DEFAULT_WIDGETS)
@@ -195,7 +189,7 @@ export default function DashboardPage() {
   }, [])
 
   const handleSaveLayout = useCallback(() => {
-    localStorage.setItem('dashboardWidgets', JSON.stringify(widgets))
+    storage.set('dashboardWidgets', widgets)
     setSavedWidgets(widgets)
     setHasUnsavedChanges(false)
   }, [widgets])
@@ -205,7 +199,7 @@ export default function DashboardPage() {
     if (confirmReset) {
       setWidgets(DEFAULT_WIDGETS)
       setSavedWidgets(DEFAULT_WIDGETS)
-      localStorage.setItem('dashboardWidgets', JSON.stringify(DEFAULT_WIDGETS))
+      storage.set('dashboardWidgets', DEFAULT_WIDGETS)
       setIsEditMode(false)
     }
   }, [])

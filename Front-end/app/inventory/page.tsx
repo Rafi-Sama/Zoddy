@@ -37,7 +37,8 @@ import {
   Download,
   Edit,
   Copy,
-  Archive
+  Archive,
+  CheckCircle
 } from "lucide-react"
 const mockInventory = [
   {
@@ -152,6 +153,7 @@ interface InventoryItem {
 }
 
 export default function InventoryPage() {
+  const [inventory, setInventory] = useState(mockInventory)
   const [selectedProduct, setSelectedProduct] = useState<InventoryItem | null>(null)
   const [adjustmentType, setAdjustmentType] = useState<"add" | "remove" | "set">("add")
   const [adjustmentQuantity, setAdjustmentQuantity] = useState("")
@@ -160,14 +162,16 @@ export default function InventoryPage() {
   const [searchTerm, setSearchTerm] = useState("")
   const [categoryFilter, setCategoryFilter] = useState("all")
   const [stockFilter, setStockFilter] = useState("all")
+  const [isProcessing, setIsProcessing] = useState(false)
+  const [successMessage, setSuccessMessage] = useState("")
 
-  const totalInventoryValue = mockInventory.reduce((sum, item) => sum + item.totalValue, 0)
-  const lowStockItems = mockInventory.filter(item => item.currentStock <= item.reorderLevel && item.currentStock > 0)
-  const outOfStockItems = mockInventory.filter(item => item.currentStock === 0)
-  const overstockedItems = mockInventory.filter(item => item.currentStock > item.reorderLevel * 3)
+  const totalInventoryValue = inventory.reduce((sum, item) => sum + item.totalValue, 0)
+  const lowStockItems = inventory.filter(item => item.currentStock <= item.reorderLevel && item.currentStock > 0)
+  const outOfStockItems = inventory.filter(item => item.currentStock === 0)
+  const overstockedItems = inventory.filter(item => item.currentStock > item.reorderLevel * 3)
 
   // Filter products based on search and filters
-  const filteredProducts = mockInventory.filter(item => {
+  const filteredProducts = inventory.filter(item => {
     const matchesSearch = item.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
                           item.sku.toLowerCase().includes(searchTerm.toLowerCase())
     const matchesCategory = categoryFilter === "all" || item.category === categoryFilter
@@ -185,17 +189,59 @@ export default function InventoryPage() {
   }
   const handleStockAdjustment = (product: InventoryItem) => {
     const quantity = parseInt(adjustmentQuantity)
-    if (!quantity || !adjustmentReason) return
-    // This would normally make an API call to update the stock
-    console.log(`Adjusting stock for ${product.name}:`, {
-      type: adjustmentType,
-      quantity,
-      reason: adjustmentReason
-    })
-    // Reset form
-    setAdjustmentQuantity("")
-    setAdjustmentReason("")
-    setSelectedProduct(null)
+    if (!quantity || !adjustmentReason) {
+      alert("Please enter quantity and reason for adjustment")
+      return
+    }
+
+    setIsProcessing(true)
+
+    // Simulate API call delay
+    setTimeout(() => {
+      // Update the inventory state
+      setInventory(prevInventory => {
+        return prevInventory.map(item => {
+          if (item.id === product.id) {
+            let newStock = item.currentStock
+
+            if (adjustmentType === "add") {
+              newStock = item.currentStock + quantity
+            } else if (adjustmentType === "remove") {
+              newStock = Math.max(0, item.currentStock - quantity)
+            } else if (adjustmentType === "set") {
+              newStock = quantity
+            }
+
+            // Update total value based on new stock
+            const newTotalValue = newStock * item.costPrice
+
+            return {
+              ...item,
+              currentStock: newStock,
+              totalValue: newTotalValue,
+              movements: {
+                thisWeek: {
+                  in: adjustmentType === "add" ? item.movements.thisWeek.in + quantity : item.movements.thisWeek.in,
+                  out: adjustmentType === "remove" ? item.movements.thisWeek.out + quantity : item.movements.thisWeek.out
+                },
+                lastWeek: item.movements.lastWeek
+              }
+            }
+          }
+          return item
+        })
+      })
+
+      // Show success message
+      setSuccessMessage(`Stock adjusted successfully for ${product.name}`)
+      setTimeout(() => setSuccessMessage(""), 3000)
+
+      // Reset form
+      setAdjustmentQuantity("")
+      setAdjustmentReason("")
+      setSelectedProduct(null)
+      setIsProcessing(false)
+    }, 1000)
   }
   return (
     <MainLayout
@@ -203,6 +249,14 @@ export default function InventoryPage() {
         { label: "Inventory" }
       ]}
     >
+      {/* Success Message */}
+      {successMessage && (
+        <div className="p-3 bg-green-50 border border-green-200 rounded-lg flex items-center gap-2 text-green-700">
+          <CheckCircle className="h-4 w-4" />
+          <span className="text-sm">{successMessage}</span>
+        </div>
+      )}
+
       {/* Overview Cards */}
       <div className="grid gap-3 md:grid-cols-4">
         <Card>
@@ -479,7 +533,7 @@ export default function InventoryPage() {
                         <div className="space-y-2">
                           <div>
                             <Label htmlFor="adjustmentType" className="text-xs">Adjustment Type</Label>
-                            <Select value={adjustmentType} onValueChange={(value: "add" | "remove" | "set") => setAdjustmentType(value)}>
+                            <Select value={adjustmentType} onValueChange={(value: "add" | "remove" | "set") => setAdjustmentType(value)} disabled={isProcessing}>
                               <SelectTrigger className="h-8 text-xs">
                                 <SelectValue />
                               </SelectTrigger>
@@ -499,11 +553,12 @@ export default function InventoryPage() {
                               value={adjustmentQuantity}
                               onChange={(e) => setAdjustmentQuantity(e.target.value)}
                               className="h-8 text-xs"
+                              disabled={isProcessing}
                             />
                           </div>
                           <div>
                             <Label htmlFor="reason" className="text-xs">Reason</Label>
-                            <Select value={adjustmentReason} onValueChange={setAdjustmentReason}>
+                            <Select value={adjustmentReason} onValueChange={setAdjustmentReason} disabled={isProcessing}>
                               <SelectTrigger className="h-8 text-xs">
                                 <SelectValue placeholder="Select reason" />
                               </SelectTrigger>
@@ -521,13 +576,22 @@ export default function InventoryPage() {
                             <Button
                               onClick={() => selectedProduct && handleStockAdjustment(selectedProduct)}
                               className="flex-1 bg-accent hover:bg-accent/90 h-8 text-xs px-3"
+                              disabled={isProcessing}
                             >
-                              Update Stock
+                              {isProcessing ? (
+                                <>
+                                  <span className="animate-spin h-3 w-3 mr-2 border-2 border-white border-t-transparent rounded-full inline-block" />
+                                  Processing...
+                                </>
+                              ) : (
+                                "Update Stock"
+                              )}
                             </Button>
                             <Button
                               variant="outline"
                               onClick={() => setSelectedProduct(null)}
                               className="flex-1 h-8 text-xs px-3"
+                              disabled={isProcessing}
                             >
                               Cancel
                             </Button>

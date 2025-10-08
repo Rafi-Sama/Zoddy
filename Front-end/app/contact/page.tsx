@@ -1,3 +1,5 @@
+"use client"
+import { useState } from "react"
 import { MarketingLayout } from "@/components/layout/marketing-layout"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
@@ -16,9 +18,73 @@ import {
   Mail,
   MapPin,
   Shield,
-  Users
+  Users,
+  CheckCircle
 } from "lucide-react"
+
 export default function ContactPage() {
+  const [formData, setFormData] = useState({
+    firstName: "",
+    lastName: "",
+    email: "",
+    phone: "",
+    businessName: "",
+    inquiryType: "",
+    subject: "",
+    message: ""
+  })
+  const [isSubmitting, setIsSubmitting] = useState(false)
+  const [isSubmitted, setIsSubmitted] = useState(false)
+
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+    const { id, value } = e.target
+    setFormData(prev => ({
+      ...prev,
+      [id.replace('-', '')]: value
+    }))
+  }
+
+  const handleSelectChange = (value: string) => {
+    setFormData(prev => ({
+      ...prev,
+      inquiryType: value
+    }))
+  }
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault()
+
+    // Validate required fields
+    if (!formData.firstName || !formData.lastName || !formData.email ||
+        !formData.inquiryType || !formData.subject || !formData.message) {
+      alert("Please fill in all required fields")
+      return
+    }
+
+    setIsSubmitting(true)
+
+    // Simulate API call
+    setTimeout(() => {
+      console.log("Form submitted:", formData)
+      setIsSubmitting(false)
+      setIsSubmitted(true)
+
+      // Reset form after 3 seconds
+      setTimeout(() => {
+        setFormData({
+          firstName: "",
+          lastName: "",
+          email: "",
+          phone: "",
+          businessName: "",
+          inquiryType: "",
+          subject: "",
+          message: ""
+        })
+        setIsSubmitted(false)
+      }, 3000)
+    }, 1500)
+  }
   return (
     <MarketingLayout>
       <div className="min-h-screen py-12">
@@ -43,68 +109,138 @@ export default function ContactPage() {
                     Send us a Message
                   </CardTitle>
                 </CardHeader>
-                <CardContent className="space-y-6">
-                  <div className="grid grid-cols-2 gap-4">
-                    <div>
-                      <Label htmlFor="first-name">First Name *</Label>
-                      <Input id="first-name" placeholder="Rahman" />
+                <CardContent>
+                  <form onSubmit={handleSubmit} className="space-y-6">
+                    {isSubmitted && (
+                      <div className="p-4 bg-green-50 border border-green-200 rounded-lg flex items-center gap-2 text-green-700">
+                        <CheckCircle className="h-5 w-5" />
+                        <span>Your message has been sent successfully! We&apos;ll get back to you soon.</span>
+                      </div>
+                    )}
+                    <div className="grid grid-cols-2 gap-4">
+                      <div>
+                        <Label htmlFor="first-name">First Name *</Label>
+                        <Input
+                          id="first-name"
+                          placeholder="Rahman"
+                          value={formData.firstName}
+                          onChange={handleInputChange}
+                          disabled={isSubmitting}
+                          required
+                        />
+                      </div>
+                      <div>
+                        <Label htmlFor="last-name">Last Name *</Label>
+                        <Input
+                          id="last-name"
+                          placeholder="Ahmed"
+                          value={formData.lastName}
+                          onChange={handleInputChange}
+                          disabled={isSubmitting}
+                          required
+                        />
+                      </div>
+                    </div>
+                    <div className="grid grid-cols-2 gap-4">
+                      <div>
+                        <Label htmlFor="email">Email Address *</Label>
+                        <Input
+                          id="email"
+                          type="email"
+                          placeholder="rahman@business.com"
+                          value={formData.email}
+                          onChange={handleInputChange}
+                          disabled={isSubmitting}
+                          required
+                        />
+                      </div>
+                      <div>
+                        <Label htmlFor="phone">Phone Number</Label>
+                        <Input
+                          id="phone"
+                          placeholder="+880 1XXX-XXXXXX"
+                          value={formData.phone}
+                          onChange={handleInputChange}
+                          disabled={isSubmitting}
+                        />
+                      </div>
+                    </div>
+                    <div className="grid grid-cols-2 gap-4">
+                      <div>
+                        <Label htmlFor="business-name">Business Name</Label>
+                        <Input
+                          id="business-name"
+                          placeholder="Rahman Electronics"
+                          value={formData.businessName}
+                          onChange={handleInputChange}
+                          disabled={isSubmitting}
+                        />
+                      </div>
+                      <div>
+                        <Label htmlFor="inquiry-type">Inquiry Type *</Label>
+                        <Select
+                          value={formData.inquiryType}
+                          onValueChange={handleSelectChange}
+                          disabled={isSubmitting}
+                        >
+                          <SelectTrigger>
+                            <SelectValue placeholder="Select type" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="support">Technical Support</SelectItem>
+                            <SelectItem value="sales">Sales Inquiry</SelectItem>
+                            <SelectItem value="partnership">Partnership</SelectItem>
+                            <SelectItem value="billing">Billing Question</SelectItem>
+                            <SelectItem value="feature">Feature Request</SelectItem>
+                            <SelectItem value="other">Other</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
                     </div>
                     <div>
-                      <Label htmlFor="last-name">Last Name *</Label>
-                      <Input id="last-name" placeholder="Ahmed" />
-                    </div>
-                  </div>
-                  <div className="grid grid-cols-2 gap-4">
-                    <div>
-                      <Label htmlFor="email">Email Address *</Label>
-                      <Input id="email" type="email" placeholder="rahman@business.com" />
-                    </div>
-                    <div>
-                      <Label htmlFor="phone">Phone Number</Label>
-                      <Input id="phone" placeholder="+880 1XXX-XXXXXX" />
-                    </div>
-                  </div>
-                  <div className="grid grid-cols-2 gap-4">
-                    <div>
-                      <Label htmlFor="business-name">Business Name</Label>
-                      <Input id="business-name" placeholder="Rahman Electronics" />
+                      <Label htmlFor="subject">Subject *</Label>
+                      <Input
+                        id="subject"
+                        placeholder="How can we help you?"
+                        value={formData.subject}
+                        onChange={handleInputChange}
+                        disabled={isSubmitting}
+                        required
+                      />
                     </div>
                     <div>
-                      <Label htmlFor="inquiry-type">Inquiry Type *</Label>
-                      <Select>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Select type" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="support">Technical Support</SelectItem>
-                          <SelectItem value="sales">Sales Inquiry</SelectItem>
-                          <SelectItem value="partnership">Partnership</SelectItem>
-                          <SelectItem value="billing">Billing Question</SelectItem>
-                          <SelectItem value="feature">Feature Request</SelectItem>
-                          <SelectItem value="other">Other</SelectItem>
-                        </SelectContent>
-                      </Select>
+                      <Label htmlFor="message">Message *</Label>
+                      <Textarea
+                        id="message"
+                        placeholder="Tell us more about your inquiry..."
+                        rows={6}
+                        value={formData.message}
+                        onChange={handleInputChange}
+                        disabled={isSubmitting}
+                        required
+                      />
                     </div>
-                  </div>
-                  <div>
-                    <Label htmlFor="subject">Subject *</Label>
-                    <Input id="subject" placeholder="How can we help you?" />
-                  </div>
-                  <div>
-                    <Label htmlFor="message">Message *</Label>
-                    <Textarea
-                      id="message"
-                      placeholder="Tell us more about your inquiry..."
-                      rows={6}
-                    />
-                  </div>
-                  <Button className="w-full">
-                    <Send className="h-4 w-4 mr-2" />
-                    Send Message
-                  </Button>
-                  <p className="text-sm text-muted-foreground text-center">
-                    We typically respond within 24 hours during business days.
-                  </p>
+                    <Button
+                      type="submit"
+                      className="w-full"
+                      disabled={isSubmitting}
+                    >
+                      {isSubmitting ? (
+                        <>
+                          <span className="animate-spin h-4 w-4 mr-2 border-2 border-white border-t-transparent rounded-full inline-block" />
+                          Sending...
+                        </>
+                      ) : (
+                        <>
+                          <Send className="h-4 w-4 mr-2" />
+                          Send Message
+                        </>
+                      )}
+                    </Button>
+                    <p className="text-sm text-muted-foreground text-center">
+                      We typically respond within 24 hours during business days.
+                    </p>
+                  </form>
                 </CardContent>
               </Card>
             </div>
