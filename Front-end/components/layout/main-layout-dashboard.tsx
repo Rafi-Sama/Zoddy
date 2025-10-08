@@ -46,7 +46,7 @@ export function MainLayoutDashboard({
     <SidebarProvider>
       <AppSidebarEnhanced />
       <main className="flex-1 overflow-auto">
-        <header className="flex h-12 md:h-12 shrink-0 items-center gap-1 md:gap-2 transition-[width,height] ease-linear group-has-[[data-collapsible=icon]]/sidebar-wrapper:h-10">
+        <header className="flex h-12 shrink-0 items-center gap-1 md:gap-2">
           <div className="flex items-center gap-1 md:gap-2 px-2 md:px-3 flex-1 min-w-0">
             <SidebarTrigger className="-ml-1 h-7 w-7 flex-shrink-0" />
             <Separator orientation="vertical" className="mr-1 md:mr-1.5 h-3.5 hidden sm:block" />
@@ -79,7 +79,7 @@ export function MainLayoutDashboard({
               </span>
             )}
           </div>
-          <div className="flex items-center gap-0.5 md:gap-1 px-2 md:px-3">
+          <div className="flex items-center gap-1 px-2 md:px-3">
             {/* Dashboard Controls - Only show on dashboard page */}
             {onAddWidget && (
               <>
@@ -90,16 +90,16 @@ export function MainLayoutDashboard({
                 <Button
                   variant={isEditMode ? "default" : "ghost"}
                   size="sm"
-                  className="h-7 w-7 p-0"
+                  className="h-8 w-8 px-0"
                   onClick={onToggleEditMode}
                   title={isEditMode ? "Exit edit mode" : "Edit dashboard layout"}
                 >
-                  <Settings2 className="h-3.5 md:h-4 w-3.5 md:w-4" />
+                  <Settings2 className="h-[1.2rem] w-[1.2rem]" />
                 </Button>
-                <Separator orientation="vertical" className="mx-0.5 md:mx-1.5 h-3.5 hidden sm:block" />
+                <Separator orientation="vertical" className="mx-1 h-4 hidden sm:block" />
               </>
             )}
-            <div className="hidden sm:flex items-center gap-0.5 md:gap-1">
+            <div className="hidden sm:flex items-center gap-1">
               <CalendarWidget />
               <Notifications />
             </div>

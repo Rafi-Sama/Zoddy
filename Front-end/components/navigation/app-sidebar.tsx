@@ -13,6 +13,7 @@ import {
   Calendar,
   Bell,
   Archive,
+  UsersRound,
 } from "lucide-react"
 import {
   Sidebar,
@@ -48,6 +49,11 @@ const items = [
     title: "Customers",
     url: "/customers",
     icon: Users,
+  },
+  {
+    title: "Team",
+    url: "/team",
+    icon: UsersRound,
   },
   {
     title: "Inventory",

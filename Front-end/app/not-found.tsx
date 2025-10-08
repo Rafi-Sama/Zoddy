@@ -67,8 +67,8 @@ export default function NotFound() {
               <Link href="/contact" className="block text-sm text-muted-foreground hover:text-foreground transition-colors">
                 Contact Us
               </Link>
-              <Link href="/about" className="block text-sm text-muted-foreground hover:text-foreground transition-colors">
-                About Zoddy
+              <Link href="/benefits" className="block text-sm text-muted-foreground hover:text-foreground transition-colors">
+                Benefits
               </Link>
             </CardContent>
           </Card>

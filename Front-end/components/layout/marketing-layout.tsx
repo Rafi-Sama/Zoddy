@@ -28,17 +28,11 @@ export function MarketingLayout({ children }: MarketingLayoutProps) {
 
           {/* Desktop Navigation */}
           <nav className="hidden md:flex items-center space-x-6 text-sm font-medium">
-            <Link href="#features" className="transition-colors hover:text-foreground/80 text-foreground/60">
-              Features
+            <Link href="/benefits" className="transition-colors hover:text-foreground/80 text-foreground/60">
+              Benefits
             </Link>
             <Link href="/pricing" className="transition-colors hover:text-foreground/80 text-foreground/60">
               Pricing
-            </Link>
-            <Link href="#testimonials" className="transition-colors hover:text-foreground/80 text-foreground/60">
-              Success Stories
-            </Link>
-            <Link href="#about" className="transition-colors hover:text-foreground/80 text-foreground/60">
-              About
             </Link>
           </nav>
 
@@ -79,8 +73,8 @@ export function MarketingLayout({ children }: MarketingLayoutProps) {
               <Link href="#testimonials" className="text-foreground/60 hover:text-foreground transition-colors py-2 text-sm">
                 Success Stories
               </Link>
-              <Link href="#about" className="text-foreground/60 hover:text-foreground transition-colors py-2 text-sm">
-                About
+              <Link href="/benefits" className="text-foreground/60 hover:text-foreground transition-colors py-2 text-sm">
+                Benefits
               </Link>
               <div className="flex flex-col space-y-2 pt-4 border-t">
                 <Link href="/login">

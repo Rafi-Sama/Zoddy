@@ -46,7 +46,7 @@ export const ROUTES = {
   SIGNOUT: '/signout',
   ONBOARDING: '/onboarding',
   PRICING: '/pricing',
-  ABOUT: '/about',
+  BENEFITS: '/benefits',
   CONTACT: '/contact'
 }
 

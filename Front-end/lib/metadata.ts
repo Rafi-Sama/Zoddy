@@ -107,9 +107,9 @@ export const pageMetadata = {
     description: 'Choose the perfect plan for your business needs'
   }),
 
-  about: () => generateMetadata({
-    title: 'About',
-    description: 'Learn more about Zoddy and our mission to help small businesses grow'
+  benefits: () => generateMetadata({
+    title: 'Benefits',
+    description: 'Discover how Zoddy transforms your WhatsApp business into a profit-generating machine. Save 3+ hours daily, never lose orders, and grow 10x faster.'
   }),
 
   contact: () => generateMetadata({

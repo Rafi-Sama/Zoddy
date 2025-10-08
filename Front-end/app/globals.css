@@ -155,5 +155,25 @@
   box-shadow: 0 0 5px rgba(0, 110, 160, 0.4); /* subtler glow */
 }
 
+/* Prevent horizontal scrollbar in sidebar during transitions */
+[data-slot="sidebar-inner"],
+[data-slot="sidebar-content"],
+[data-slot="sidebar-footer"] {
+  overflow-x: hidden !important;
+}
+
+/* Ensure smooth text truncation during sidebar collapse/expand */
+[data-slot="sidebar-menu-button"] span {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  transition: opacity 0.2s ease;
+}
+
+/* Hide text immediately when collapsing to prevent overflow */
+.group[data-state="collapsed"] [data-slot="sidebar-menu-button"] span:last-child {
+  opacity: 0;
+  width: 0;
+}
 
 }

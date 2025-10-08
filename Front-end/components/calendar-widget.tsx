@@ -97,8 +97,8 @@ export function CalendarWidget() {
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <Button variant="ghost" size="icon" className="h-8 w-8">
-          <CalendarIcon className="h-4 w-4" />
+        <Button variant="ghost" size="sm" className="h-8 w-8 px-0">
+          <CalendarIcon className="h-[1.2rem] w-[1.2rem]" />
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" className="w-[420px] p-0">

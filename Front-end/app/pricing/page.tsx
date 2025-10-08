@@ -1,121 +1,53 @@
 "use client"
+
+import { useState } from "react"
+import { useRouter } from "next/navigation"
 import { MarketingLayout } from "@/components/layout/marketing-layout"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
+import { Switch } from "@/components/ui/switch"
+import { Label } from "@/components/ui/label"
 import Link from "next/link"
+import { cn } from "@/lib/utils"
+import { SUBSCRIPTION_PLANS } from "@/types/billing"
+import { toast } from "sonner"
 import {
   CheckCircle,
   ArrowRight,
   Crown,
   Building,
   Users,
-  X,
   Star,
   Phone
 } from "lucide-react"
 export default function PricingPage() {
-  const plans = [
-    {
-      name: "Free Trial",
-      description: "Perfect for testing Zoddy",
-      price: "৳0",
-      period: "14 days",
-      badge: "Try First",
-      badgeColor: "bg-blue-100 text-blue-800",
-      features: [
-        "Up to 50 orders",
-        "5 products",
-        "2 customers",
-        "Basic dashboard",
-        "WhatsApp integration",
-        "Email support"
-      ],
-      limitations: [
-        "Limited analytics",
-        "No payment reminders",
-        "No team access"
-      ],
-      cta: "Start Free Trial",
-      ctaVariant: "outline" as const,
-      icon: Users
-    },
-    {
-      name: "Starter",
-      description: "For small business owners",
-      price: "৳৪৯৯",
-      period: "month",
-      badge: "Most Popular",
-      badgeColor: "bg-accent text-accent-foreground",
-      popular: true,
-      features: [
-        "Unlimited orders",
-        "Unlimited products",
-        "Unlimited customers",
-        "Advanced analytics",
-        "Payment reminders",
-        "WhatsApp automation",
-        "Inventory tracking",
-        "Customer insights",
-        "Export data",
-        "Priority support"
-      ],
-      limitations: [],
-      cta: "Get Started",
-      ctaVariant: "default" as const,
-      icon: Star,
-      savings: "Save ৳২,০০০ yearly"
-    },
-    {
-      name: "Growth",
-      description: "For growing businesses",
-      price: "৳৯৯৯",
-      period: "month",
-      badge: "Best Value",
-      badgeColor: "bg-green-100 text-green-800",
-      features: [
-        "Everything in Starter",
-        "Advanced reporting",
-        "Team collaboration (3 users)",
-        "API access",
-        "Custom integrations",
-        "SMS notifications",
-        "Advanced automation",
-        "Business analytics",
-        "Priority phone support",
-        "Dedicated account manager"
-      ],
-      limitations: [],
-      cta: "Upgrade to Growth",
-      ctaVariant: "default" as const,
-      icon: Crown,
-      savings: "Save ৳৪,০০০ yearly"
-    },
-    {
-      name: "Enterprise",
-      description: "For large businesses",
-      price: "Custom",
-      period: "contact us",
-      badge: "Contact Sales",
-      badgeColor: "bg-purple-100 text-purple-800",
-      features: [
-        "Everything in Growth",
-        "Unlimited team members",
-        "Custom features",
-        "White-label solution",
-        "On-premise deployment",
-        "24/7 phone support",
-        "Custom training",
-        "SLA guarantee",
-        "Dedicated infrastructure",
-        "Compliance support"
-      ],
-      limitations: [],
-      cta: "Contact Sales",
-      ctaVariant: "outline" as const,
-      icon: Building
+  const router = useRouter()
+  const [billingInterval, setBillingInterval] = useState<"monthly" | "yearly">("monthly")
+
+  const handleGetStarted = (planId: string) => {
+    if (planId === 'enterprise') {
+      toast.info("Our sales team will contact you shortly!")
+      router.push('/contact')
+      return
     }
-  ]
+    // Navigate to billing page with selected plan
+    router.push(`/account/billing?plan=${planId}&interval=${billingInterval}`)
+  }
+
+  const formatPrice = (price: number, interval: "monthly" | "yearly") => {
+    if (price === 0) return "Free"
+    const displayPrice = interval === "yearly" ? price * 10 : price // 2 months free
+    return `৳${displayPrice.toLocaleString('en-BD')}`
+  }
+
+  // Use the shared SUBSCRIPTION_PLANS from billing types
+  const plans = SUBSCRIPTION_PLANS.map(plan => ({
+    ...plan,
+    cta: plan.id === 'enterprise' ? 'Contact Sales' : plan.price === 0 ? 'Start Free' : 'Get Started',
+    ctaVariant: plan.popular ? 'default' as const : 'outline' as const,
+    icon: plan.id === 'free' ? Users : plan.id === 'starter' ? Star : plan.id === 'professional' ? Crown : Building
+  }))
   const faqs = [
     {
       question: "Can I change plans anytime?",
@@ -170,74 +102,110 @@ export default function PricingPage() {
           </div>
         </div>
       </section>
+      {/* Billing Toggle */}
+      <section className="container mx-auto px-4 pb-8">
+        <div className="flex items-center justify-center gap-4">
+          <Label htmlFor="billing-toggle" className={cn(
+            "text-base font-medium",
+            billingInterval === "monthly" && "text-primary"
+          )}>
+            Monthly
+          </Label>
+          <Switch
+            id="billing-toggle"
+            checked={billingInterval === "yearly"}
+            onCheckedChange={(checked) => setBillingInterval(checked ? "yearly" : "monthly")}
+          />
+          <Label htmlFor="billing-toggle" className={cn(
+            "text-base font-medium",
+            billingInterval === "yearly" && "text-primary"
+          )}>
+            Yearly
+            <Badge variant="default" className="ml-2 bg-green-500">
+              Save 2 months!
+            </Badge>
+          </Label>
+        </div>
+      </section>
+
       {/* Pricing Cards */}
       <section className="container mx-auto px-4 pb-16">
         <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8 max-w-7xl mx-auto">
-          {plans.map((plan, index) => (
-            <Card
-              key={index}
-              className={`relative overflow-hidden ${
-                plan.popular ? 'ring-2 ring-accent shadow-xl scale-105' : ''
-              } hover:shadow-lg transition-all`}
-            >
-              {plan.popular && (
-                <div className="absolute top-0 left-0 right-0 bg-accent text-accent-foreground text-center py-2 text-sm font-medium">
-                  Most Popular
-                </div>
-              )}
-              <CardHeader className={plan.popular ? 'pt-12' : ''}>
-                <div className="flex items-center gap-3 mb-4">
-                  <div className="p-2 rounded-lg bg-accent/10">
-                    {(() => {
-                      const Icon = plan.icon
-                      return <Icon className="h-6 w-6 text-accent" />
-                    })()}
+          {plans.map((plan) => {
+            const isEnterprise = plan.id === 'enterprise'
+            const savings = billingInterval === "yearly" && !isEnterprise && plan.price > 0 ? plan.price * 2 : 0
+
+            return (
+              <Card
+                key={plan.id}
+                className={cn(
+                  "relative overflow-hidden hover:shadow-lg transition-all",
+                  plan.popular && "ring-2 ring-accent shadow-xl scale-105"
+                )}
+              >
+                {plan.popular && (
+                  <div className="absolute top-0 left-0 right-0 bg-accent text-accent-foreground text-center py-2 text-sm font-medium">
+                    {plan.badge}
                   </div>
-                  <Badge className={plan.badgeColor}>{plan.badge}</Badge>
-                </div>
-                <CardTitle className="text-2xl">{plan.name}</CardTitle>
-                <CardDescription className="text-base">{plan.description}</CardDescription>
-                <div className="py-4">
-                  <div className="flex items-baseline gap-2">
-                    <span className="text-4xl font-bold">{plan.price}</span>
-                    <span className="text-muted-foreground">/{plan.period}</span>
+                )}
+                <CardHeader className={plan.popular ? 'pt-12' : ''}>
+                  <div className="flex items-center gap-3 mb-4">
+                    <div className="p-2 rounded-lg bg-accent/10">
+                      {(() => {
+                        const Icon = plan.icon
+                        return <Icon className="h-6 w-6 text-accent" />
+                      })()}
+                    </div>
+                    {plan.badge && !plan.popular && (
+                      <Badge variant="secondary">{plan.badge}</Badge>
+                    )}
                   </div>
-                  {plan.savings && (
-                    <div className="text-sm text-green-600 font-medium mt-1">{plan.savings}</div>
-                  )}
-                </div>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="space-y-3">
-                  {plan.features.map((feature, i) => (
-                    <div key={i} className="flex items-center gap-3">
-                      <CheckCircle className="w-4 h-4 text-green-500 flex-shrink-0" />
-                      <span className="text-sm">{feature}</span>
+                  <CardTitle className="text-2xl">{plan.name}</CardTitle>
+                  <CardDescription className="text-base">{plan.description}</CardDescription>
+                  <div className="py-4">
+                    <div className="flex items-baseline gap-2">
+                      <span className="text-4xl font-bold">
+                        {isEnterprise ? "Custom" : formatPrice(plan.price, billingInterval)}
+                      </span>
+                      {!isEnterprise && plan.price > 0 && (
+                        <span className="text-muted-foreground">
+                          /{billingInterval === "yearly" ? "year" : "month"}
+                        </span>
+                      )}
                     </div>
-                  ))}
-                  {plan.limitations.map((limitation, i) => (
-                    <div key={i} className="flex items-center gap-3 opacity-50">
-                      <X className="w-4 h-4 text-red-500 flex-shrink-0" />
-                      <span className="text-sm">{limitation}</span>
-                    </div>
-                  ))}
-                </div>
-                <div className="pt-4">
-                  <Link href={plan.name === "Enterprise" ? "/contact" : "/login"}>
+                    {savings > 0 && (
+                      <div className="text-sm text-green-600 font-medium mt-1">
+                        Save ৳{savings.toLocaleString('en-BD')} yearly
+                      </div>
+                    )}
+                  </div>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div className="space-y-3">
+                    {plan.features.slice(0, 6).map((feature, i) => (
+                      <div key={i} className="flex items-center gap-3">
+                        <CheckCircle className="w-4 h-4 text-green-500 flex-shrink-0" />
+                        <span className="text-sm">{feature}</span>
+                      </div>
+                    ))}
+                  </div>
+                  <div className="pt-4">
                     <Button
                       variant={plan.ctaVariant}
-                      className={`w-full ${
-                        plan.ctaVariant === 'default' ? 'bg-accent hover:bg-accent/90' : ''
-                      }`}
+                      className={cn(
+                        "w-full",
+                        plan.ctaVariant === 'default' && "bg-accent hover:bg-accent/90"
+                      )}
+                      onClick={() => handleGetStarted(plan.id)}
                     >
                       {plan.cta}
-                      {plan.name !== "Enterprise" && <ArrowRight className="ml-2 h-4 w-4" />}
+                      {plan.id !== "enterprise" && <ArrowRight className="ml-2 h-4 w-4" />}
                     </Button>
-                  </Link>
-                </div>
-              </CardContent>
-            </Card>
-          ))}
+                  </div>
+                </CardContent>
+              </Card>
+            )
+          })}
         </div>
       </section>
       {/* Features Comparison */}

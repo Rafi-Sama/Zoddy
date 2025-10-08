@@ -20,14 +20,12 @@ import {
   Camera,
   Shield,
   Bell,
-  CreditCard,
   Key,
   Smartphone,
   LogOut,
   Save,
   Edit2,
   ChevronRight,
-  Download,
   Palette,
   FileText,
   HelpCircle,
@@ -54,11 +52,6 @@ const navigationItems = [
     id: "security",
     label: "Security",
     icon: Shield,
-  },
-  {
-    id: "billing",
-    label: "Billing",
-    icon: CreditCard,
   },
   {
     id: "preferences",
@@ -439,78 +432,6 @@ function AccountContent() {
                     <Activity className="mr-2 h-3.5 w-3.5" />
                     View Security Log
                   </Button>
-                </CardContent>
-              </Card>
-            </div>
-          </div>
-        )
-
-      case "billing":
-        return (
-          <div className="space-y-4">
-            <div className="mb-4">
-              <h2 className="text-xl font-semibold">Billing & Subscription</h2>
-              <p className="text-sm text-muted-foreground">Manage your plan and payments</p>
-            </div>
-
-            <div className="grid gap-4 md:grid-cols-1 xl:grid-cols-3">
-              {/* Current Plan - Compact */}
-              <Card className="xl:col-span-1">
-                <CardHeader className="pb-3 pt-4">
-                  <CardTitle className="text-sm">Current Plan</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-2">
-                    <div>
-                      <p className="text-lg font-bold">Professional</p>
-                      <p className="text-2xl font-bold">$99<span className="text-sm font-normal">/mo</span></p>
-                    </div>
-                    <Badge className="bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400">Active</Badge>
-                    <div className="pt-2 space-y-1 text-sm">
-                      <p className="text-muted-foreground">Next billing: Jan 15</p>
-                      <p className="text-muted-foreground">Card: •••• 4242</p>
-                    </div>
-                    <div className="flex gap-2 pt-2">
-                      <Button size="sm" variant="outline" className="flex-1 h-7 text-xs">
-                        Change
-                      </Button>
-                      <Button size="sm" variant="outline" className="flex-1 h-7 text-xs">
-                        Update
-                      </Button>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-
-              {/* Recent Transactions - Compact */}
-              <Card className="xl:col-span-2">
-                <CardHeader className="pb-3 pt-4">
-                  <CardTitle className="text-sm">Recent Transactions</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-2">
-                    {[
-                      { date: "Dec 15", amount: "$99", invoice: "INV-012" },
-                      { date: "Nov 15", amount: "$99", invoice: "INV-011" },
-                      { date: "Oct 15", amount: "$99", invoice: "INV-010" },
-                    ].map((item, index) => (
-                      <div key={index} className="flex items-center justify-between py-1.5 px-2 rounded-lg border">
-                        <div className="flex items-center gap-3">
-                          <FileText className="h-3.5 w-3.5 text-muted-foreground" />
-                          <div>
-                            <span className="text-sm font-medium">{item.invoice}</span>
-                            <span className="text-xs text-muted-foreground ml-2">{item.date}</span>
-                          </div>
-                        </div>
-                        <div className="flex items-center gap-2">
-                          <span className="text-sm font-medium">{item.amount}</span>
-                          <Button variant="ghost" size="icon" className="h-6 w-6">
-                            <Download className="h-3 w-3" />
-                          </Button>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
                 </CardContent>
               </Card>
             </div>

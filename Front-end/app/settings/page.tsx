@@ -3,6 +3,7 @@
 import { useState, useEffect, Suspense } from "react"
 import { useSearchParams } from "next/navigation"
 import { MainLayout } from "@/components/layout/main-layout"
+import { BillingSection } from "@/components/account/billing-section"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
@@ -53,6 +54,12 @@ const navigationItems = [
     description: "Company information"
   },
   {
+    id: "billing",
+    label: "Billing",
+    icon: CreditCard,
+    description: "Subscription & invoices"
+  },
+  {
     id: "preferences",
     label: "Preferences",
     icon: Palette,
@@ -61,7 +68,7 @@ const navigationItems = [
   {
     id: "payments",
     label: "Payments",
-    icon: CreditCard,
+    icon: DollarSign,
     description: "Payment methods"
   },
   {
@@ -180,6 +187,9 @@ function SettingsContent() {
 
   const renderContent = () => {
     switch (activeSection) {
+      case "billing":
+        return <BillingSection />
+
       case "business":
         return (
           <div className="space-y-4">

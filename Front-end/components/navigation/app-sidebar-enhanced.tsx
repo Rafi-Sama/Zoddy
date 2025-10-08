@@ -12,6 +12,7 @@ import {
   TrendingUp,
   User2,
   Users,
+  UsersRound,
   Calendar,
   Bell,
   Archive,
@@ -92,6 +93,12 @@ const initialItems: MenuItem[] = [
     title: "Customers",
     url: "/customers",
     icon: Users,
+  },
+  {
+    id: "team",
+    title: "Team",
+    url: "/team",
+    icon: UsersRound,
   },
   {
     id: "inventory",
@@ -244,20 +251,38 @@ export function AppSidebarEnhanced() {
       if (saved) {
         try {
           const parsed = JSON.parse(saved)
-          // Filter out removed items (products and analytics) and reconstruct icon references
-          const validIds = initialItems.map(item => item.id)
-          const filtered = parsed.filter((item: MenuItem) => validIds.includes(item.id))
+          const savedIds = new Set(parsed.map((item: MenuItem) => item.id))
 
-          // If we filtered out any items, clear localStorage to use fresh data
-          if (filtered.length !== parsed.length) {
-            localStorage.removeItem('sidebarItems')
-            return initialItems
-          }
+          // Start with saved items that still exist in initialItems
+          const validSavedItems = parsed
+            .filter((item: MenuItem) => initialItems.some(i => i.id === item.id))
+            .map((item: MenuItem) => ({
+              ...item,
+              icon: initialItems.find(i => i.id === item.id)?.icon || Home
+            }))
 
-          return filtered.map((item: MenuItem) => ({
-            ...item,
-            icon: initialItems.find(i => i.id === item.id)?.icon || Home
-          }))
+          // Add any new items from initialItems that aren't in saved items
+          const newItems = initialItems.filter(item => !savedIds.has(item.id))
+
+          // Merge saved items with new items
+          const mergedItems = [...validSavedItems]
+
+          // Insert new items at their original positions
+          newItems.forEach(newItem => {
+            const originalIndex = initialItems.findIndex(i => i.id === newItem.id)
+            // Find the right position to insert
+            let insertIndex = mergedItems.length
+            for (let i = originalIndex + 1; i < initialItems.length; i++) {
+              const afterItemIndex = mergedItems.findIndex(item => item.id === initialItems[i].id)
+              if (afterItemIndex !== -1) {
+                insertIndex = afterItemIndex
+                break
+              }
+            }
+            mergedItems.splice(insertIndex, 0, newItem)
+          })
+
+          return mergedItems
         } catch {
           localStorage.removeItem('sidebarItems')
           return initialItems
@@ -270,18 +295,6 @@ export function AppSidebarEnhanced() {
   const [archiveExpanded, setArchiveExpanded] = useState(false)
   const [activeId, setActiveId] = useState<string | null>(null)
 
-  // Clean up any invalid items on mount
-  useEffect(() => {
-    const validIds = initialItems.map(item => item.id)
-    const hasInvalidItems = items.some(item => !validIds.includes(item.id))
-
-    if (hasInvalidItems) {
-      const validItems = items.filter(item => validIds.includes(item.id))
-      setItems(validItems.length > 0 ? validItems : initialItems)
-      localStorage.removeItem('sidebarItems')
-    }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [])
 
   // Save to localStorage whenever items change
   useEffect(() => {
@@ -457,7 +470,7 @@ export function AppSidebarEnhanced() {
                     <a href="/account">Account</a>
                   </DropdownMenuItem>
                   <DropdownMenuItem asChild>
-                    <a href="/account?section=billing">Billing</a>
+                    <a href="/settings?section=billing">Billing</a>
                   </DropdownMenuItem>
                   <DropdownMenuItem asChild>
                     <a href="/signout">Sign out</a>

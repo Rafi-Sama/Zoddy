@@ -122,3 +122,7 @@ Migrating previous data through Excel sheets or some renowned formats.
 Date formats, address formats, phone number validation
 Local payment methods (not everyone uses PayPal)
 Whatsapp pay, bkash pay, razor pay, stripe
+
+10. Deliver data integration & delivery make easy.
+
+11. Payment integration and payment make easy.

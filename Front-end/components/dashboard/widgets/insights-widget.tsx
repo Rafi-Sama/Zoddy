@@ -5,7 +5,7 @@ import { Clock, Star } from "lucide-react"
 export function InsightsWidget() {
   return (
     <Card className="h-full overflow-hidden">
-      <CardHeader className="p-3 sm:p-6">
+      <CardHeader>
         <CardTitle className="text-sm sm:text-base">📊 Business Insights</CardTitle>
         <CardDescription className="text-xs sm:text-sm">Your day-1 ROI dashboard</CardDescription>
       </CardHeader>

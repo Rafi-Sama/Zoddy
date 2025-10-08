@@ -92,10 +92,10 @@ export function WidgetSelectorDropdown({ onAddWidget, existingWidgets }: WidgetS
         <Button
           variant="ghost"
           size="sm"
-          className="h-7 w-7 p-0 relative"
+          className="h-8 w-8 px-0 relative"
           title="Add Dashboard Widget"
         >
-          <Plus className="h-4 w-4" />
+          <Plus className="h-[1.2rem] w-[1.2rem]" />
           {availableCount > 0 && (
             <span className="absolute -top-1 -right-1 h-3 w-3 bg-accent rounded-full text-[8px] flex items-center justify-center font-bold">
               {availableCount}
