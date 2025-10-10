@@ -9,17 +9,6 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
@@ -36,6 +25,7 @@ import {
 import { useState } from "react";
 import { useCalendar, type Reminder } from "@/contexts/calendar-context";
 import { cn } from "@/lib/utils";
+import { ReminderModal, type ReminderFormData } from "@/components/calendar/reminder-modal";
 
 export default function CalendarPage() {
   const {
@@ -144,19 +134,7 @@ export default function CalendarPage() {
     );
   };
 
-  const handleAddReminder = (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
-    const formData = new FormData(e.currentTarget);
-
-    const reminderData = {
-      title: formData.get("title") as string,
-      description: formData.get("description") as string,
-      date: formData.get("date") as string,
-      time: formData.get("time") as string,
-      type: formData.get("type") as "reminder" | "note" | "event",
-      completed: false,
-    };
-
+  const handleSubmitReminder = (reminderData: ReminderFormData) => {
     if (editingReminder) {
       updateReminder(editingReminder.id, reminderData);
       setEditingReminder(null);
@@ -165,7 +143,6 @@ export default function CalendarPage() {
     }
 
     setShowReminderDialog(false);
-    e.currentTarget.reset();
   };
 
   const getTypeColor = (type: string) => {
@@ -297,84 +274,16 @@ export default function CalendarPage() {
                       day: "numeric",
                     })}
                   </CardTitle>
-                  <Dialog
-                    open={showReminderDialog}
-                    onOpenChange={setShowReminderDialog}
+                  <Button
+                    size="icon"
+                    className="h-8 w-8"
+                    onClick={() => {
+                      setEditingReminder(null);
+                      setShowReminderDialog(true);
+                    }}
                   >
-                    <DialogTrigger asChild>
-                      <Button
-                        size="icon"
-                        className="h-8 w-8"
-                        onClick={() => setEditingReminder(null)}
-                      >
-                        <Plus className="h-4 w-4" />
-                      </Button>
-                    </DialogTrigger>
-                    <DialogContent>
-                      <DialogHeader>
-                        <DialogTitle>
-                          {editingReminder ? "Edit Reminder" : "Add Reminder"}
-                        </DialogTitle>
-                        <DialogDescription>
-                          Create a reminder for{" "}
-                          {selectedDate.toLocaleDateString()}
-                        </DialogDescription>
-                      </DialogHeader>
-                      <form onSubmit={handleAddReminder} className="space-y-4">
-                        <div>
-                          <Label htmlFor="title">Title</Label>
-                          <Input
-                            id="title"
-                            name="title"
-                            defaultValue={editingReminder?.title}
-                            required
-                          />
-                        </div>
-                        <div>
-                          <Label htmlFor="description">
-                            Description (optional)
-                          </Label>
-                          <Textarea
-                            id="description"
-                            name="description"
-                            defaultValue={editingReminder?.description}
-                          />
-                        </div>
-                        <div className="grid grid-cols-2 gap-4">
-                          <div>
-                            <Label htmlFor="time">Time</Label>
-                            <Input
-                              id="time"
-                              name="time"
-                              type="time"
-                              defaultValue={editingReminder?.time}
-                            />
-                          </div>
-                          <div>
-                            <Label htmlFor="type">Type</Label>
-                            <select
-                              id="type"
-                              name="type"
-                              defaultValue={editingReminder?.type || "reminder"}
-                              className="flex h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-sm"
-                            >
-                              <option value="reminder">Reminder</option>
-                              <option value="event">Event</option>
-                              <option value="note">Note</option>
-                            </select>
-                          </div>
-                        </div>
-                        <Input
-                          type="hidden"
-                          name="date"
-                          value={selectedDate.toISOString().split("T")[0]}
-                        />
-                        <Button type="submit" className="w-full">
-                          {editingReminder ? "Update" : "Create"}
-                        </Button>
-                      </form>
-                    </DialogContent>
-                  </Dialog>
+                    <Plus className="h-4 w-4" />
+                  </Button>
                 </div>
               </CardHeader>
               <CardContent className="space-y-2">
@@ -568,6 +477,15 @@ export default function CalendarPage() {
           </Card>
         </TabsContent>
       </Tabs>
+
+      {/* Reminder Modal */}
+      <ReminderModal
+        open={showReminderDialog}
+        onOpenChange={setShowReminderDialog}
+        selectedDate={selectedDate}
+        editingReminder={editingReminder}
+        onSubmit={handleSubmitReminder}
+      />
     </MainLayout>
   );
 }

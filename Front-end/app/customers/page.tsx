@@ -325,86 +325,94 @@ export default function CustomersPage() {
       </div>
       {/* Filter & Search Bar */}
       <Card>
-        <CardContent className="pt-3">
-          <div className="space-y-3">
-            {/* Search and Filters */}
-            <div className="flex flex-col sm:flex-row gap-2">
-              <div className="relative flex-1">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-3 w-3 text-muted-foreground" />
+        <CardContent className="pt-4">
+          <div className="flex flex-col gap-3">
+            {/* Search, Filters and View Toggle Row - Responsive layout */}
+            <div className="flex flex-col md:flex-row gap-3">
+              {/* Search Input - Takes 2/3 space on desktop, full width on mobile */}
+              <div className="relative flex-1 md:flex-[2]">
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                 <Input
                   placeholder="Search by name, phone, email..."
-                  className="pl-10 h-8 text-xs"
+                  className="pl-10 h-10 text-sm w-full"
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
                 />
               </div>
-              <Select value={statusFilter} onValueChange={setStatusFilter}>
-                <SelectTrigger className="w-full sm:w-[120px] h-8 text-xs">
-                  <SelectValue placeholder="Status" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All Status</SelectItem>
-                  <SelectItem value="vip">VIP</SelectItem>
-                  <SelectItem value="regular">Regular</SelectItem>
-                  <SelectItem value="new">New</SelectItem>
-                  <SelectItem value="inactive">Inactive</SelectItem>
-                </SelectContent>
-              </Select>
-              <Select value={sortBy} onValueChange={setSortBy}>
-                <SelectTrigger className="w-full sm:w-[120px] h-8 text-xs">
-                  <SelectValue placeholder="Sort by" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="name">Name</SelectItem>
-                  <SelectItem value="totalSpent">Total Spent</SelectItem>
-                  <SelectItem value="lastOrder">Last Order</SelectItem>
-                  <SelectItem value="totalOrders">Order Count</SelectItem>
-                </SelectContent>
-              </Select>
-              <div className="flex rounded-md border">
+
+              {/* Filters - Takes 1/3 space on desktop */}
+              <div className="flex gap-2 md:flex-[1]">
+                <Select value={statusFilter} onValueChange={setStatusFilter}>
+                  <SelectTrigger className="flex-1 h-10 text-sm">
+                    <SelectValue placeholder="Status" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">All Status</SelectItem>
+                    <SelectItem value="vip">VIP</SelectItem>
+                    <SelectItem value="regular">Regular</SelectItem>
+                    <SelectItem value="new">New</SelectItem>
+                    <SelectItem value="inactive">Inactive</SelectItem>
+                  </SelectContent>
+                </Select>
+                <Select value={sortBy} onValueChange={setSortBy}>
+                  <SelectTrigger className="flex-1 h-10 text-sm">
+                    <SelectValue placeholder="Sort by" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="name">Name</SelectItem>
+                    <SelectItem value="totalSpent">Total Spent</SelectItem>
+                    <SelectItem value="lastOrder">Last Order</SelectItem>
+                    <SelectItem value="totalOrders">Order Count</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              {/* View Toggle - Positioned to the far right */}
+              <div className="flex rounded-md border md:ml-auto">
                 <Button
                   variant={viewMode === "list" ? "default" : "ghost"}
-                  onClick={() => setViewMode("list")}
-                  className="rounded-r-none h-8 px-2"
                   size="sm"
+                  onClick={() => setViewMode("list")}
+                  className="rounded-r-none h-10 px-3"
                 >
-                  <List className="h-3 w-3" />
+                  <List className="h-4 w-4" />
                 </Button>
                 <Button
                   variant={viewMode === "grid" ? "default" : "ghost"}
-                  onClick={() => setViewMode("grid")}
-                  className="rounded-l-none h-8 px-2"
                   size="sm"
+                  onClick={() => setViewMode("grid")}
+                  className="rounded-l-none h-10 px-3"
                 >
-                  <Grid3X3 className="h-3 w-3" />
+                  <Grid3X3 className="h-4 w-4" />
                 </Button>
               </div>
             </div>
 
-            {/* Quick Actions */}
-            <div className="flex flex-wrap gap-1.5">
+            {/* Action Buttons - Stack on mobile */}
+            <div className="flex gap-2">
               <Button
                 variant="outline"
-                className="h-8 text-xs px-3"
+                className="h-10 text-sm px-3"
                 onClick={handleBroadcast}
               >
-                <MessageSquare className="h-3 w-3 mr-2" />
-                Broadcast
+                <MessageSquare className="h-4 w-4 sm:mr-2" />
+                <span className="hidden sm:inline">Broadcast</span>
               </Button>
               <Button
-                className="bg-accent hover:bg-accent/90 h-8 text-xs px-3"
+                className="bg-accent hover:bg-accent/90 h-10 text-sm px-3"
                 onClick={handleAddCustomer}
                 disabled={isAddingCustomer}
               >
                 {isAddingCustomer ? (
                   <>
-                    <span className="animate-spin h-3 w-3 mr-2 border-2 border-white border-t-transparent rounded-full inline-block" />
-                    Adding...
+                    <span className="animate-spin h-4 w-4 mr-2 border-2 border-white border-t-transparent rounded-full inline-block" />
+                    <span className="hidden sm:inline">Adding...</span>
                   </>
                 ) : (
                   <>
-                    <Plus className="h-3 w-3 mr-2" />
-                    Add Customer
+                    <Plus className="h-4 w-4 sm:mr-2" />
+                    <span className="hidden sm:inline">Add Customer</span>
+                    <span className="sm:hidden">Add</span>
                   </>
                 )}
               </Button>
@@ -585,107 +593,117 @@ export default function CustomersPage() {
         </div>
       ) : (
         <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm">Customer Management</CardTitle>
+          <CardHeader>
+            <CardTitle className="text-base sm:text-lg">Customer Management</CardTitle>
             <CardDescription className="text-xs">Complete customer database with analytics</CardDescription>
           </CardHeader>
           <CardContent>
-            <div className="overflow-x-auto">
-              <table className="w-full">
-                <thead>
-                  <tr className="border-b">
-                    <th className="text-left py-2 px-1.5 text-xs">Customer</th>
-                    <th className="text-left py-2 px-1.5 text-xs">Contact</th>
-                    <th className="text-left py-2 px-1.5 text-xs">Orders</th>
-                    <th className="text-left py-2 px-1.5 text-xs">Total Spent</th>
-                    <th className="text-left py-2 px-1.5 text-xs">Avg Order</th>
-                    <th className="text-left py-2 px-1.5 text-xs">Last Order</th>
-                    <th className="text-left py-2 px-1.5 text-xs">Status</th>
-                    <th className="text-left py-2 px-1.5 text-xs">Actions</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {filteredCustomers.map((customer) => {
-                    const daysSinceLastOrder = getDaysSinceLastOrder(customer.lastOrder)
-                    return (
-                      <tr key={customer.id} className="border-b hover:bg-muted/50">
-                        <td className="py-2 px-1.5">
-                          <div className="flex items-center gap-2">
-                            <div className="w-8 h-8 rounded-full bg-accent/10 flex items-center justify-center">
-                              <span className="font-bold text-accent text-xs">{customer.name[0]}</span>
-                            </div>
-                            <div>
-                              <div className="font-medium text-xs">{customer.name}</div>
-                              <div className="text-[10px] text-muted-foreground">{customer.favoriteCategory}</div>
-                            </div>
-                          </div>
-                        </td>
-                        <td className="py-2 px-1.5">
-                          <div className="space-y-0.5">
-                            <div className="flex items-center gap-1 text-[10px] text-muted-foreground">
-                              <Phone className="h-2.5 w-2.5" />
-                              {customer.phone}
-                            </div>
-                            <div className="flex items-center gap-1 text-[10px] text-muted-foreground">
-                              <Mail className="h-2.5 w-2.5" />
-                              {customer.email}
-                            </div>
-                          </div>
-                        </td>
-                        <td className="py-2 px-1.5">
-                          <div className="font-medium text-xs">{customer.totalOrders}</div>
-                        </td>
-                        <td className="py-2 px-1.5">
-                          <div className="font-medium text-xs">৳{customer.totalSpent.toLocaleString()}</div>
-                        </td>
-                        <td className="py-2 px-1.5">
-                          <div className="text-xs">৳{customer.averageOrderValue.toLocaleString()}</div>
-                        </td>
-                        <td className="py-2 px-1.5">
-                          <div className="text-xs">{daysSinceLastOrder}d ago</div>
-                          {daysSinceLastOrder > 30 && (
-                            <AlertTriangle className="h-3 w-3 text-yellow-600 mt-0.5" />
-                          )}
-                        </td>
-                        <td className="py-2 px-1.5">
-                          <Badge className={`${getStatusColor(customer.status)} text-[9px] px-1.5 py-0`}>
-                            {customer.status}
-                          </Badge>
-                        </td>
-                        <td className="py-2 px-1.5">
-                          <div className="flex gap-1">
-                            <Dialog>
-                              <DialogTrigger asChild>
+            <div className="overflow-x-auto -mx-4 sm:mx-0">
+              <div className="inline-block min-w-full align-middle">
+                <div className="overflow-hidden">
+                  <table className="min-w-full divide-y divide-border">
+                    <thead className="bg-muted/50">
+                      <tr>
+                        <th className="text-left py-3 px-3 text-xs font-medium text-muted-foreground">Customer</th>
+                        <th className="text-left py-3 px-3 text-xs font-medium text-muted-foreground hidden md:table-cell">Contact</th>
+                        <th className="text-left py-3 px-3 text-xs font-medium text-muted-foreground">Orders</th>
+                        <th className="text-left py-3 px-3 text-xs font-medium text-muted-foreground">Total Spent</th>
+                        <th className="text-left py-3 px-3 text-xs font-medium text-muted-foreground hidden lg:table-cell">Avg Order</th>
+                        <th className="text-left py-3 px-3 text-xs font-medium text-muted-foreground hidden sm:table-cell">Last Order</th>
+                        <th className="text-left py-3 px-3 text-xs font-medium text-muted-foreground">Status</th>
+                        <th className="text-left py-3 px-3 text-xs font-medium text-muted-foreground">Actions</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-border bg-background">
+                      {filteredCustomers.map((customer) => {
+                        const daysSinceLastOrder = getDaysSinceLastOrder(customer.lastOrder)
+                        return (
+                          <tr key={customer.id} className="hover:bg-muted/50">
+                            <td className="py-3 px-3">
+                              <div className="flex items-center gap-2">
+                                <div className="w-8 h-8 rounded-full bg-accent/10 flex items-center justify-center shrink-0">
+                                  <span className="font-bold text-accent text-xs">{customer.name[0]}</span>
+                                </div>
+                                <div>
+                                  <div className="font-medium text-xs">{customer.name}</div>
+                                  <div className="text-[10px] text-muted-foreground truncate max-w-[120px]">{customer.favoriteCategory}</div>
+                                </div>
+                              </div>
+                            </td>
+                            <td className="py-3 px-3 hidden md:table-cell">
+                              <div className="space-y-0.5">
+                                <div className="flex items-center gap-1 text-[10px] text-muted-foreground">
+                                  <Phone className="h-2.5 w-2.5" />
+                                  {customer.phone}
+                                </div>
+                                <div className="flex items-center gap-1 text-[10px] text-muted-foreground">
+                                  <Mail className="h-2.5 w-2.5" />
+                                  {customer.email}
+                                </div>
+                              </div>
+                            </td>
+                            <td className="py-3 px-3 font-medium text-xs whitespace-nowrap">{customer.totalOrders}</td>
+                            <td className="py-3 px-3 font-medium text-xs whitespace-nowrap">৳{customer.totalSpent.toLocaleString()}</td>
+                            <td className="py-3 px-3 text-xs hidden lg:table-cell whitespace-nowrap">৳{customer.averageOrderValue.toLocaleString()}</td>
+                            <td className="py-3 px-3 text-xs hidden sm:table-cell whitespace-nowrap">
+                              <div>{daysSinceLastOrder}d ago</div>
+                              {daysSinceLastOrder > 30 && (
+                                <AlertTriangle className="h-3 w-3 text-yellow-600 mt-0.5" />
+                              )}
+                            </td>
+                            <td className="py-3 px-3">
+                              <Badge className={`${getStatusColor(customer.status)} text-[9px] px-2 py-1 whitespace-nowrap`}>
+                                {getStatusIcon(customer.status)}
+                                <span className="ml-1 capitalize">{customer.status}</span>
+                              </Badge>
+                            </td>
+                            <td className="py-3 px-3">
+                              <div className="flex gap-1">
+                                <Dialog>
+                                  <DialogTrigger asChild>
+                                    <Button
+                                      variant="ghost"
+                                      size="sm"
+                                      onClick={() => setSelectedCustomer(customer)}
+                                      className="h-9 w-9 p-0"
+                                    >
+                                      <Edit className="h-4 w-4" />
+                                    </Button>
+                                  </DialogTrigger>
+                                  <DialogContent className="sm:max-w-2xl max-h-[90vh] overflow-y-auto">
+                                    <CustomerDetailsModal
+                                      customer={selectedCustomer}
+                                      onSendMessage={handleSendMessage}
+                                      onNewOrder={handleNewOrder}
+                                      onViewOrders={handleViewOrders}
+                                    />
+                                  </DialogContent>
+                                </Dialog>
                                 <Button
                                   variant="ghost"
-                                  className="h-6 px-1.5"
-                                  onClick={() => setSelectedCustomer(customer)}
+                                  size="sm"
+                                  className="h-9 w-9 p-0 hidden sm:inline-flex"
+                                  onClick={() => handleSendMessage(customer)}
                                 >
-                                  <Edit className="h-3 w-3" />
+                                  <MessageSquare className="h-4 w-4" />
                                 </Button>
-                              </DialogTrigger>
-                              <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
-                                <CustomerDetailsModal
-                          customer={selectedCustomer}
-                          onSendMessage={handleSendMessage}
-                          onNewOrder={handleNewOrder}
-                          onViewOrders={handleViewOrders}
-                        />
-                              </DialogContent>
-                            </Dialog>
-                            <Button variant="ghost" className="h-6 px-1.5" onClick={() => handleSendMessage(customer)}>
-                              <MessageSquare className="h-3 w-3" />
-                            </Button>
-                            <Button variant="ghost" className="h-6 px-1.5" onClick={() => handleNewOrder(customer)}>
-                              <ShoppingCart className="h-3 w-3" />
-                            </Button>
-                          </div>
-                        </td>
-                      </tr>
-                    )
-                  })}
-                </tbody>
-              </table>
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  className="h-9 w-9 p-0 hidden md:inline-flex"
+                                  onClick={() => handleNewOrder(customer)}
+                                >
+                                  <ShoppingCart className="h-4 w-4" />
+                                </Button>
+                              </div>
+                            </td>
+                          </tr>
+                        )
+                      })}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
             </div>
           </CardContent>
         </Card>

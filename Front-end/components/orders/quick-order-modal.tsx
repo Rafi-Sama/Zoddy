@@ -2,6 +2,7 @@
 
 import * as React from "react"
 import { useState, useRef, useEffect } from "react"
+import Image from "next/image"
 import {
   Plus,
   Upload,
@@ -375,9 +376,11 @@ export function QuickOrderModal({ onCreateOrder, trigger }: QuickOrderModalProps
                       <div className="flex gap-2">
                         {uploadedImages.map((img, index) => (
                           <div key={index} className="relative group shrink-0">
-                            <img
+                            <Image
                               src={img}
                               alt={`Screenshot ${index + 1}`}
+                              width={80}
+                              height={80}
                               className="h-20 w-20 object-cover rounded-md border"
                             />
                             <Button
