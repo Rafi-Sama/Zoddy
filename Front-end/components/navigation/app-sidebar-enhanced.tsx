@@ -378,13 +378,13 @@ export function AppSidebarEnhanced() {
     >
       <Sidebar collapsible="icon">
         <SidebarHeader>
-          <div className="flex items-center gap-1.5 md:gap-2 px-2 py-1.5">
-            <div className="flex h-6 w-6 items-center justify-center rounded-lg bg-accent text-accent-foreground flex-shrink-0">
+          <div className="flex items-center gap-1.5 md:gap-2 py-1.5 group-data-[collapsible=icon]/sidebar:justify-center group-data-[collapsible=icon]/sidebar:px-0">
+            <div className="flex h-6 w-6 items-center justify-center rounded-lg bg-accent text-accent-foreground flex-shrink-0 group-data-[collapsible=icon]/sidebar:mx-auto">
               <TrendingUp className="h-3.5 w-3.5" />
             </div>
-            <div className="grid flex-1 text-left text-xs leading-tight min-w-0">
+            <div className="grid flex-1 text-left text-xs leading-tight min-w-0 group-data-[collapsible=icon]/sidebar:hidden">
               <span className="truncate font-bold font-display">Zoddy</span>
-              <span className="truncate text-[10px] text-muted-foreground group-data-[collapsible=icon]/sidebar:hidden">Business Tracker</span>
+              <span className="truncate text-[10px] text-muted-foreground">Business Tracker</span>
             </div>
           </div>
         </SidebarHeader>
@@ -457,9 +457,10 @@ export function AppSidebarEnhanced() {
             <SidebarMenuItem>
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                  <SidebarMenuButton>
-                    <User2 /> Username
-                    <ChevronUp className="ml-auto" />
+                  <SidebarMenuButton tooltip="Account">
+                    <User2 className="group-data-[collapsible=icon]/sidebar:mx-auto" />
+                    <span className="group-data-[collapsible=icon]/sidebar:hidden">Username</span>
+                    <ChevronUp className="ml-auto group-data-[collapsible=icon]/sidebar:hidden" />
                   </SidebarMenuButton>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent

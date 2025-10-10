@@ -4,154 +4,207 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-Zoddy is a business progress and growth tracking system for small online businesses, particularly targeting sellers in Bangladesh who operate through social media platforms. The system provides order management, customer data collection, analytics visualization, inventory tracking, and sales insights.
+Zoddy is a business progress and growth tracking system for small online businesses in Bangladesh, specifically targeting sellers who operate through WhatsApp, Facebook, and other social media platforms. Built with Next.js 15, TypeScript, and Supabase.
 
 ## Development Commands
 
 ```bash
-# Navigate to the frontend directory first
+# Navigate to frontend first - all work happens in Front-end directory
 cd Front-end
 
 # Install dependencies
 npm install
 
-# Run development server
+# Run development server (localhost:3000)
 npm run dev
 
-# Build for production (runs linting first)
+# Build for production (runs ESLint before building)
 npm run build
 
 # Start production server
 npm start
 
-# Run linting
+# Run linting only
 npm run lint
-
-# Run a specific test (if tests are added)
-# npm test -- path/to/test.spec.ts
 ```
 
 ## Architecture Overview
 
-### Authentication Flow (WorkOS AuthKit)
+### Tech Stack
+- **Next.js 15.5.4** with App Router (NOT Pages Router)
+- **React 19.1.0** with Server Components by default
+- **TypeScript 5** with strict mode
+- **Tailwind CSS v4** (new PostCSS plugin architecture)
+- **WorkOS AuthKit** for authentication
+- **Supabase** for database and backend
+- **shadcn/ui** components built on Radix UI
+
+### Authentication (WorkOS AuthKit)
 - **Middleware Protection**: All routes protected by default via `middleware.ts`
-- **Public Routes**: Only `/`, `/about`, `/pricing`, `/contact` are public
-- **Auth Endpoints**:
-  - `/login` - Redirects to WorkOS sign-in
-  - `/callback` - OAuth callback, redirects to `/dashboard`
-  - `/signout` - Clears session
-- **User Sync**: WorkOS users are synced to Supabase via `lib/sync-user.ts`
+- **Public Routes**: Only `/`, `/benefits`, `/pricing`, `/contact` are public
+- **Auth Flow**:
+  - `/login` → Redirects to WorkOS OAuth
+  - `/callback` → Handles OAuth return, syncs user to Supabase, redirects to `/dashboard`
+  - `/signout` → Clears session
+- **User Sync**: `lib/sync-user.ts` syncs WorkOS users to Supabase on first login
 
-### Database Integration (Supabase)
-The project uses a dual-client pattern for Supabase:
-
-1. **Server Client** (`lib/supabase.ts`): Uses WorkOS access token for server-side operations
-2. **Browser Client** (`lib/supabase-client.ts`): Singleton pattern with AuthKit integration
-3. **API Abstraction** (`lib/api-client.ts`): Provides retry logic and standardized CRUD operations
-
-### State Management
-- **Global State**: React Context providers for Notifications and Calendar
-- **Persistence**: LocalStorage wrapper (`lib/storage.ts`) with expiration support
-- **Form State**: Custom `useForm` hook with validation
-
-### Component Architecture
-- **UI Components**: Radix UI primitives wrapped with shadcn/ui styling
-- **Layout**: Sidebar-based layout with draggable, archivable navigation
-- **Dashboard**: Widget-based system with drag-and-drop customization
-  - Widgets stored in `components/dashboard/widgets/`
-  - Layout persistence via LocalStorage
-  - Smart positioning with overlap resolution
-
-### Key Directories
-```
-Front-end/
-├── app/              # Next.js App Router pages and API routes
-├── components/       # React components
-│   ├── ui/          # Atomic shadcn/ui components
-│   ├── dashboard/   # Dashboard-specific components
-│   └── layout/      # Layout components
-├── contexts/        # React Context providers
-├── hooks/          # Custom React hooks
-├── lib/            # Utility functions and configurations
-├── types/          # TypeScript type definitions
-└── styles/         # Global CSS and Tailwind config
-```
-
-## Key Technical Decisions
-
-### Routing
-- Uses Next.js 15 App Router (not Pages Router)
-- Server Components by default, "use client" for interactivity
-- Protected routes handled via middleware
-
-### Styling
-- Tailwind CSS v4 with custom Zoddy brand colors
-- Dark/light theme support via CSS variables
-- Component variants managed with Class Variance Authority (CVA)
-
-### Forms & Validation
-- React Hook Form + Zod for type-safe form handling
-- Custom validation library (`lib/validation.ts`) with Bangladesh-specific rules
-- Real-time validation with error messages
-
-### Performance
-- Image optimization with AVIF/WebP formats
-- Static asset caching (1 year)
-- Lazy loading utilities
-- Debouncing for expensive operations
-
-## Common Patterns
-
-### Creating a New Page
-1. Add route in `app/[route]/page.tsx`
-2. Wrap with authentication if needed (default is protected)
-3. Use `MainLayout` or `MarketingLayout` component
-
-### Adding a Dashboard Widget
-1. Create widget component in `components/dashboard/widgets/`
-2. Add widget type to `types/dashboard.ts`
-3. Register in `WidgetFactory` (`components/dashboard/widget-factory.tsx`)
-4. Add to available widgets list
-
-### Working with Supabase
+### Database (Supabase) - Dual Client Pattern
 ```typescript
-// Server-side
+// Server-side (uses WorkOS access token)
 import { createClient } from '@/lib/supabase'
 const supabase = await createClient()
 
-// Client-side
+// Client-side (uses apiClient abstraction)
 import { apiClient } from '@/lib/api-client'
-const response = await apiClient.fetchWithAuth('table_name')
+const { data, error } = await apiClient.fetchWithAuth('orders', accessToken)
 ```
 
-### Using Context Providers
+### Dashboard Widget System
+- **Widget Components**: `components/dashboard/widgets/`
+- **Widget Factory**: `components/dashboard/widget-factory.tsx` renders widget by type
+- **Grid Layout**: Uses `react-grid-layout` for drag-and-drop
+- **Overlap Resolution**: `lib/dashboard-utils.ts` handles smart positioning
+- **Persistence**: Layouts saved to localStorage
+
+### State Management
+- **Global Contexts**:
+  - `contexts/notifications-context.tsx` - App-wide notifications
+  - `contexts/calendar-context.tsx` - Reminders and calendar events
+- **Form State**: Custom `useForm` hook with Zod validation
+- **Data Fetching**: `useDataFetch` hook with caching and retry logic
+- **Storage**: `lib/storage.ts` wraps localStorage with expiration
+
+## Key Patterns & Code Examples
+
+### Creating Protected Pages
 ```typescript
-// Access notifications
-import { useNotifications } from '@/contexts/notifications-context'
+// All routes are protected by default. For public routes, update middleware.ts
+// app/new-feature/page.tsx
+import { MainLayout } from '@/components/layout/main-layout'
 
-// Access calendar/reminders
-import { useCalendar } from '@/contexts/calendar-context'
+export default function NewFeaturePage() {
+  return (
+    <MainLayout title="New Feature">
+      {/* Page content */}
+    </MainLayout>
+  )
+}
 ```
+
+### Adding Dashboard Widgets
+1. Create component in `components/dashboard/widgets/new-widget.tsx`
+2. Add type to `types/dashboard.ts`:
+   ```typescript
+   export type WidgetType = 'revenue' | 'orders' | 'new-widget' | ...
+   ```
+3. Register in `components/dashboard/widget-factory.tsx`:
+   ```typescript
+   case 'new-widget':
+     return <NewWidget {...props} />
+   ```
+
+### Form Handling Pattern
+```typescript
+// Uses custom useForm hook with Zod validation
+import { useForm } from '@/hooks/use-form'
+import { validators } from '@/lib/validation'
+
+const form = useForm({
+  initialValues: { email: '', phone: '' },
+  validationRules: {
+    email: validators.email(),
+    phone: validators.phoneNumber() // Bangladesh format
+  },
+  onSubmit: async (data) => {
+    // Handle submission
+  }
+})
+```
+
+### Bangladesh-Specific Helpers
+```typescript
+// Currency formatting (lib/helpers.ts)
+formatCurrency(1000) // Returns "৳1,000"
+
+// Phone validation (lib/validation.ts)
+validators.phoneNumber() // Validates +880 and 01X-XXXX-XXXX formats
+
+// Payment methods in constants
+PAYMENT_METHODS: ['bkash', 'nagad', 'rocket', 'bank_transfer', 'cash']
+```
+
+### API Operations Pattern
+```typescript
+// Client-side data fetching with retry and auth
+const { data, loading, error, refetch } = useDataFetch(
+  'orders',
+  async () => {
+    const accessToken = await getAccessToken()
+    return apiClient.fetchWithAuth('orders', accessToken, {
+      filter: { status: 'pending' },
+      orderBy: { column: 'created_at', ascending: false }
+    })
+  },
+  { cacheTime: 5 * 60 * 1000, retryCount: 3 }
+)
+```
+
+## Important Implementation Details
+
+### Routing Rules
+- App Router with Server Components by default
+- Mark interactive components with `"use client"` directive
+- API routes go in `app/api/[endpoint]/route.ts`
+- Dynamic routes use `[param]` folders
+
+### Styling Guidelines
+- Use Tailwind CSS classes, not inline styles
+- Theme colors via CSS variables: `--primary`, `--secondary`, `--accent`
+- Dark mode class: `dark:` prefix on Tailwind classes
+- Component variants with CVA (Class Variance Authority)
+
+### Performance Optimizations
+- Images: Use Next.js Image with AVIF/WebP formats
+- Lazy loading: Use `lib/lazy-load.tsx` for heavy components
+- Debouncing: Use `useDebounce` hook for search/filter inputs
+- Caching: `useDataFetch` includes built-in cache management
+
+### Error Handling
+- API client includes automatic retry logic (3 attempts)
+- Toast notifications via `useToast()` hook
+- Form validation shows inline errors
 
 ## Environment Variables
 
-Required environment variables (stored in `.env`):
-- `NEXT_PUBLIC_WORKOS_CLIENT_ID` - WorkOS client ID
-- `WORKOS_API_KEY` - WorkOS API key
-- `WORKOS_CLIENT_ID` - WorkOS client ID (server-side)
-- `WORKOS_COOKIE_PASSWORD` - 32+ character secret for cookie encryption
-- `NEXT_PUBLIC_WORKOS_REDIRECT_URI` - OAuth callback URL
-- `NEXT_PUBLIC_SUPABASE_URL` - Supabase project URL
-- `NEXT_PUBLIC_SUPABASE_ANON_KEY` - Supabase anonymous key
-- `SUPABASE_SERVICE_ROLE_KEY` - Supabase service role key (for user sync)
+Required in `.env.local`:
+```
+# WorkOS Authentication
+WORKOS_API_KEY=sk_test_...
+WORKOS_CLIENT_ID=client_...
+NEXT_PUBLIC_WORKOS_CLIENT_ID=client_...
+WORKOS_COOKIE_PASSWORD=[32+ character secret]
+NEXT_PUBLIC_WORKOS_REDIRECT_URI=http://localhost:3000/callback
+
+# Supabase
+NEXT_PUBLIC_SUPABASE_URL=https://[project].supabase.co
+NEXT_PUBLIC_SUPABASE_ANON_KEY=eyJ...
+SUPABASE_SERVICE_ROLE_KEY=eyJ...
+```
 
 ## Business Context
 
-The application is designed for:
-- Small online sellers in Bangladesh
-- WhatsApp/Telegram-based businesses
-- Users currently tracking orders manually
-- Focus on mobile-first experience
-- Support for local payment methods (bKash, etc.)
+Target Users: Small online sellers in Bangladesh using WhatsApp/Facebook for sales
 
-Key features include order tracking, inventory management, customer insights, payment reminders, and marketing tools - all optimized for simplicity and ease of use.
+Key Features:
+- Multi-channel order tracking (WhatsApp, Facebook, phone)
+- Customer relationship management
+- Inventory tracking with low stock alerts
+- Payment tracking (bKash, Nagad, Rocket, bank, cash)
+- Analytics dashboard with customizable widgets
+- Team collaboration with role-based access
+
+Subscription Tiers:
+- Free: 50 orders/month
+- Starter: 500 orders/month, ৳500/month
+- Professional: Unlimited, API access, ৳1,500/month
+- Enterprise: Custom solutions

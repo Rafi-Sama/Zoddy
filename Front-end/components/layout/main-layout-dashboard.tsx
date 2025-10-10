@@ -43,7 +43,7 @@ export function MainLayoutDashboard({
   onToggleEditMode
 }: MainLayoutDashboardProps) {
   return (
-    <SidebarProvider>
+    <SidebarProvider defaultOpen={false}>
       <AppSidebarEnhanced />
       <main className="flex-1 overflow-auto">
         <header className="flex h-12 shrink-0 items-center gap-1 md:gap-2">

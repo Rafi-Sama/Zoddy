@@ -257,9 +257,11 @@ export default function InventoryPage() {
         </div>
       )}
 
-      {/* Overview Cards */}
-      <div className="grid gap-3 md:grid-cols-4">
-        <Card>
+      {/* Main Grid Layout */}
+      <div className="grid gap-3 md:grid-cols-4 md:grid-rows-2">
+
+        {/* Total Inventory Value - Row 1, Col 1 (1x1) */}
+        <Card className="md:col-span-1 md:row-span-1">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-1.5">
             <CardTitle className="text-xs font-medium">Total Inventory Value</CardTitle>
             <DollarSign className="h-2.5 w-2.5 text-muted-foreground" />
@@ -271,31 +273,8 @@ export default function InventoryPage() {
             </p>
           </CardContent>
         </Card>
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-1.5">
-            <CardTitle className="text-xs font-medium">Low Stock Items</CardTitle>
-            <AlertTriangle className="h-2.5 w-2.5 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-lg font-bold text-yellow-600">{lowStockItems.length}</div>
-            <p className="text-[10px] text-muted-foreground">
-              Need restocking soon
-            </p>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-1.5">
-            <CardTitle className="text-xs font-medium">Out of Stock</CardTitle>
-            <Package className="h-2.5 w-2.5 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-lg font-bold text-red-600">{outOfStockItems.length}</div>
-            <p className="text-[10px] text-muted-foreground">
-              Products unavailable
-            </p>
-          </CardContent>
-        </Card>
-        <Card>
+        {/* Overstocked Items - Row 2, Col 1 (1x1) */}
+        <Card className="md:col-span-1 md:row-span-1">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-1.5">
             <CardTitle className="text-xs font-medium">Overstocked Items</CardTitle>
             <TrendingUp className="h-2.5 w-2.5 text-muted-foreground" />
@@ -307,155 +286,150 @@ export default function InventoryPage() {
             </p>
           </CardContent>
         </Card>
-      </div>
-      {/* Search, Filter & Actions */}
-      <Card>
-        <CardContent className="pt-3">
-          <div className="space-y-3">
-            {/* Search and Filters */}
-            <div className="flex flex-col sm:flex-row gap-2">
-              <div className="relative flex-1">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-3 w-3 text-muted-foreground" />
-                <Input
-                  placeholder="Search products..."
-                  className="pl-10 h-8 text-xs"
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                />
-              </div>
-              <Select value={categoryFilter} onValueChange={setCategoryFilter}>
-                <SelectTrigger className="w-full sm:w-[140px] h-8 text-xs">
-                  <SelectValue placeholder="Category" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All Categories</SelectItem>
-                  <SelectItem value="Women's Fashion">Women&apos;s Fashion</SelectItem>
-                  <SelectItem value="Men's Fashion">Men&apos;s Fashion</SelectItem>
-                  <SelectItem value="Accessories">Accessories</SelectItem>
-                </SelectContent>
-              </Select>
-              <Select value={stockFilter} onValueChange={setStockFilter}>
-                <SelectTrigger className="w-full sm:w-[140px] h-8 text-xs">
-                  <SelectValue placeholder="Stock Status" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All Stock</SelectItem>
-                  <SelectItem value="instock">In Stock</SelectItem>
-                  <SelectItem value="lowstock">Low Stock</SelectItem>
-                  <SelectItem value="outofstock">Out of Stock</SelectItem>
-                </SelectContent>
-              </Select>
-              <div className="flex rounded-md border">
-                <Button
-                  variant={viewMode === "list" ? "default" : "ghost"}
-                  onClick={() => setViewMode("list")}
-                  className="rounded-r-none h-8 px-2"
-                  size="sm"
-                >
-                  <List className="h-3 w-3" />
-                </Button>
-                <Button
-                  variant={viewMode === "grid" ? "default" : "ghost"}
-                  onClick={() => setViewMode("grid")}
-                  className="rounded-l-none h-8 px-2"
-                  size="sm"
-                >
-                  <Grid3X3 className="h-3 w-3" />
-                </Button>
-              </div>
-            </div>
 
-            {/* Quick Actions */}
-            <div className="flex flex-wrap gap-1.5">
-              <Button className="bg-accent hover:bg-accent/90 h-8 text-xs px-3">
-                <Plus className="h-3 w-3 mr-2" />
-                Add Product
-              </Button>
-              <Button variant="outline" className="h-8 text-xs px-3">
-                <RotateCcw className="h-3 w-3 mr-2" />
-                Stock Take
-              </Button>
-              <Button variant="outline" className="h-8 text-xs px-3">
-                <History className="h-3 w-3 mr-2" />
-                Movement History
-              </Button>
-              <Button variant="outline" className="h-8 text-xs px-3">
-                <Download className="h-3 w-3 mr-2" />
-                Export
-              </Button>
-              <Button variant="outline" className="h-8 text-xs px-3">
-                <Download className="h-3 w-3 mr-2" />
-                Import
-              </Button>
-              <Button variant="outline" className="h-8 text-xs px-3">
-                <Settings className="h-3 w-3 mr-2" />
-                Settings
-              </Button>
+
+        {/* Low Stock - Row 1-2, Col 4 (2x1) */}
+        <Card className="md:col-span-1 md:row-span-2">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-1.5 text-yellow-600 text-sm">
+              <AlertTriangle className="h-3.5 w-3.5" />
+              Low Stock ({lowStockItems.length})
+            </CardTitle>
+            <CardDescription className="text-xs">
+              Items need restocking soon
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-1.5 max-h-[280px] overflow-y-auto">
+            {lowStockItems.length > 0 ? (
+              lowStockItems.map((item) => (
+                <div key={item.id} className="flex items-center justify-between p-1.5 border rounded">
+                  <div className="min-w-0 flex-1">
+                    <div className="font-medium text-xs truncate">{item.name}</div>
+                    <div className="text-[10px] text-muted-foreground">
+                      {item.currentStock} left (reorder at {item.reorderLevel})
+                    </div>
+                  </div>
+                  <Button className="h-6 text-[10px] px-2 ml-2 flex-shrink-0" variant="outline">
+                    Reorder
+                  </Button>
+                </div>
+              ))
+            ) : (
+              <div className="text-xs text-muted-foreground text-center py-4">
+                All items have healthy stock levels
+              </div>
+            )}
+          </CardContent>
+        </Card>
+
+
+        {/* Out of Stock - Row 2, Col 2-3 (1x2) */}
+        <Card className="md:col-span-1 md:row-span-2">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-1.5 text-red-600 text-sm">
+              <Package className="h-3.5 w-3.5" />
+              Out of Stock ({outOfStockItems.length})
+            </CardTitle>
+            <CardDescription className="text-xs">
+              These items are completely out of stock
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-1.5 max-h-[280px] overflow-y-auto">
+              {outOfStockItems.length > 0 ? (
+                outOfStockItems.map((item) => (
+                  <div key={item.id} className="flex items-center justify-between p-1.5 border rounded">
+                    <div className="min-w-0 flex-1">
+                      <div className="font-medium text-xs truncate">{item.name}</div>
+                      <div className="text-[10px] text-muted-foreground">Urgent</div>
+                    </div>
+                    <Button className="bg-red-600 hover:bg-red-700 h-5 text-[10px] px-2 ml-1">
+                      Restock
+                    </Button>
+                  </div>
+                ))
+              ) : (
+                <div className="col-span-2 text-xs text-muted-foreground text-center py-2">
+                  No items are currently out of stock
+                </div>
+              )}
+          </CardContent>
+        </Card>
+        {/* Search, Filter & Actions - Row 1, Col 2-3 (1x2) */}
+        <Card className="md:col-span-2 md:row-span-1">
+          <CardContent className="pt-3">
+            <div className="space-y-2">
+              {/* Search and Filters */}
+              <div className="flex flex-col sm:flex-row gap-2">
+                <div className="relative flex-1">
+                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-3 w-3 text-muted-foreground" />
+                  <Input
+                    placeholder="Search products..."
+                    className="pl-10 h-7 text-xs"
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                  />
+                </div>
+                <Select value={categoryFilter} onValueChange={setCategoryFilter}>
+                  <SelectTrigger className="w-full sm:w-[120px] h-7 text-xs">
+                    <SelectValue placeholder="Category" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">All Categories</SelectItem>
+                    <SelectItem value="Women's Fashion">Women&apos;s Fashion</SelectItem>
+                    <SelectItem value="Men's Fashion">Men&apos;s Fashion</SelectItem>
+                    <SelectItem value="Accessories">Accessories</SelectItem>
+                  </SelectContent>
+                </Select>
+                <Select value={stockFilter} onValueChange={setStockFilter}>
+                  <SelectTrigger className="w-full sm:w-[120px] h-7 text-xs">
+                    <SelectValue placeholder="Stock Status" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">All Stock</SelectItem>
+                    <SelectItem value="instock">In Stock</SelectItem>
+                    <SelectItem value="lowstock">Low Stock</SelectItem>
+                    <SelectItem value="outofstock">Out of Stock</SelectItem>
+                  </SelectContent>
+                </Select>
+                <div className="flex rounded-md border">
+                  <Button
+                    variant={viewMode === "list" ? "default" : "ghost"}
+                    onClick={() => setViewMode("list")}
+                    className="rounded-r-none h-7 px-2"
+                    size="sm"
+                  >
+                    <List className="h-3 w-3" />
+                  </Button>
+                  <Button
+                    variant={viewMode === "grid" ? "default" : "ghost"}
+                    onClick={() => setViewMode("grid")}
+                    className="rounded-l-none h-7 px-2"
+                    size="sm"
+                  >
+                    <Grid3X3 className="h-3 w-3" />
+                  </Button>
+                </div>
+              </div>
+
+              {/* Quick Actions */}
+              <div className="flex flex-wrap gap-1.5">
+                <Button variant="outline" className="h-7 text-xs px-2">
+                  <History className="h-3 w-3 mr-1" />
+                  History
+                </Button>
+                <Button variant="outline" className="h-7 text-xs px-2">
+                  <Download className="h-3 w-3 mr-1" />
+                  Import
+                </Button>
+                <Button className="bg-accent hover:bg-accent/90 h-7 text-xs px-2">
+                  <Plus className="h-3 w-3 mr-1" />
+                  Add
+                </Button>
+              </div>
             </div>
-          </div>
-        </CardContent>
-      </Card>
-      {/* Alerts Section */}
-      {(lowStockItems.length > 0 || outOfStockItems.length > 0) && (
-        <div className="grid gap-3 md:grid-cols-2">
-          {lowStockItems.length > 0 && (
-            <Card>
-              <CardHeader className="pb-2">
-                <CardTitle className="flex items-center gap-1.5 text-yellow-600 text-sm">
-                  <AlertTriangle className="h-3.5 w-3.5" />
-                  Low Stock Alert
-                </CardTitle>
-                <CardDescription className="text-xs">
-                  These items need restocking soon
-                </CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-1.5">
-                {lowStockItems.map((item) => (
-                  <div key={item.id} className="flex items-center justify-between p-1.5 border rounded-lg">
-                    <div>
-                      <div className="font-medium text-xs">{item.name}</div>
-                      <div className="text-[10px] text-muted-foreground">
-                        {item.currentStock} left (reorder at {item.reorderLevel})
-                      </div>
-                    </div>
-                    <Button className="h-6 text-[10px] px-2" variant="outline">
-                      Reorder
-                    </Button>
-                  </div>
-                ))}
-              </CardContent>
-            </Card>
-          )}
-          {outOfStockItems.length > 0 && (
-            <Card>
-              <CardHeader className="pb-2">
-                <CardTitle className="flex items-center gap-1.5 text-red-600 text-sm">
-                  <Package className="h-3.5 w-3.5" />
-                  Out of Stock
-                </CardTitle>
-                <CardDescription className="text-xs">
-                  These items are completely out of stock
-                </CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-1.5">
-                {outOfStockItems.map((item) => (
-                  <div key={item.id} className="flex items-center justify-between p-1.5 border rounded-lg">
-                    <div>
-                      <div className="font-medium text-xs">{item.name}</div>
-                      <div className="text-[10px] text-muted-foreground">
-                        Urgent restock needed
-                      </div>
-                    </div>
-                    <Button className="bg-red-600 hover:bg-red-700 h-6 text-[10px] px-2">
-                      Restock Now
-                    </Button>
-                  </div>
-                ))}
-              </CardContent>
-            </Card>
-          )}
-        </div>
-      )}
+          </CardContent>
+        </Card>
+      </div>
       {/* Products Display - Grid or List View */}
       {viewMode === "grid" ? (
         <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
@@ -768,12 +742,6 @@ export default function InventoryPage() {
                                 </div>
                               </DialogContent>
                             </Dialog>
-                            <Button variant="ghost" className="h-6 px-1.5">
-                              <Copy className="h-3 w-3" />
-                            </Button>
-                            <Button variant="ghost" className="h-6 px-1.5">
-                              <Archive className="h-3 w-3" />
-                            </Button>
                           </div>
                         </td>
                       </tr>
@@ -785,43 +753,7 @@ export default function InventoryPage() {
           </CardContent>
         </Card>
       )}
-      {/* Stock Movement Summary */}
-      <Card>
-        <CardHeader className="pb-2">
-          <CardTitle className="text-sm">Stock Movement Summary</CardTitle>
-          <CardDescription className="text-xs">Weekly stock in/out comparison</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="grid md:grid-cols-2 gap-3">
-            <div>
-              <h4 className="font-semibold mb-2 text-green-600 text-xs">Stock In (This Week)</h4>
-              <div className="space-y-1.5">
-                {mockInventory
-                  .filter(item => item.movements.thisWeek.in > 0)
-                  .map((item) => (
-                    <div key={item.id} className="flex justify-between items-center p-1.5 border rounded">
-                      <span className="text-xs">{item.name}</span>
-                      <Badge variant="outline" className="text-green-600 text-[9px] px-1.5 py-0">+{item.movements.thisWeek.in}</Badge>
-                    </div>
-                  ))}
-              </div>
-            </div>
-            <div>
-              <h4 className="font-semibold mb-2 text-red-600 text-xs">Stock Out (This Week)</h4>
-              <div className="space-y-1.5">
-                {mockInventory
-                  .filter(item => item.movements.thisWeek.out > 0)
-                  .map((item) => (
-                    <div key={item.id} className="flex justify-between items-center p-1.5 border rounded">
-                      <span className="text-xs">{item.name}</span>
-                      <Badge variant="outline" className="text-red-600 text-[9px] px-1.5 py-0">-{item.movements.thisWeek.out}</Badge>
-                    </div>
-                  ))}
-              </div>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
+      
     </MainLayout>
   )
 }

@@ -1,481 +1,620 @@
 "use client"
+
 import { useState } from "react"
+import { useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Textarea } from "@/components/ui/textarea"
 import { Badge } from "@/components/ui/badge"
+import { toast } from "sonner"
+import confetti from 'canvas-confetti'
 import {
   Building2,
-  Palette,
   CheckCircle,
+  Check,
   ArrowRight,
   ArrowLeft,
-  Sparkles,
-  TrendingUp,
   Package,
-  Store,
-  Upload,
-  Camera,
   Users,
-  Wallet,
-  ShoppingBag,
-  Settings,
-  Target,
-  CreditCard,
-  Calendar
+  Loader2,
+  MessageCircle,
+  Truck,
+  UserPlus,
+  Mail
 } from "lucide-react"
+import { useOrganizationWithFallback } from "@/hooks/use-organization"
+
+interface OnboardingData {
+  // Business Information
+  businessName: string
+  businessType: string
+  industry: string
+  phone: string
+
+  // Integrations (optional)
+  integrations: {
+    delivery: string[]
+    messaging: string[]
+  }
+
+  // Team Members (optional)
+  teamMembers: {
+    email: string
+    role: string
+  }[]
+}
+
 export default function OnboardingPage() {
+  const router = useRouter()
+  const { organizationId } = useOrganizationWithFallback()
   const [currentStep, setCurrentStep] = useState(1)
-  const totalSteps = 5
+  const [isLoading, setIsLoading] = useState(false)
+  const totalSteps = 3
+
+  const [formData, setFormData] = useState<OnboardingData>({
+    businessName: "",
+    businessType: "",
+    industry: "",
+    phone: "",
+    integrations: {
+      delivery: [],
+      messaging: []
+    },
+    teamMembers: []
+  })
+
+  const [newTeamMember, setNewTeamMember] = useState({ email: "", role: "" })
+
   const steps = [
     {
       id: 1,
-      title: "Welcome to Zoddy",
-      subtitle: "Let's get to know your business",
-      icon: Sparkles
+      title: "Business Info",
+      subtitle: "Essential details",
+      icon: Building2,
+      required: true
     },
     {
       id: 2,
-      title: "Business Information",
-      subtitle: "Tell us about your business",
-      icon: Building2
+      title: "Integrations",
+      subtitle: "Connect tools",
+      icon: Package,
+      required: false
     },
     {
       id: 3,
-      title: "Business Goals",
-      subtitle: "What are your priorities?",
-      icon: Target
-    },
-    {
-      id: 4,
-      title: "Setup Preferences",
-      subtitle: "Customize your experience",
-      icon: Palette
-    },
-    {
-      id: 5,
-      title: "You're All Set!",
-      subtitle: "Ready to grow your business",
-      icon: CheckCircle
+      title: "Team",
+      subtitle: "Invite members",
+      icon: Users,
+      required: false
     }
   ]
+
+  const handleInputChange = (field: keyof OnboardingData, value: string | { delivery: string[]; messaging: string[] } | { email: string; role: string }[]) => {
+    setFormData(prev => ({ ...prev, [field]: value }))
+  }
+
+  const handleIntegrationToggle = (type: 'delivery' | 'messaging', value: string) => {
+    setFormData(prev => {
+      const current = prev.integrations[type]
+      const isSelected = current.includes(value)
+
+      return {
+        ...prev,
+        integrations: {
+          ...prev.integrations,
+          [type]: isSelected
+            ? current.filter(item => item !== value)
+            : [...current, value]
+        }
+      }
+    })
+  }
+
+  const addTeamMember = () => {
+    if (!newTeamMember.email || !newTeamMember.role) {
+      toast.error("Please enter both email and role")
+      return
+    }
+
+    if (formData.teamMembers.some(m => m.email === newTeamMember.email)) {
+      toast.error("This email is already added")
+      return
+    }
+
+    setFormData(prev => ({
+      ...prev,
+      teamMembers: [...prev.teamMembers, newTeamMember]
+    }))
+    setNewTeamMember({ email: "", role: "" })
+    toast.success("Team member added")
+  }
+
+  const removeTeamMember = (email: string) => {
+    setFormData(prev => ({
+      ...prev,
+      teamMembers: prev.teamMembers.filter(m => m.email !== email)
+    }))
+  }
+
+  const validateBusinessInfo = () => {
+    return formData.businessName &&
+           formData.businessType &&
+           formData.industry &&
+           formData.phone
+  }
+
+  const celebrate = () => {
+    const duration = 2000
+    const animationEnd = Date.now() + duration
+    const defaults = { startVelocity: 30, spread: 360, ticks: 60, zIndex: 0 }
+
+    const randomInRange = (min: number, max: number) => Math.random() * (max - min) + min
+
+    const interval: NodeJS.Timeout = setInterval(() => {
+      const timeLeft = animationEnd - Date.now()
+      if (timeLeft <= 0) return clearInterval(interval)
+
+      const particleCount = 50 * (timeLeft / duration)
+      confetti({
+        ...defaults,
+        particleCount,
+        origin: { x: randomInRange(0.1, 0.3), y: Math.random() - 0.2 }
+      })
+      confetti({
+        ...defaults,
+        particleCount,
+        origin: { x: randomInRange(0.7, 0.9), y: Math.random() - 0.2 }
+      })
+    }, 250)
+  }
+
   const nextStep = () => {
+    if (currentStep === 1 && !validateBusinessInfo()) {
+      toast.error("Please fill in all required fields")
+      return
+    }
+
     if (currentStep < totalSteps) {
       setCurrentStep(currentStep + 1)
+    } else {
+      handleSubmit()
     }
   }
+
   const prevStep = () => {
     if (currentStep > 1) {
       setCurrentStep(currentStep - 1)
     }
   }
+
+  const skipToEnd = () => {
+    handleSubmit()
+  }
+
+  const handleSubmit = async () => {
+    if (!organizationId) {
+      toast.error("No organization found. Please try logging in again.")
+      return
+    }
+
+    if (!validateBusinessInfo()) {
+      toast.error("Please complete the business information first")
+      setCurrentStep(1)
+      return
+    }
+
+    setIsLoading(true)
+
+    try {
+      const response = await fetch('/api/onboarding', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          organizationId,
+          ...formData
+        })
+      })
+
+      if (response.ok) {
+        celebrate()
+        toast.success("Welcome to Zoddy! Your business is all set up.")
+        setTimeout(() => {
+          router.push('/dashboard')
+        }, 2000)
+      } else {
+        throw new Error('Failed to save onboarding data')
+      }
+    } catch (error) {
+      console.error('Error during onboarding:', error)
+      toast.error("Failed to complete onboarding. Please try again.")
+    } finally {
+      setIsLoading(false)
+    }
+  }
+
   const renderStepContent = () => {
     switch (currentStep) {
       case 1:
         return (
-          <div className="text-center space-y-6">
-            <div className="flex justify-center">
-              <div className="p-6 bg-primary/10 rounded-full">
-                <Sparkles className="h-16 w-16 text-primary" />
+          <div className="space-y-5">
+            <div className="text-center mb-6">
+              <div className="inline-flex p-3 bg-primary/10 rounded-full mb-4">
+                <Building2 className="h-8 w-8 text-primary" />
               </div>
+              <h2 className="text-xl font-semibold mb-2">Tell us about your business</h2>
+              <p className="text-sm text-muted-foreground">Just 4 quick fields to get started</p>
             </div>
+
             <div className="space-y-4">
-              <h2 className="text-3xl font-bold font-display">Welcome to Zoddy!</h2>
-              <p className="text-lg text-muted-foreground max-w-md mx-auto">
-                Were excited to help you transform your small business with data-driven growth tools.
-              </p>
-            </div>
-            <div className="grid gap-4 md:grid-cols-3 max-w-2xl mx-auto">
-              <div className="text-center space-y-2">
-                <TrendingUp className="h-8 w-8 text-primary mx-auto" />
-                <h3 className="font-semibold">Boost Sales</h3>
-                <p className="text-sm text-muted-foreground">Increase revenue with smart insights</p>
+              <div className="space-y-2">
+                <Label htmlFor="business-name" className="text-sm">
+                  Business Name <span className="text-destructive">*</span>
+                </Label>
+                <Input
+                  id="business-name"
+                  placeholder="e.g., Rahman Electronics"
+                  value={formData.businessName}
+                  onChange={(e) => handleInputChange('businessName', e.target.value)}
+                />
               </div>
-              <div className="text-center space-y-2">
-                <Users className="h-8 w-8 text-primary mx-auto" />
-                <h3 className="font-semibold">Understand Customers</h3>
-                <p className="text-sm text-muted-foreground">Know your customers better</p>
-              </div>
-              <div className="text-center space-y-2">
-                <Package className="h-8 w-8 text-primary mx-auto" />
-                <h3 className="font-semibold">Manage Inventory</h3>
-                <p className="text-sm text-muted-foreground">Never run out of stock</p>
-              </div>
-            </div>
-          </div>
-        )
-      case 2:
-        return (
-          <div className="space-y-6">
-            <div className="text-center space-y-2">
-              <Building2 className="h-12 w-12 text-primary mx-auto" />
-              <h2 className="text-2xl font-bold font-display">Tell us about your business</h2>
-              <p className="text-muted-foreground">This helps us personalize your Zoddy experience</p>
-            </div>
-            <div className="grid gap-6 max-w-2xl mx-auto">
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <Label htmlFor="business-name">Business Name *</Label>
-                  <Input id="business-name" placeholder="Rahman Electronics" />
-                </div>
-                <div>
-                  <Label htmlFor="business-type">Business Type *</Label>
-                  <Select>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div className="space-y-2">
+                  <Label htmlFor="business-type" className="text-sm">
+                    Business Type <span className="text-destructive">*</span>
+                  </Label>
+                  <Select
+                    value={formData.businessType}
+                    onValueChange={(value) => handleInputChange('businessType', value)}
+                  >
                     <SelectTrigger>
                       <SelectValue placeholder="Select type" />
                     </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="retail">Retail Store</SelectItem>
-                      <SelectItem value="restaurant">Restaurant</SelectItem>
+                      <SelectItem value="wholesale">Wholesale</SelectItem>
+                      <SelectItem value="ecommerce">E-commerce Only</SelectItem>
+                      <SelectItem value="hybrid">Physical + Online</SelectItem>
                       <SelectItem value="service">Service Business</SelectItem>
-                      <SelectItem value="online">Online Store</SelectItem>
                       <SelectItem value="manufacturing">Manufacturing</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="industry" className="text-sm">
+                    Industry <span className="text-destructive">*</span>
+                  </Label>
+                  <Select
+                    value={formData.industry}
+                    onValueChange={(value) => handleInputChange('industry', value)}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select industry" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="fashion">Fashion & Clothing</SelectItem>
+                      <SelectItem value="electronics">Electronics</SelectItem>
+                      <SelectItem value="food">Food & Beverages</SelectItem>
+                      <SelectItem value="beauty">Beauty & Cosmetics</SelectItem>
+                      <SelectItem value="home">Home & Furniture</SelectItem>
+                      <SelectItem value="health">Health & Pharmacy</SelectItem>
+                      <SelectItem value="sports">Sports & Fitness</SelectItem>
+                      <SelectItem value="books">Books & Stationery</SelectItem>
+                      <SelectItem value="jewelry">Jewelry & Accessories</SelectItem>
                       <SelectItem value="other">Other</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
               </div>
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <Label htmlFor="location">Location *</Label>
-                  <Select>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select division" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="dhaka">Dhaka</SelectItem>
-                      <SelectItem value="chittagong">Chittagong</SelectItem>
-                      <SelectItem value="rajshahi">Rajshahi</SelectItem>
-                      <SelectItem value="khulna">Khulna</SelectItem>
-                      <SelectItem value="sylhet">Sylhet</SelectItem>
-                      <SelectItem value="barisal">Barisal</SelectItem>
-                      <SelectItem value="rangpur">Rangpur</SelectItem>
-                      <SelectItem value="mymensingh">Mymensingh</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div>
-                  <Label htmlFor="employees">Number of Employees</Label>
-                  <Select>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select range" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="1">Just me</SelectItem>
-                      <SelectItem value="2-5">2-5 employees</SelectItem>
-                      <SelectItem value="6-10">6-10 employees</SelectItem>
-                      <SelectItem value="11-50">11-50 employees</SelectItem>
-                      <SelectItem value="50+">50+ employees</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-              </div>
-              <div>
-                <Label htmlFor="address">Business Address</Label>
-                <Textarea id="address" placeholder="Enter your business address..." rows={2} />
-              </div>
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <Label htmlFor="phone">Phone Number</Label>
-                  <Input id="phone" placeholder="+880 1XXX-XXXXXX" />
-                </div>
-                <div>
-                  <Label htmlFor="website">Website (Optional)</Label>
-                  <Input id="website" placeholder="www.yourbusiness.com" />
-                </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="phone" className="text-sm">
+                  Phone Number <span className="text-destructive">*</span>
+                </Label>
+                <Input
+                  id="phone"
+                  type="tel"
+                  placeholder="+880 1XXX-XXXXXX"
+                  value={formData.phone}
+                  onChange={(e) => handleInputChange('phone', e.target.value)}
+                />
               </div>
             </div>
           </div>
         )
+
+      case 2:
+        return (
+          <div className="space-y-5">
+            <div className="text-center mb-6">
+              <div className="inline-flex p-3 bg-primary/10 rounded-full mb-4">
+                <Package className="h-8 w-8 text-primary" />
+              </div>
+              <h2 className="text-xl font-semibold mb-2">Connect Your Tools</h2>
+              <p className="text-sm text-muted-foreground">Optional - you can set these up later</p>
+            </div>
+
+            {/* Delivery Services */}
+            <Card>
+              <CardHeader className="pb-3">
+                <CardTitle className="text-base flex items-center gap-2">
+                  <Truck className="h-4 w-4" />
+                  Delivery Services
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="grid grid-cols-2 gap-2">
+                  {[
+                    "Pathao",
+                    "RedX",
+                    "Steadfast",
+                    "Sundarban",
+                    "Paperfly",
+                    "eCourier"
+                  ].map((service) => (
+                    <button
+                      key={service}
+                      type="button"
+                      onClick={() => handleIntegrationToggle('delivery', service.toLowerCase())}
+                      className={`flex items-center justify-between p-2.5 rounded-lg border text-sm transition-colors ${
+                        formData.integrations.delivery.includes(service.toLowerCase())
+                          ? "bg-primary text-primary-foreground border-primary"
+                          : "hover:bg-muted border-input"
+                      }`}
+                    >
+                      <span>{service}</span>
+                      {formData.integrations.delivery.includes(service.toLowerCase()) && (
+                        <Check className="h-3.5 w-3.5" />
+                      )}
+                    </button>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Messaging Platforms */}
+            <Card>
+              <CardHeader className="pb-3">
+                <CardTitle className="text-base flex items-center gap-2">
+                  <MessageCircle className="h-4 w-4" />
+                  Messaging Platforms
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="grid grid-cols-2 gap-2">
+                  {[
+                    "WhatsApp",
+                    "Telegram",
+                    "Messenger",
+                    "Viber",
+                    "SMS",
+                    "Email"
+                  ].map((platform) => (
+                    <button
+                      key={platform}
+                      type="button"
+                      onClick={() => handleIntegrationToggle('messaging', platform.toLowerCase())}
+                      className={`flex items-center justify-between p-2.5 rounded-lg border text-sm transition-colors ${
+                        formData.integrations.messaging.includes(platform.toLowerCase())
+                          ? "bg-primary text-primary-foreground border-primary"
+                          : "hover:bg-muted border-input"
+                      }`}
+                    >
+                      <span>{platform}</span>
+                      {formData.integrations.messaging.includes(platform.toLowerCase()) && (
+                        <Check className="h-3.5 w-3.5" />
+                      )}
+                    </button>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+        )
+
       case 3:
         return (
-          <div className="space-y-6">
-            <div className="text-center space-y-2">
-              <Target className="h-12 w-12 text-primary mx-auto" />
-              <h2 className="text-2xl font-bold font-display">What are your main goals?</h2>
-              <p className="text-muted-foreground">Select your top priorities (choose up to 3)</p>
-            </div>
-            <div className="grid gap-4 max-w-2xl mx-auto">
-              {[
-                {
-                  icon: TrendingUp,
-                  title: "Increase Sales Revenue",
-                  description: "Boost overall sales and profitability"
-                },
-                {
-                  icon: Users,
-                  title: "Grow Customer Base",
-                  description: "Attract and retain more customers"
-                },
-                {
-                  icon: Package,
-                  title: "Better Inventory Management",
-                  description: "Optimize stock levels and reduce waste"
-                },
-                {
-                  icon: Wallet,
-                  title: "Improve Cash Flow",
-                  description: "Better financial management and planning"
-                },
-                {
-                  icon: ShoppingBag,
-                  title: "Go Digital/Online",
-                  description: "Establish online presence and e-commerce"
-                },
-                {
-                  icon: Settings,
-                  title: "Streamline Operations",
-                  description: "Improve efficiency and save time"
-                }
-              ].map((goal, i) => (
-                <div key={i} className="p-4 border rounded-lg hover:bg-primary/5 cursor-pointer transition-all group">
-                  <div className="flex items-start space-x-4">
-                    <div className="p-2 bg-primary/10 rounded group-hover:bg-primary/20 transition-colors">
-                      <goal.icon className="h-6 w-6 text-primary" />
-                    </div>
-                    <div className="flex-1">
-                      <h3 className="font-semibold group-hover:text-primary transition-colors">{goal.title}</h3>
-                      <p className="text-sm text-muted-foreground">{goal.description}</p>
-                    </div>
-                    <div className="w-4 h-4 border-2 border-primary rounded group-hover:bg-primary/20" />
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-        )
-      case 4:
-        return (
-          <div className="space-y-6">
-            <div className="text-center space-y-2">
-              <Palette className="h-12 w-12 text-primary mx-auto" />
-              <h2 className="text-2xl font-bold font-display">Customize your experience</h2>
-              <p className="text-muted-foreground">Set up your preferences and integrations</p>
-            </div>
-            <div className="grid gap-6 max-w-2xl mx-auto">
-              <Card>
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2 text-lg">
-                    <Store className="h-5 w-5" />
-                    Business Logo
-                  </CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  <div className="border-2 border-dashed border-muted-foreground/25 rounded-lg p-8 text-center">
-                    <Camera className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-                    <p className="text-sm text-muted-foreground mb-2">Upload your business logo</p>
-                    <Button variant="outline">
-                      <Upload className="h-4 w-4 mr-2" />
-                      Choose File
-                    </Button>
-                  </div>
-                </CardContent>
-              </Card>
-              <Card>
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2 text-lg">
-                    <CreditCard className="h-5 w-5" />
-                    Payment Methods
-                  </CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  <p className="text-sm text-muted-foreground">Select payment methods you accept</p>
-                  <div className="grid grid-cols-2 gap-3">
-                    {[
-                      { name: "Cash", popular: true },
-                      { name: "bKash", popular: true },
-                      { name: "Nagad", popular: true },
-                      { name: "Rocket", popular: false },
-                      { name: "Bank Transfer", popular: false },
-                      { name: "Credit/Debit Card", popular: false }
-                    ].map((method, i) => (
-                      <div key={i} className="flex items-center justify-between p-3 border rounded">
-                        <span className="text-sm">{method.name}</span>
-                        <div className="flex items-center space-x-2">
-                          {method.popular && <Badge variant="secondary" className="text-xs">Popular</Badge>}
-                          <div className="w-4 h-4 border-2 border-primary rounded" />
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </CardContent>
-              </Card>
-              <Card>
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2 text-lg">
-                    <Calendar className="h-5 w-5" />
-                    Business Hours
-                  </CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  <div className="grid grid-cols-3 gap-4">
-                    <div>
-                      <Label>Opens At</Label>
-                      <Select>
-                        <SelectTrigger>
-                          <SelectValue placeholder="9:00 AM" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="8">8:00 AM</SelectItem>
-                          <SelectItem value="9">9:00 AM</SelectItem>
-                          <SelectItem value="10">10:00 AM</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </div>
-                    <div>
-                      <Label>Closes At</Label>
-                      <Select>
-                        <SelectTrigger>
-                          <SelectValue placeholder="6:00 PM" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="17">5:00 PM</SelectItem>
-                          <SelectItem value="18">6:00 PM</SelectItem>
-                          <SelectItem value="19">7:00 PM</SelectItem>
-                          <SelectItem value="20">8:00 PM</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </div>
-                    <div>
-                      <Label>Closed Days</Label>
-                      <Select>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Friday" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="friday">Friday</SelectItem>
-                          <SelectItem value="saturday">Saturday</SelectItem>
-                          <SelectItem value="sunday">Sunday</SelectItem>
-                          <SelectItem value="none">No closed days</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-            </div>
-          </div>
-        )
-      case 5:
-        return (
-          <div className="text-center space-y-6">
-            <div className="flex justify-center">
-              <div className="p-6 bg-green-100 rounded-full">
-                <CheckCircle className="h-16 w-16 text-green-600" />
+          <div className="space-y-5">
+            <div className="text-center mb-6">
+              <div className="inline-flex p-3 bg-primary/10 rounded-full mb-4">
+                <Users className="h-8 w-8 text-primary" />
               </div>
+              <h2 className="text-xl font-semibold mb-2">Invite Your Team</h2>
+              <p className="text-sm text-muted-foreground">Optional - add team members anytime</p>
             </div>
-            <div className="space-y-4">
-              <h2 className="text-3xl font-bold font-display text-green-600">Congratulations!</h2>
-              <p className="text-lg text-muted-foreground max-w-md mx-auto">
-                Your Zoddy account is now set up and ready to help grow your business.
-              </p>
-            </div>
-            <div className="grid gap-4 md:grid-cols-3 max-w-2xl mx-auto">
-              <Card className="text-center p-4">
-                <TrendingUp className="h-8 w-8 text-primary mx-auto mb-2" />
-                <h3 className="font-semibold mb-1">Track Performance</h3>
-                <p className="text-sm text-muted-foreground">Monitor sales, customers, and growth</p>
-              </Card>
-              <Card className="text-center p-4">
-                <Package className="h-8 w-8 text-primary mx-auto mb-2" />
-                <h3 className="font-semibold mb-1">Manage Inventory</h3>
-                <p className="text-sm text-muted-foreground">Keep track of your stock levels</p>
-              </Card>
-              <Card className="text-center p-4">
-                <Users className="h-8 w-8 text-primary mx-auto mb-2" />
-                <h3 className="font-semibold mb-1">Understand Customers</h3>
-                <p className="text-sm text-muted-foreground">Get insights about your customers</p>
-              </Card>
-            </div>
-            <div className="space-y-3">
-              <Button size="lg" className="w-full max-w-xs">
-                Go to Dashboard
-                <ArrowRight className="h-4 w-4 ml-2" />
-              </Button>
-              <p className="text-sm text-muted-foreground">
-                Need help? Check out our{" "}
-                <a href="#" className="text-primary hover:underline">
-                  getting started guide
-                </a>
-              </p>
-            </div>
+
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-base">Add Team Members</CardTitle>
+                <CardDescription className="text-sm">
+                  Invite colleagues to collaborate
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="grid gap-3">
+                  <div className="space-y-2">
+                    <Label htmlFor="member-email" className="text-sm">Email Address</Label>
+                    <Input
+                      id="member-email"
+                      type="email"
+                      placeholder="colleague@example.com"
+                      value={newTeamMember.email}
+                      onChange={(e) => setNewTeamMember(prev => ({ ...prev, email: e.target.value }))}
+                    />
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="member-role" className="text-sm">Role</Label>
+                    <Select
+                      value={newTeamMember.role}
+                      onValueChange={(value) => setNewTeamMember(prev => ({ ...prev, role: value }))}
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select role" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="admin">Admin</SelectItem>
+                        <SelectItem value="manager">Manager</SelectItem>
+                        <SelectItem value="sales">Sales</SelectItem>
+                        <SelectItem value="support">Support</SelectItem>
+                        <SelectItem value="viewer">Viewer</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  <Button
+                    type="button"
+                    onClick={addTeamMember}
+                    variant="secondary"
+                    className="w-full"
+                  >
+                    <UserPlus className="h-4 w-4 mr-2" />
+                    Add Member
+                  </Button>
+                </div>
+
+                {formData.teamMembers.length > 0 && (
+                  <>
+                    <div className="border-t pt-4">
+                      <p className="text-sm font-medium mb-3">Team Members ({formData.teamMembers.length})</p>
+                      <div className="space-y-2">
+                        {formData.teamMembers.map((member, index) => (
+                          <div key={index} className="flex items-center justify-between p-2.5 bg-muted rounded-lg">
+                            <div className="flex items-center gap-3">
+                              <div className="p-1.5 bg-background rounded-full">
+                                <Mail className="h-3.5 w-3.5" />
+                              </div>
+                              <div>
+                                <p className="text-sm font-medium">{member.email}</p>
+                                <p className="text-xs text-muted-foreground">{member.role}</p>
+                              </div>
+                            </div>
+                            <Button
+                              size="sm"
+                              variant="ghost"
+                              onClick={() => removeTeamMember(member.email)}
+                              className="h-7 px-2 text-xs"
+                            >
+                              Remove
+                            </Button>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  </>
+                )}
+              </CardContent>
+            </Card>
           </div>
         )
+
       default:
         return null
     }
   }
+
   return (
-    <div className="min-h-screen bg-background">
-      <div className="container mx-auto px-4 py-12">
-        {/* Progress Bar */}
-        <div className="max-w-4xl mx-auto mb-8">
-          <div className="flex items-center justify-between mb-4">
-            <h1 className="text-2xl font-bold font-display">Setup Your Account</h1>
-            <span className="text-sm text-muted-foreground">
-              Step {currentStep} of {totalSteps}
-            </span>
-          </div>
-          <div className="w-full bg-muted rounded-full h-2">
-            <div
-              className="bg-primary h-2 rounded-full transition-all duration-300"
-              style={{ width: `${(currentStep / totalSteps) * 100}%` }}
-            />
-          </div>
-        </div>
-        {/* Step Indicators */}
-        <div className="max-w-4xl mx-auto mb-12">
-          <div className="flex items-center justify-between">
+    <div className="min-h-screen bg-background flex items-center justify-center p-4">
+      <div className="w-full max-w-lg">
+        {/* Progress Steps */}
+        <div className="mb-8">
+          <div className="flex items-center justify-between mb-6">
             {steps.map((step, index) => (
-              <div key={step.id} className="flex flex-col items-center space-y-2">
-                <div
-                  className={`w-12 h-12 rounded-full flex items-center justify-center ${
-                    currentStep >= step.id
-                      ? "bg-primary text-primary-foreground"
-                      : "bg-muted text-muted-foreground"
-                  }`}
-                >
-                  <step.icon className="h-6 w-6" />
-                </div>
-                <div className="text-center">
-                  <p className="text-sm font-medium">{step.title}</p>
-                  <p className="text-xs text-muted-foreground hidden md:block">{step.subtitle}</p>
+              <div key={step.id} className="flex items-center">
+                <div className="flex flex-col items-center">
+                  <div
+                    className={`w-10 h-10 rounded-full flex items-center justify-center transition-colors ${
+                      currentStep > step.id
+                        ? "bg-primary text-primary-foreground"
+                        : currentStep === step.id
+                        ? "bg-primary text-primary-foreground"
+                        : "bg-muted text-muted-foreground"
+                    }`}
+                  >
+                    {currentStep > step.id ? (
+                      <CheckCircle className="h-5 w-5" />
+                    ) : (
+                      <span className="text-sm font-medium">{step.id}</span>
+                    )}
+                  </div>
+                  <div className="text-center mt-2">
+                    <p className="text-xs font-medium">
+                      {step.title}
+                      {!step.required && (
+                        <Badge variant="secondary" className="ml-1 text-[10px] px-1 py-0">
+                          Optional
+                        </Badge>
+                      )}
+                    </p>
+                  </div>
                 </div>
                 {index < steps.length - 1 && (
-                  <div className="absolute top-6 left-1/2 w-full h-0.5 bg-muted -z-10 hidden md:block" />
+                  <div
+                    className={`h-0.5 w-full mx-2 transition-colors ${
+                      currentStep > step.id ? "bg-primary" : "bg-muted"
+                    }`}
+                  />
                 )}
               </div>
             ))}
           </div>
         </div>
-        {/* Step Content */}
-        <Card className="max-w-4xl mx-auto">
-          <CardContent className="p-8">
+
+        {/* Main Content Card */}
+        <Card className="border-0 shadow-lg">
+          <CardContent className="p-6">
             {renderStepContent()}
           </CardContent>
         </Card>
+
         {/* Navigation */}
-        <div className="max-w-4xl mx-auto mt-8">
-          <div className="flex justify-between">
-            <Button
-              variant="outline"
-              onClick={prevStep}
-              disabled={currentStep === 1}
-              className="flex items-center"
-            >
-              <ArrowLeft className="h-4 w-4 mr-2" />
-              Previous
-            </Button>
+        <div className="mt-6 flex items-center justify-between">
+          <Button
+            variant="outline"
+            onClick={prevStep}
+            disabled={currentStep === 1}
+            className={currentStep === 1 ? 'invisible' : ''}
+          >
+            <ArrowLeft className="h-4 w-4 mr-2" />
+            Back
+          </Button>
+
+          <div className="flex items-center gap-3">
+            {currentStep > 1 && (
+              <Button
+                variant="ghost"
+                onClick={skipToEnd}
+                disabled={isLoading}
+              >
+                Skip to finish
+              </Button>
+            )}
+
             <Button
               onClick={nextStep}
-              disabled={currentStep === totalSteps}
-              className="flex items-center"
+              disabled={isLoading}
             >
-              {currentStep === totalSteps ? "Get Started" : "Next"}
-              <ArrowRight className="h-4 w-4 ml-2" />
+              {isLoading ? (
+                <>
+                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                  Saving...
+                </>
+              ) : currentStep === totalSteps ? (
+                <>
+                  Complete Setup
+                  <CheckCircle className="h-4 w-4 ml-2" />
+                </>
+              ) : (
+                <>
+                  Continue
+                  <ArrowRight className="h-4 w-4 ml-2" />
+                </>
+              )}
             </Button>
           </div>
         </div>

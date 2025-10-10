@@ -1,15 +1,41 @@
-"use client"
+"use client";
 
-import { MainLayout } from "@/components/layout/main-layout"
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
-import { Button } from "@/components/ui/button"
-import { Badge } from "@/components/ui/badge"
-import { Input } from "@/components/ui/input"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { useNotifications } from "@/contexts/notifications-context"
-import { Bell, Check, Archive, Trash2, Search, Filter, CheckCheck, BellOff, ShoppingCart, DollarSign, AlertTriangle, Clock, Info } from "lucide-react"
-import { cn } from "@/lib/utils"
-import { useState } from "react"
+import { MainLayout } from "@/components/layout/main-layout";
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+  CardDescription,
+} from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { Input } from "@/components/ui/input";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { useNotifications } from "@/contexts/notifications-context";
+import {
+  Bell,
+  Check,
+  Archive,
+  Trash2,
+  Search,
+  Filter,
+  CheckCheck,
+  BellOff,
+  ShoppingCart,
+  DollarSign,
+  AlertTriangle,
+  Clock,
+  Info,
+} from "lucide-react";
+import { cn } from "@/lib/utils";
+import { useState } from "react";
 
 export default function NotificationsPage() {
   const {
@@ -18,57 +44,69 @@ export default function NotificationsPage() {
     markAllAsRead,
     deleteNotification,
     archiveNotification,
-    getUnreadCount
-  } = useNotifications()
+    getUnreadCount,
+  } = useNotifications();
 
-  const [searchQuery, setSearchQuery] = useState("")
-  const [filterType, setFilterType] = useState<string>("all")
-  const [filterStatus, setFilterStatus] = useState<string>("all")
+  const [searchQuery, setSearchQuery] = useState("");
+  const [filterType, setFilterType] = useState<string>("all");
+  const [filterStatus, setFilterStatus] = useState<string>("all");
 
-  const activeNotifications = getActiveNotifications()
-  const unreadCount = getUnreadCount()
+  const activeNotifications = getActiveNotifications();
+  const unreadCount = getUnreadCount();
 
   // Filter notifications based on search and filters
-  const filteredNotifications = activeNotifications.filter(notification => {
-    const matchesSearch = notification.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                          notification.description.toLowerCase().includes(searchQuery.toLowerCase())
-    const matchesType = filterType === "all" || notification.type === filterType
-    const matchesStatus = filterStatus === "all" ||
-                          (filterStatus === "unread" && !notification.read) ||
-                          (filterStatus === "read" && notification.read)
+  const filteredNotifications = activeNotifications.filter((notification) => {
+    const matchesSearch =
+      notification.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      notification.description
+        .toLowerCase()
+        .includes(searchQuery.toLowerCase());
+    const matchesType =
+      filterType === "all" || notification.type === filterType;
+    const matchesStatus =
+      filterStatus === "all" ||
+      (filterStatus === "unread" && !notification.read) ||
+      (filterStatus === "read" && notification.read);
 
-    return matchesSearch && matchesType && matchesStatus
-  })
+    return matchesSearch && matchesType && matchesStatus;
+  });
 
   const getNotificationColor = (type: string) => {
-    switch(type) {
-      case "order": return "bg-blue-100 text-blue-800 border-blue-200"
-      case "payment": return "bg-green-100 text-green-800 border-green-200"
-      case "stock": return "bg-orange-100 text-orange-800 border-orange-200"
-      case "warning": return "bg-yellow-100 text-yellow-800 border-yellow-200"
-      case "info": return "bg-gray-100 text-gray-800 border-gray-200"
-      default: return "bg-gray-100 text-gray-800 border-gray-200"
+    switch (type) {
+      case "order":
+        return "bg-blue-100 text-blue-800 border-blue-200";
+      case "payment":
+        return "bg-green-100 text-green-800 border-green-200";
+      case "stock":
+        return "bg-orange-100 text-orange-800 border-orange-200";
+      case "warning":
+        return "bg-yellow-100 text-yellow-800 border-yellow-200";
+      case "info":
+        return "bg-gray-100 text-gray-800 border-gray-200";
+      default:
+        return "bg-gray-100 text-gray-800 border-gray-200";
     }
-  }
+  };
 
   const getIcon = (type: string) => {
-    switch(type) {
-      case "order": return <ShoppingCart className="h-4 w-4" />
-      case "payment": return <DollarSign className="h-4 w-4" />
-      case "stock": return <AlertTriangle className="h-4 w-4" />
-      case "warning": return <Clock className="h-4 w-4" />
-      case "info": return <Info className="h-4 w-4" />
-      default: return <Bell className="h-4 w-4" />
+    switch (type) {
+      case "order":
+        return <ShoppingCart className="h-4 w-4" />;
+      case "payment":
+        return <DollarSign className="h-4 w-4" />;
+      case "stock":
+        return <AlertTriangle className="h-4 w-4" />;
+      case "warning":
+        return <Clock className="h-4 w-4" />;
+      case "info":
+        return <Info className="h-4 w-4" />;
+      default:
+        return <Bell className="h-4 w-4" />;
     }
-  }
+  };
 
   return (
-    <MainLayout
-      breadcrumbs={[
-        { label: "Dashboard", href: "/dashboard" },
-        { label: "Notifications" }
-      ]}
-    >
+    <MainLayout breadcrumbs={[{ label: "Notifications" }]}>
       {/* Header */}
       <Card>
         <CardHeader>
@@ -79,7 +117,9 @@ export default function NotificationsPage() {
                 Notifications
               </CardTitle>
               <CardDescription className="mt-1">
-                {unreadCount > 0 ? `You have ${unreadCount} unread notifications` : "All notifications are read"}
+                {unreadCount > 0
+                  ? `You have ${unreadCount} unread notifications`
+                  : "All notifications are read"}
               </CardDescription>
             </div>
             <div className="flex gap-2">
@@ -146,12 +186,13 @@ export default function NotificationsPage() {
           {filteredNotifications.length === 0 ? (
             <div className="flex flex-col items-center justify-center py-12 text-center">
               <BellOff className="h-12 w-12 text-muted-foreground/30 mb-4" />
-              <p className="text-muted-foreground text-sm">No notifications found</p>
+              <p className="text-muted-foreground text-sm">
+                No notifications found
+              </p>
               <p className="text-muted-foreground text-xs mt-1">
                 {searchQuery || filterType !== "all" || filterStatus !== "all"
                   ? "Try adjusting your filters"
-                  : "You're all caught up!"
-                }
+                  : "You're all caught up!"}
               </p>
             </div>
           ) : (
@@ -165,10 +206,12 @@ export default function NotificationsPage() {
                     notification.read && "bg-background"
                   )}
                 >
-                  <div className={cn(
-                    "flex h-10 w-10 items-center justify-center rounded-full shrink-0",
-                    getNotificationColor(notification.type)
-                  )}>
+                  <div
+                    className={cn(
+                      "flex h-10 w-10 items-center justify-center rounded-full shrink-0",
+                      getNotificationColor(notification.type)
+                    )}
+                  >
                     {getIcon(notification.type)}
                   </div>
                   <div className="flex-1 space-y-1">
@@ -185,7 +228,10 @@ export default function NotificationsPage() {
                             {notification.time}
                           </span>
                           {!notification.read && (
-                            <Badge variant="secondary" className="text-[10px] px-1.5 py-0">
+                            <Badge
+                              variant="secondary"
+                              className="text-[10px] px-1.5 py-0"
+                            >
                               New
                             </Badge>
                           )}
@@ -228,5 +274,5 @@ export default function NotificationsPage() {
         </CardContent>
       </Card>
     </MainLayout>
-  )
+  );
 }

@@ -35,14 +35,21 @@ import {
   Search,
   Calendar,
   Phone,
-  MapPin
+  MapPin,
+  RefreshCw
 } from "lucide-react"
 import { toast } from "sonner"
+import { DateRangePicker } from "@/components/ui/date-range-picker"
+import { ImportOrdersModal } from "@/components/orders/import-orders-modal"
+import { QuickOrderModal } from "@/components/orders/quick-order-modal"
+import { EditOrderModal } from "@/components/orders/edit-order-modal"
+import { DateRange } from "react-day-picker"
+import { isWithinInterval, parse } from "date-fns"
 const mockOrders = [
   {
     id: "#1234",
     customer: { name: "Fatima Khan", phone: "+880 1712-345678", address: "Dhanmondi, Dhaka" },
-    date: "2024-01-15",
+    date: "15-01-2024",
     items: [
       { name: "Cotton Kurti - Blue", quantity: 2, price: 1200 },
       { name: "Silk Scarf", quantity: 1, price: 500 }
@@ -55,7 +62,7 @@ const mockOrders = [
   {
     id: "#1235",
     customer: { name: "Rahman Ali", phone: "+880 1801-234567", address: "Gulshan, Dhaka" },
-    date: "2024-01-14",
+    date: "14-01-2024",
     items: [
       { name: "Embroidered Shirt", quantity: 1, price: 1800 }
     ],
@@ -67,7 +74,7 @@ const mockOrders = [
   {
     id: "#1236",
     customer: { name: "Nusrat Jahan", phone: "+880 1915-876543", address: "Uttara, Dhaka" },
-    date: "2024-01-13",
+    date: "13-01-2024",
     items: [
       { name: "Designer Saree", quantity: 1, price: 3500 },
       { name: "Matching Blouse", quantity: 1, price: 800 }
@@ -80,7 +87,7 @@ const mockOrders = [
   {
     id: "#1237",
     customer: { name: "Sakib Ahmed", phone: "+880 1704-987654", address: "Banani, Dhaka" },
-    date: "2024-01-12",
+    date: "12-01-2024",
     items: [
       { name: "Casual T-shirt", quantity: 3, price: 450 }
     ],
@@ -88,6 +95,18 @@ const mockOrders = [
     status: "pending",
     paymentStatus: "pending",
     delivery: "Standard"
+  },
+  {
+    id: "#1238",
+    customer: { name: "Ayesha Rahman", phone: "+880 1812-654321", address: "Mohammadpur, Dhaka" },
+    date: "11-01-2024",
+    items: [
+      { name: "Winter Jacket", quantity: 1, price: 2500 }
+    ],
+    amount: 2500,
+    status: "returned",
+    paymentStatus: "paid",
+    delivery: "Express"
   }
 ]
 
@@ -118,6 +137,9 @@ export default function OrdersPage() {
   const [paymentFilter, setPaymentFilter] = useState("all")
   const [orders, setOrders] = useState<Order[]>(mockOrders)
   const [isProcessing, setIsProcessing] = useState(false)
+  const [dateRange, setDateRange] = useState<DateRange | undefined>(undefined)
+  const [editingOrder, setEditingOrder] = useState<Order | null>(null)
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false)
   const getStatusColor = (status: string) => {
     switch (status) {
       case "delivered":
@@ -128,6 +150,8 @@ export default function OrdersPage() {
         return "bg-yellow-100 text-yellow-800"
       case "pending":
         return "bg-gray-100 text-gray-800"
+      case "returned":
+        return "bg-red-100 text-red-800"
       default:
         return "bg-gray-100 text-gray-800"
     }
@@ -160,28 +184,57 @@ export default function OrdersPage() {
   }
 
   // Handler functions for button actions
-  const handleImport = () => {
-    toast.info("Import feature coming soon", {
-      description: "CSV/Excel import functionality will be available in the next update"
+  const handleImportOrders = (importedOrders: Order[]) => {
+    // Add imported orders to the existing orders
+    const today = new Date()
+    const newOrders = importedOrders.map(order => ({
+      ...order,
+      id: order.id || `#${Math.floor(Math.random() * 10000)}`,
+      date: order.date || `${today.getDate().toString().padStart(2, '0')}-${(today.getMonth() + 1).toString().padStart(2, '0')}-${today.getFullYear()}`
+    }))
+
+    setOrders([...newOrders, ...orders])
+    toast.success("Orders imported successfully", {
+      description: `${importedOrders.length} orders have been added`
     })
   }
 
-  const handleNewOrder = () => {
-    toast.info("New order form coming soon", {
-      description: "The order creation interface is under development"
+  const handleCreateOrder = (newOrder: Order) => {
+    setOrders([newOrder, ...orders])
+    toast.success("Order created successfully", {
+      description: `Order ${newOrder.id} has been created`
     })
   }
 
-  const handleDateRangePicker = () => {
-    toast.info("Date range picker coming soon", {
-      description: "Filter orders by date range functionality will be available soon"
-    })
+  const handleDateRangeChange = (range: DateRange | undefined) => {
+    setDateRange(range)
+    if (!range) {
+      toast.info("Date filter cleared", {
+        description: "Showing all orders"
+      })
+    }
   }
+
 
   const handleEditOrder = (order: Order) => {
-    setSelectedOrder(order)
-    toast.info("Edit order feature coming soon", {
-      description: `Edit functionality for order ${order.id} is under development`
+    setEditingOrder(order)
+    setIsEditModalOpen(true)
+  }
+
+  const handleSaveEdit = (updatedOrder: Order) => {
+    setOrders(prevOrders =>
+      prevOrders.map(order =>
+        order.id === updatedOrder.id ? updatedOrder : order
+      )
+    )
+
+    // Update selected order if it's the one being edited
+    if (selectedOrder?.id === updatedOrder.id) {
+      setSelectedOrder(updatedOrder)
+    }
+
+    toast.success("Order updated successfully", {
+      description: `Order ${updatedOrder.id} has been updated`
     })
   }
 
@@ -239,7 +292,14 @@ export default function OrdersPage() {
     // Payment filter
     const matchesPayment = paymentFilter === "all" || order.paymentStatus === paymentFilter
 
-    return matchesSearch && matchesStatus && matchesPayment
+    // Date range filter
+    const matchesDateRange = !dateRange?.from || !dateRange?.to ||
+      (order.date && isWithinInterval(parse(order.date, "dd-MM-yyyy", new Date()), {
+        start: dateRange.from,
+        end: dateRange.to
+      }))
+
+    return matchesSearch && matchesStatus && matchesPayment && matchesDateRange
   })
 
   return (
@@ -277,6 +337,7 @@ export default function OrdersPage() {
                     <SelectItem value="confirmed">Confirmed</SelectItem>
                     <SelectItem value="shipped">Shipped</SelectItem>
                     <SelectItem value="delivered">Delivered</SelectItem>
+                    <SelectItem value="returned">Returned</SelectItem>
                   </SelectContent>
                 </Select>
                 <Select value={paymentFilter} onValueChange={setPaymentFilter}>
@@ -290,14 +351,12 @@ export default function OrdersPage() {
                     <SelectItem value="partial">Partial</SelectItem>
                   </SelectContent>
                 </Select>
-                <Button
-                  variant="outline"
-                  className="h-10 text-sm px-3"
-                  onClick={handleDateRangePicker}
-                >
-                  <Calendar className="h-4 w-4 sm:mr-2" />
-                  <span className="hidden sm:inline">Date Range</span>
-                </Button>
+                <DateRangePicker
+                  date={dateRange}
+                  onDateChange={handleDateRangeChange}
+                  className="flex-1 min-w-[140px]"
+                  placeholder="All dates"
+                />
               </div>
 
               {/* View Toggle - Positioned to the far right */}
@@ -322,33 +381,68 @@ export default function OrdersPage() {
             </div>
 
             {/* Action Buttons - Stack on mobile */}
-            <div className="flex flex-wrap gap-2">
-              <Button
-                variant="outline"
-                className="h-10 text-sm px-3 flex-1 sm:flex-none"
-                onClick={handleImport}
-              >
-                <Download className="h-4 w-4 sm:mr-2" />
-                <span className="hidden sm:inline">Import</span>
-              </Button>
-              <Button
-                className="bg-accent hover:bg-accent/90 h-10 text-sm px-3 flex-1 sm:flex-none"
-                onClick={handleNewOrder}
-              >
-                <Plus className="h-4 w-4 sm:mr-2" />
-                <span className="hidden sm:inline">New Order</span>
-                <span className="sm:hidden">New</span>
-              </Button>
+            <div className="flex gap-2">
+              <ImportOrdersModal
+                onImport={handleImportOrders}
+                trigger={
+                  <Button variant="outline" className="h-10 text-sm px-3">
+                    <Download className="h-4 w-4 sm:mr-2" />
+                    <span className="hidden sm:inline">Import</span>
+                  </Button>
+                }
+              />
+              <QuickOrderModal
+                onCreateOrder={handleCreateOrder}
+                trigger={
+                  <Button className="bg-accent hover:bg-accent/90 h-10 text-sm px-3">
+                    <Plus className="h-4 w-4 sm:mr-2" />
+                    <span className="hidden sm:inline">New Order</span>
+                    <span className="sm:hidden">New</span>
+                  </Button>
+                }
+              />
             </div>
           </div>
         </CardContent>
       </Card>
+      {/* Results Count */}
+      {(searchTerm || statusFilter !== "all" || paymentFilter !== "all" || dateRange) && (
+        <Card>
+          <CardContent className="py-3">
+            <div className="flex items-center justify-between">
+              <p className="text-sm text-muted-foreground">
+                Showing {filteredOrders.length} of {orders.length} orders
+              </p>
+              {(searchTerm || statusFilter !== "all" || paymentFilter !== "all" || dateRange) && (
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => {
+                    setSearchTerm("")
+                    setStatusFilter("all")
+                    setPaymentFilter("all")
+                    setDateRange(undefined)
+                    toast.info("Filters cleared")
+                  }}
+                >
+                  Clear Filters
+                </Button>
+              )}
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
       {/* Orders List/Grid */}
       {viewMode === "list" ? (
         <Card>
           <CardHeader>
             <CardTitle className="text-base sm:text-lg">Orders List</CardTitle>
-            <CardDescription className="text-xs">Manage and track all your orders</CardDescription>
+            <CardDescription className="text-xs">
+              {filteredOrders.length === 0
+                ? "No orders match your filters"
+                : "Manage and track all your orders"}
+            </CardDescription>
           </CardHeader>
           <CardContent>
             <div className="overflow-x-auto -mx-4 sm:mx-0">
@@ -368,7 +462,18 @@ export default function OrdersPage() {
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-border bg-background">
-                      {filteredOrders.map((order) => (
+                      {filteredOrders.length === 0 ? (
+                        <tr>
+                          <td colSpan={8} className="py-8 text-center">
+                            <div className="flex flex-col items-center justify-center">
+                              <Package className="h-10 w-10 text-muted-foreground mb-3" />
+                              <p className="text-sm text-muted-foreground">No orders found</p>
+                              <p className="text-xs text-muted-foreground">Try adjusting your filters</p>
+                            </div>
+                          </td>
+                        </tr>
+                      ) : (
+                        filteredOrders.map((order) => (
                         <tr key={order.id} className="hover:bg-muted/50">
                           <td className="py-3 px-3 font-medium text-xs whitespace-nowrap">{order.id}</td>
                           <td className="py-3 px-3">
@@ -436,7 +541,7 @@ export default function OrdersPage() {
                             </div>
                           </td>
                         </tr>
-                      ))}
+                      )))}
                     </tbody>
                   </table>
                 </div>
@@ -445,6 +550,26 @@ export default function OrdersPage() {
           </CardContent>
         </Card>
       ) : (
+        filteredOrders.length === 0 ? (
+          <Card>
+            <CardContent className="flex flex-col items-center justify-center py-16">
+              <Package className="h-12 w-12 text-muted-foreground mb-4" />
+              <p className="text-lg font-medium text-muted-foreground mb-1">No orders found</p>
+              <p className="text-sm text-muted-foreground">Try adjusting your filters or add a new order</p>
+              <div className="mt-4">
+                <QuickOrderModal
+                  onCreateOrder={handleCreateOrder}
+                  trigger={
+                    <Button className="bg-accent hover:bg-accent/90">
+                      <Plus className="h-4 w-4 mr-2" />
+                      Create Your First Order
+                    </Button>
+                  }
+                />
+              </div>
+            </CardContent>
+          </Card>
+        ) : (
         <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
           {filteredOrders.map((order) => (
             <Card key={order.id} className="hover:shadow-md transition-shadow">
@@ -517,6 +642,19 @@ export default function OrdersPage() {
             </Card>
           ))}
         </div>
+      ))}
+
+      {/* Edit Order Modal */}
+      {editingOrder && (
+        <EditOrderModal
+          order={editingOrder}
+          isOpen={isEditModalOpen}
+          onClose={() => {
+            setIsEditModalOpen(false)
+            setEditingOrder(null)
+          }}
+          onSave={handleSaveEdit}
+        />
       )}
     </MainLayout>
   )
@@ -665,6 +803,8 @@ function getStatusColor(status: string) {
       return "bg-yellow-100 text-yellow-800"
     case "pending":
       return "bg-gray-100 text-gray-800"
+    case "returned":
+      return "bg-red-100 text-red-800"
     default:
       return "bg-gray-100 text-gray-800"
   }
@@ -691,6 +831,8 @@ function getStatusIcon(status: string) {
       return <Package className="h-3.5 w-3.5" />
     case "pending":
       return <Clock className="h-3.5 w-3.5" />
+    case "returned":
+      return <RefreshCw className="h-3.5 w-3.5" />
     default:
       return <Clock className="h-3.5 w-3.5" />
   }
