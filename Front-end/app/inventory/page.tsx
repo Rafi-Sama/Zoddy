@@ -166,6 +166,8 @@ interface StockHistoryItem {
     sku: string
     category: string
     finalStock: number
+    cost?: number
+    price?: number
     reason: string
   }
 }
@@ -581,7 +583,7 @@ export default function InventoryPage() {
 
 
         {/* Low Stock - Row 1-2, Col 4 (2x1) */}
-        <Card className="md:col-span-1 md:row-span-2">
+        <Card className="md:col-span-1 md:row-span-2 h-full max-h-[332px] overflow-hidden">
           <CardHeader>
             <CardTitle className="flex items-center gap-1.5 text-yellow-600 text-sm">
               <AlertTriangle className="h-3.5 w-3.5" />
@@ -591,7 +593,7 @@ export default function InventoryPage() {
               Items need restocking soon
             </CardDescription>
           </CardHeader>
-          <CardContent className="space-y-1.5 max-h-[280px] overflow-y-auto">
+          <CardContent className="space-y-1.5 max-h-[280px] overflow-y-auto scrollbar-hide">
             {lowStockItems.length > 0 ? (
               <TooltipProvider>
                 {lowStockItems.map((item) => (
@@ -629,7 +631,7 @@ export default function InventoryPage() {
 
 
         {/* Out of Stock - Row 2, Col 2-3 (1x2) */}
-        <Card className="md:col-span-1 md:row-span-2">
+        <Card className="md:col-span-1 md:row-span-2 h-full max-h-[332px] overflow-hidden">
           <CardHeader>
             <CardTitle className="flex items-center gap-1.5 text-red-600 text-sm">
               <Package className="h-3.5 w-3.5" />
@@ -639,7 +641,7 @@ export default function InventoryPage() {
               These items are completely out of stock
             </CardDescription>
           </CardHeader>
-          <CardContent className="space-y-1.5 max-h-[280px] overflow-y-auto">
+          <CardContent className="space-y-1.5 max-h-[280px] overflow-y-auto scrollbar-hide">
               {outOfStockItems.length > 0 ? (
                 <TooltipProvider>
                   {outOfStockItems.map((item) => (
@@ -1118,7 +1120,6 @@ export default function InventoryPage() {
         open={isHistoryModalOpen}
         onOpenChange={setIsHistoryModalOpen}
         history={stockHistory}
-        onExport={() => toast.info("Export feature coming soon")}
       />
 
 

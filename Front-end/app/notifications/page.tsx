@@ -122,6 +122,41 @@ export default function NotificationsPage() {
                   : "All notifications are read"}
               </CardDescription>
             </div>
+            <div className="flex flex-wrap gap-3 w-1/2">
+              <div className="relative flex-1 min-w-[200px] max-w-md">
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                <Input
+                  placeholder="Search notifications..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="pl-9"
+                />
+              </div>
+              <Select value={filterType} onValueChange={setFilterType}>
+                <SelectTrigger className="w-[150px]">
+                  <Filter className="h-3.5 w-3.5 mr-2" />
+                  <SelectValue placeholder="Type" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Types</SelectItem>
+                  <SelectItem value="order">Orders</SelectItem>
+                  <SelectItem value="payment">Payments</SelectItem>
+                  <SelectItem value="stock">Stock</SelectItem>
+                  <SelectItem value="warning">Warnings</SelectItem>
+                  <SelectItem value="info">Info</SelectItem>
+                </SelectContent>
+              </Select>
+              <Select value={filterStatus} onValueChange={setFilterStatus}>
+                <SelectTrigger className="w-[140px]">
+                  <SelectValue placeholder="Status" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Status</SelectItem>
+                  <SelectItem value="unread">Unread</SelectItem>
+                  <SelectItem value="read">Read</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
             <div className="flex gap-2">
               {unreadCount > 0 && (
                 <Button
@@ -137,47 +172,6 @@ export default function NotificationsPage() {
             </div>
           </div>
         </CardHeader>
-      </Card>
-
-      {/* Filters and Search */}
-      <Card>
-        <CardContent className="pt-6">
-          <div className="flex flex-wrap gap-3">
-            <div className="relative flex-1 min-w-[200px] max-w-md">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-              <Input
-                placeholder="Search notifications..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="pl-9"
-              />
-            </div>
-            <Select value={filterType} onValueChange={setFilterType}>
-              <SelectTrigger className="w-[140px]">
-                <Filter className="h-3.5 w-3.5 mr-2" />
-                <SelectValue placeholder="Type" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All Types</SelectItem>
-                <SelectItem value="order">Orders</SelectItem>
-                <SelectItem value="payment">Payments</SelectItem>
-                <SelectItem value="stock">Stock</SelectItem>
-                <SelectItem value="warning">Warnings</SelectItem>
-                <SelectItem value="info">Info</SelectItem>
-              </SelectContent>
-            </Select>
-            <Select value={filterStatus} onValueChange={setFilterStatus}>
-              <SelectTrigger className="w-[140px]">
-                <SelectValue placeholder="Status" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All Status</SelectItem>
-                <SelectItem value="unread">Unread</SelectItem>
-                <SelectItem value="read">Read</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-        </CardContent>
       </Card>
 
       {/* Notifications List */}
@@ -217,13 +211,11 @@ export default function NotificationsPage() {
                   <div className="flex-1 space-y-1">
                     <div className="flex items-start justify-between">
                       <div>
-                        <p className="text-sm font-medium leading-none">
+                       <div className="flex items-top gap-2 mb-2">
+                         <p className="text-sm font-medium leading-none">
                           {notification.title}
-                        </p>
-                        <p className="text-sm text-muted-foreground mt-1">
-                          {notification.description}
-                        </p>
-                        <div className="flex items-center gap-2 mt-2">
+                          </p>
+                        <div className="flex items-center gap-2 mt-[-10px]">
                           <span className="text-xs text-muted-foreground">
                             {notification.time}
                           </span>
@@ -236,6 +228,11 @@ export default function NotificationsPage() {
                             </Badge>
                           )}
                         </div>
+
+                       </div>
+                        <p className="text-sm text-muted-foreground mt-1">
+                          {notification.description}
+                        </p>
                       </div>
                       <div className="flex gap-1">
                         {!notification.read && (

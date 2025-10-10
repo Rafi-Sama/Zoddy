@@ -5,6 +5,9 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Badge } from "@/components/ui/badge"
+import { toast } from "sonner"
+import { AddCustomerModal, type CustomerFormData } from "@/components/customers/add-customer-modal"
+import { ImportCustomersModal } from "@/components/customers/import-customers-modal"
 import {
   Select,
   SelectContent,
@@ -24,7 +27,6 @@ import {
   Plus,
   TrendingUp,
   ShoppingCart,
-  DollarSign,
   AlertTriangle,
   Crown,
   Clock,
@@ -37,7 +39,8 @@ import {
   List,
   Mail,
   Edit,
-  CheckCircle
+  CheckCircle,
+  Download
 } from "lucide-react"
 const mockCustomers = [
   {
@@ -133,27 +136,57 @@ export default function CustomersPage() {
   const [searchTerm, setSearchTerm] = useState("")
   const [statusFilter, setStatusFilter] = useState("all")
   const [sortBy, setSortBy] = useState("name")
-  const [isAddingCustomer, setIsAddingCustomer] = useState(false)
   const [successMessage, setSuccessMessage] = useState("")
+  const [isImportModalOpen, setIsImportModalOpen] = useState(false)
+  const [isAddModalOpen, setIsAddModalOpen] = useState(false)
+  const [customers, setCustomers] = useState(mockCustomers)
 
-  const handleBroadcast = () => {
-    const message = prompt("Enter broadcast message to send to all customers:")
-    if (message) {
-      // Simulate sending broadcast
-      setTimeout(() => {
-        setSuccessMessage(`Broadcast message sent to ${mockCustomers.length} customers`)
-        setTimeout(() => setSuccessMessage(""), 3000)
-      }, 500)
-    }
+  const handleImportCustomers = async (file: File) => {
+    // Mock imported customers
+    const importedCustomers = [
+      {
+        id: (customers.length + 1).toString(),
+        name: "Imported Customer",
+        phone: "+880 1700-000000",
+        email: "imported@email.com",
+        address: "Imported from " + file.name,
+        totalOrders: 0,
+        totalSpent: 0,
+        lastOrder: new Date().toISOString().split('T')[0],
+        status: "New",
+        averageOrderValue: 0,
+        joinDate: new Date().toISOString().split('T')[0],
+        favoriteCategory: "Fashion"
+      }
+    ]
+
+    setCustomers([...customers, ...importedCustomers])
+    toast.success("Customers imported successfully", {
+      description: `${importedCustomers.length} customers imported from ${file.name}`
+    })
   }
 
-  const handleAddCustomer = () => {
-    setIsAddingCustomer(true)
-    // Simulate adding customer
-    setTimeout(() => {
-      setIsAddingCustomer(false)
-      alert("Add Customer feature will be fully implemented soon!")
-    }, 500)
+  const handleAddCustomer = (customerData: CustomerFormData) => {
+    const newCustomer = {
+      id: (customers.length + 1).toString(),
+      name: customerData.name,
+      phone: customerData.phone,
+      email: customerData.email,
+      address: customerData.address,
+      totalOrders: 0,
+      totalSpent: 0,
+      lastOrder: new Date().toISOString().split('T')[0],
+      status: customerData.status || "New",
+      averageOrderValue: 0,
+      joinDate: new Date().toISOString().split('T')[0],
+      favoriteCategory: customerData.favoriteCategory || "Fashion"
+    }
+
+    setCustomers([...customers, newCustomer])
+    toast.success("Customer added successfully", {
+      description: `${customerData.name} has been added to your customer database`
+    })
+    setIsAddModalOpen(false)
   }
 
   const handleSendMessage = (customer: Customer) => {
@@ -173,11 +206,10 @@ export default function CustomersPage() {
   }
 
   // Customer analytics
-  const totalCustomers = mockCustomers.length
+  const totalCustomers = customers.length
   const newCustomersThisMonth = 2 // This would be calculated from real data
   const retentionRate = 87.5 // From analytics page
   const churnRate = 12.5
-  const customerLifetimeValue = 8450
   const getStatusColor = (status: string) => {
     switch (status) {
       case "VIP":
@@ -215,7 +247,7 @@ export default function CustomersPage() {
   }
 
   // Filter and sort customers
-  const filteredCustomers = mockCustomers
+  const filteredCustomers = customers
     .filter(customer => {
       const matchesSearch = searchTerm === "" ||
         customer.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -255,194 +287,66 @@ export default function CustomersPage() {
         </div>
       )}
 
-      {/* Summary Cards with Analytics */}
-      <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-5">
-        <Card>
+      {/* Main Grid Layout */}
+      <div className="grid gap-3 md:grid-cols-4 md:grid-rows-2">
+
+        {/* Total Customers - Row 1, Col 1 (1x1) */}
+        <Card className="md:col-span-1 md:row-span-1">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-1.5">
             <CardTitle className="text-xs font-medium">Total Customers</CardTitle>
-            <Users className="h-3.5 w-3.5 text-muted-foreground" />
+            <Users className="h-2.5 w-2.5 text-muted-foreground" />
           </CardHeader>
           <CardContent>
             <div className="text-lg font-bold">{totalCustomers}</div>
-            <div className="flex items-center text-[10px] text-green-600">
-              <TrendingUp className="h-2.5 w-2.5 mr-1" />
+            <p className="text-[10px] text-muted-foreground">
               +{newCustomersThisMonth} this month
-            </div>
+            </p>
           </CardContent>
         </Card>
-        <Card>
+
+        {/* Retention Rate - Row 2, Col 1 (1x1) */}
+        <Card className="md:col-span-1 md:row-span-1">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-1.5">
             <CardTitle className="text-xs font-medium">Retention Rate</CardTitle>
-            <Users className="h-3.5 w-3.5 text-muted-foreground" />
+            <Users className="h-2.5 w-2.5 text-muted-foreground" />
           </CardHeader>
           <CardContent>
             <div className="text-lg font-bold text-green-600">{retentionRate}%</div>
-            <div className="text-[10px] text-muted-foreground">
+            <p className="text-[10px] text-muted-foreground">
               Churn: {churnRate}%
-            </div>
+            </p>
           </CardContent>
         </Card>
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-1.5">
-            <CardTitle className="text-xs font-medium">Lifetime Value</CardTitle>
-            <DollarSign className="h-3.5 w-3.5 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-lg font-bold">৳{customerLifetimeValue.toLocaleString()}</div>
-            <div className="text-[10px] text-muted-foreground">
-              Per customer avg
-            </div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-1.5">
-            <CardTitle className="text-xs font-medium">VIP Customers</CardTitle>
-            <Crown className="h-3.5 w-3.5 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-lg font-bold text-purple-600">
-              {mockCustomers.filter(c => c.status === "VIP").length}
-            </div>
-            <div className="text-[10px] text-muted-foreground">
-              High-value segment
-            </div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-1.5">
-            <CardTitle className="text-xs font-medium">Need Attention</CardTitle>
-            <AlertTriangle className="h-3.5 w-3.5 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-lg font-bold text-orange-600">
-              {mockCustomers.filter(c => getDaysSinceLastOrder(c.lastOrder) > 30).length}
-            </div>
-            <div className="text-[10px] text-muted-foreground">
-              No orders 30+ days
-            </div>
-          </CardContent>
-        </Card>
-      </div>
-      {/* Filter & Search Bar */}
-      <Card>
-        <CardContent className="pt-4">
-          <div className="flex flex-col gap-3">
-            {/* Search, Filters and View Toggle Row - Responsive layout */}
-            <div className="flex flex-col md:flex-row gap-3">
-              {/* Search Input - Takes 2/3 space on desktop, full width on mobile */}
-              <div className="relative flex-1 md:flex-[2]">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                <Input
-                  placeholder="Search by name, phone, email..."
-                  className="pl-10 h-10 text-sm w-full"
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                />
-              </div>
 
-              {/* Filters - Takes 1/3 space on desktop */}
-              <div className="flex gap-2 md:flex-[1]">
-                <Select value={statusFilter} onValueChange={setStatusFilter}>
-                  <SelectTrigger className="flex-1 h-10 text-sm">
-                    <SelectValue placeholder="Status" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">All Status</SelectItem>
-                    <SelectItem value="vip">VIP</SelectItem>
-                    <SelectItem value="regular">Regular</SelectItem>
-                    <SelectItem value="new">New</SelectItem>
-                    <SelectItem value="inactive">Inactive</SelectItem>
-                  </SelectContent>
-                </Select>
-                <Select value={sortBy} onValueChange={setSortBy}>
-                  <SelectTrigger className="flex-1 h-10 text-sm">
-                    <SelectValue placeholder="Sort by" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="name">Name</SelectItem>
-                    <SelectItem value="totalSpent">Total Spent</SelectItem>
-                    <SelectItem value="lastOrder">Last Order</SelectItem>
-                    <SelectItem value="totalOrders">Order Count</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-
-              {/* View Toggle - Positioned to the far right */}
-              <div className="flex rounded-md border md:ml-auto">
-                <Button
-                  variant={viewMode === "list" ? "default" : "ghost"}
-                  size="sm"
-                  onClick={() => setViewMode("list")}
-                  className="rounded-r-none h-10 px-3"
-                >
-                  <List className="h-4 w-4" />
-                </Button>
-                <Button
-                  variant={viewMode === "grid" ? "default" : "ghost"}
-                  size="sm"
-                  onClick={() => setViewMode("grid")}
-                  className="rounded-l-none h-10 px-3"
-                >
-                  <Grid3X3 className="h-4 w-4" />
-                </Button>
-              </div>
-            </div>
-
-            {/* Action Buttons - Stack on mobile */}
-            <div className="flex gap-2">
-              <Button
-                variant="outline"
-                className="h-10 text-sm px-3"
-                onClick={handleBroadcast}
-              >
-                <MessageSquare className="h-4 w-4 sm:mr-2" />
-                <span className="hidden sm:inline">Broadcast</span>
-              </Button>
-              <Button
-                className="bg-accent hover:bg-accent/90 h-10 text-sm px-3"
-                onClick={handleAddCustomer}
-                disabled={isAddingCustomer}
-              >
-                {isAddingCustomer ? (
-                  <>
-                    <span className="animate-spin h-4 w-4 mr-2 border-2 border-white border-t-transparent rounded-full inline-block" />
-                    <span className="hidden sm:inline">Adding...</span>
-                  </>
-                ) : (
-                  <>
-                    <Plus className="h-4 w-4 sm:mr-2" />
-                    <span className="hidden sm:inline">Add Customer</span>
-                    <span className="sm:hidden">Add</span>
-                  </>
-                )}
-              </Button>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
-      {/* Customer Insights */}
-      <div className="grid gap-3 md:grid-cols-3">
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm">Top Customers</CardTitle>
-            <CardDescription className="text-xs">By total revenue</CardDescription>
+        {/* Top Customers - Row 1-2, Col 4 (2x1) */}
+        <Card className="md:col-span-1 md:row-span-2 h-full max-h-[332px] overflow-hidden">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-1.5 text-accent text-sm">
+              <Crown className="h-3.5 w-3.5" />
+              Top Customers
+            </CardTitle>
+            <CardDescription className="text-xs">
+              By total revenue
+            </CardDescription>
           </CardHeader>
-          <CardContent className="space-y-2">
-            {mockCustomers
+          <CardContent className="space-y-1.5 max-h-[280px] overflow-y-auto scrollbar-hide">
+            {customers
               .sort((a, b) => b.totalSpent - a.totalSpent)
               .slice(0, 5)
               .map((customer, index) => (
-                <div key={customer.id} className="flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    <div className="w-6 h-6 rounded-full bg-accent/10 flex items-center justify-center">
-                      <span className="font-bold text-accent text-xs">{index + 1}</span>
-                    </div>
-                    <div>
-                      <div className="font-medium text-xs">{customer.name}</div>
-                      <div className="text-[10px] text-muted-foreground">{customer.totalOrders} orders</div>
+                <div key={customer.id} className="flex items-center justify-between p-1.5 border rounded">
+                  <div className="min-w-0 flex-1">
+                    <div className="flex items-center gap-1.5">
+                      <div className="w-5 h-5 rounded-full bg-accent/10 flex items-center justify-center shrink-0">
+                        <span className="font-bold text-accent text-[10px]">{index + 1}</span>
+                      </div>
+                      <div className="min-w-0">
+                        <div className="font-medium text-xs truncate">{customer.name}</div>
+                        <div className="text-[10px] text-muted-foreground">{customer.totalOrders} orders</div>
+                      </div>
                     </div>
                   </div>
-                  <div className="text-right">
+                  <div className="text-right ml-2 flex-shrink-0">
                     <div className="font-bold text-xs">৳{customer.totalSpent.toLocaleString()}</div>
                     <Badge className={`${getStatusColor(customer.status)} text-[9px] px-1.5 py-0`} variant="secondary">
                       {customer.status}
@@ -452,52 +356,123 @@ export default function CustomersPage() {
               ))}
           </CardContent>
         </Card>
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm">Customer Segments</CardTitle>
-            <CardDescription className="text-xs">Distribution by status</CardDescription>
+
+        {/* Need Attention - Row 1-2, Col 2 (2x1) */}
+        <Card className="md:col-span-1 md:row-span-2 h-full max-h-[332px] overflow-hidden">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-1.5 text-orange-600 text-sm">
+              <AlertTriangle className="h-3.5 w-3.5" />
+              Need Attention ({customers.filter(c => getDaysSinceLastOrder(c.lastOrder) > 30).length})
+            </CardTitle>
+            <CardDescription className="text-xs">
+              Customers requiring follow-up
+            </CardDescription>
           </CardHeader>
-          <CardContent className="space-y-2">
-            {["VIP", "Regular", "New", "Inactive"].map((status) => {
-              const count = mockCustomers.filter(c => c.status === status).length
-              const percentage = Math.round((count / mockCustomers.length) * 100)
-              return (
-                <div key={status} className="flex items-center justify-between">
-                  <div className="flex items-center gap-1.5">
-                    {getStatusIcon(status)}
-                    <span className="text-xs">{status} Customers</span>
-                  </div>
-                  <div className="flex items-center gap-1.5">
-                    <div className="text-xs font-medium">{count}</div>
-                    <div className="text-[10px] text-muted-foreground">({percentage}%)</div>
-                  </div>
-                </div>
-              )
-            })}
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm">Need Attention</CardTitle>
-            <CardDescription className="text-xs">Customers requiring follow-up</CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-2">
-            {mockCustomers
+          <CardContent className="space-y-1.5 max-h-[280px] overflow-y-auto scrollbar-hide">
+            {customers
               .filter(c => getDaysSinceLastOrder(c.lastOrder) > 30)
               .map((customer) => (
-                <div key={customer.id} className="flex items-center justify-between p-1.5 border rounded-lg">
-                  <div>
-                    <div className="font-medium text-xs">{customer.name}</div>
+                <div key={customer.id} className="flex items-center justify-between p-1.5 border rounded">
+                  <div className="min-w-0 flex-1">
+                    <div className="font-medium text-xs truncate">{customer.name}</div>
                     <div className="text-[10px] text-muted-foreground">
-                      Last order: {getDaysSinceLastOrder(customer.lastOrder)} days ago
+                      Last order: {getDaysSinceLastOrder(customer.lastOrder)}d ago
                     </div>
                   </div>
-                  <Button className="h-6 text-[10px] px-2" variant="outline" onClick={() => handleSendMessage(customer)}>
+                  <Button className="h-5 text-[10px] px-2 ml-1 flex-shrink-0" variant="outline" onClick={() => handleSendMessage(customer)}>
                     <MessageSquare className="h-3 w-3 mr-1" />
-                    Message
+                    Generate Message
                   </Button>
                 </div>
               ))}
+          </CardContent>
+        </Card>
+
+        {/* Search, Filter & Actions - Row 1, Col 2-3 (1x2) */}
+        <Card className="md:col-span-2 md:row-span-1">
+          <CardContent className="pt-4">
+            <div className="flex flex-col gap-3">
+              {/* Search, Filters and View Toggle Row - Responsive layout */}
+              <div className="flex flex-col md:flex-row gap-3">
+                {/* Search Input - Takes 2/3 space on desktop, full width on mobile */}
+                <div className="relative flex-1 md:flex-[2]">
+                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                  <Input
+                    placeholder="Search by name, phone, email..."
+                    className="pl-10 h-10 text-sm w-full"
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                  />
+                </div>
+
+                {/* Filters - Takes 1/3 space on desktop */}
+                <div className="flex gap-2 md:flex-[1]">
+                  <Select value={statusFilter} onValueChange={setStatusFilter}>
+                    <SelectTrigger className="flex-1 h-10 text-sm">
+                      <SelectValue placeholder="Status" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">All Status</SelectItem>
+                      <SelectItem value="vip">VIP</SelectItem>
+                      <SelectItem value="regular">Regular</SelectItem>
+                      <SelectItem value="new">New</SelectItem>
+                      <SelectItem value="inactive">Inactive</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  <Select value={sortBy} onValueChange={setSortBy}>
+                    <SelectTrigger className="flex-1 h-10 text-sm">
+                      <SelectValue placeholder="Sort by" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="name">Name</SelectItem>
+                      <SelectItem value="totalSpent">Total Spent</SelectItem>
+                      <SelectItem value="lastOrder">Last Order</SelectItem>
+                      <SelectItem value="totalOrders">Order Count</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                {/* View Toggle - Positioned to the far right */}
+                <div className="flex rounded-md border md:ml-auto">
+                  <Button
+                    variant={viewMode === "list" ? "default" : "ghost"}
+                    size="sm"
+                    onClick={() => setViewMode("list")}
+                    className="rounded-r-none h-10 px-3"
+                  >
+                    <List className="h-4 w-4" />
+                  </Button>
+                  <Button
+                    variant={viewMode === "grid" ? "default" : "ghost"}
+                    size="sm"
+                    onClick={() => setViewMode("grid")}
+                    className="rounded-l-none h-10 px-3"
+                  >
+                    <Grid3X3 className="h-4 w-4" />
+                  </Button>
+                </div>
+              </div>
+
+              {/* Action Buttons - Stack on mobile */}
+              <div className="flex gap-2">
+                <Button
+                  variant="outline"
+                  className="h-10 text-sm px-3"
+                  onClick={() => setIsImportModalOpen(true)}
+                >
+                  <Download className="h-4 w-4 sm:mr-2" />
+                  <span className="hidden sm:inline">Import</span>
+                </Button>
+                <Button
+                  className="bg-accent hover:bg-accent/90 h-10 text-sm px-3"
+                  onClick={() => setIsAddModalOpen(true)}
+                >
+                  <Plus className="h-4 w-4 sm:mr-2" />
+                  <span className="hidden sm:inline">Add Customer</span>
+                  <span className="sm:hidden">Add</span>
+                </Button>
+              </div>
+            </div>
           </CardContent>
         </Card>
       </div>
@@ -708,6 +683,19 @@ export default function CustomersPage() {
           </CardContent>
         </Card>
       )}
+
+      {/* Modals */}
+      <AddCustomerModal
+        open={isAddModalOpen}
+        onOpenChange={setIsAddModalOpen}
+        onAdd={handleAddCustomer}
+      />
+
+      <ImportCustomersModal
+        open={isImportModalOpen}
+        onOpenChange={setIsImportModalOpen}
+        onImport={handleImportCustomers}
+      />
     </MainLayout>
   )
 }

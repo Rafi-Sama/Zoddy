@@ -182,9 +182,9 @@ function SortableItem({ item, onArchive, onUnarchive }: {
           <SidebarMenuItem>
             <SidebarMenuButton asChild tooltip={item.title}>
               <a href={item.url} className="relative group/item flex items-center">
-                <item.icon className="group-data-[collapsible=icon]/sidebar:mx-auto h-4 w-4 flex-shrink-0" />
-                <span className="group-data-[collapsible=icon]/sidebar:hidden truncate">{item.title}</span>
-                <div className="ml-auto flex items-center gap-0.5 group-data-[collapsible=icon]/sidebar:hidden">
+                <item.icon className="group-data-[collapsible=icon]:mx-auto h-4 w-4 flex-shrink-0" />
+                <span className="group-data-[collapsible=icon]:hidden truncate">{item.title}</span>
+                <div className="ml-auto flex items-center gap-0.5 group-data-[collapsible=icon]:hidden">
                   <div
                     className="cursor-move opacity-0 group-hover/item:opacity-100 transition-opacity hidden md:block touch-none"
                     {...attributes}
@@ -378,11 +378,11 @@ export function AppSidebarEnhanced() {
     >
       <Sidebar collapsible="icon">
         <SidebarHeader>
-          <div className="flex items-center gap-1.5 md:gap-2 py-1.5 group-data-[collapsible=icon]/sidebar:justify-center group-data-[collapsible=icon]/sidebar:px-0">
-            <div className="flex h-6 w-6 items-center justify-center rounded-lg bg-accent text-accent-foreground flex-shrink-0 group-data-[collapsible=icon]/sidebar:mx-auto">
+          <div className="flex items-center gap-1.5 md:gap-2 py-1.5 group-data-[collapsible=icon]:justify-center group-data-[collapsible=icon]:px-0">
+            <div className="flex h-6 w-6 items-center justify-center rounded-lg bg-accent text-accent-foreground flex-shrink-0 group-data-[collapsible=icon]:mx-auto">
               <TrendingUp className="h-3.5 w-3.5" />
             </div>
-            <div className="grid flex-1 text-left text-xs leading-tight min-w-0 group-data-[collapsible=icon]/sidebar:hidden">
+            <div className="grid flex-1 text-left text-xs leading-tight min-w-0 group-data-[collapsible=icon]:hidden">
               <span className="truncate font-bold font-display">Zoddy</span>
               <span className="truncate text-[10px] text-muted-foreground">Business Tracker</span>
             </div>
@@ -413,22 +413,16 @@ export function AppSidebarEnhanced() {
           {/* Archive Section */}
           {archivedItems.length > 0 && (
             <SidebarGroup>
-              <button
-                onClick={() => setArchiveExpanded(!archiveExpanded)}
-                className="flex items-center justify-between px-2 py-1.5 text-xs font-medium text-muted-foreground hover:text-foreground transition-colors group-data-[collapsible=icon]/sidebar:px-0 group-data-[collapsible=icon]/sidebar:justify-center"
-              >
-                <div className="flex items-center gap-1.5">
-                  <Archive className="h-3.5 w-3.5 group-data-[collapsible=icon]/sidebar:mx-auto" />
-                  <span className="group-data-[collapsible=icon]/sidebar:hidden">Archive ({archivedItems.length})</span>
-                </div>
-                <div className="group-data-[collapsible=icon]/sidebar:hidden">
-                  {archiveExpanded ? (
-                    <ChevronUp className="h-3 w-3" />
-                  ) : (
-                    <ChevronDown className="h-3 w-3" />
-                  )}
-                </div>
-              </button>
+              <div className="px-2 group-data-[collapsible=icon]:px-0!">
+                <button
+                  onClick={() => setArchiveExpanded(!archiveExpanded)}
+                  className="flex w-full items-center gap-2 overflow-hidden rounded-md p-1.5 text-xs font-medium text-muted-foreground hover:text-foreground hover:bg-sidebar-accent transition-[width,height,padding] group-data-[collapsible=icon]:size-7! group-data-[collapsible=icon]:justify-center"
+                >
+                  <Archive className="h-3.5 w-3.5 shrink-0" />
+                  <span className="truncate group-data-[collapsible=icon]:hidden">Archive ({archivedItems.length})</span>
+                  <ChevronDown className={`h-3 w-3 shrink-0 transition-transform group-data-[collapsible=icon]:hidden ${archiveExpanded ? 'rotate-180' : ''}`} />
+                </button>
+              </div>
               {archiveExpanded && (
                 <SidebarGroupContent>
                   <SidebarMenu>
@@ -458,9 +452,9 @@ export function AppSidebarEnhanced() {
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                   <SidebarMenuButton tooltip="Account">
-                    <User2 className="group-data-[collapsible=icon]/sidebar:mx-auto" />
-                    <span className="group-data-[collapsible=icon]/sidebar:hidden">Username</span>
-                    <ChevronUp className="ml-auto group-data-[collapsible=icon]/sidebar:hidden" />
+                    <User2 className="group-data-[collapsible=icon]:mx-auto" />
+                    <span className="group-data-[collapsible=icon]:hidden">Username</span>
+                    <ChevronUp className="ml-auto group-data-[collapsible=icon]:hidden" />
                   </SidebarMenuButton>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent

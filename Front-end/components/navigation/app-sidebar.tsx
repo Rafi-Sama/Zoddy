@@ -41,6 +41,11 @@ const items = [
     icon: Home,
   },
   {
+    title: "Inventory",
+    url: "/inventory",
+    icon: Package,
+  },
+  {
     title: "Orders",
     url: "/orders",
     icon: ShoppingCart,
@@ -49,16 +54,6 @@ const items = [
     title: "Customers",
     url: "/customers",
     icon: Users,
-  },
-  {
-    title: "Team",
-    url: "/team",
-    icon: UsersRound,
-  },
-  {
-    title: "Inventory",
-    url: "/inventory",
-    icon: Package,
   },
   {
     title: "Payments",
@@ -71,6 +66,11 @@ const items = [
     icon: Megaphone,
   },
   {
+    title: "Team",
+    url: "/team",
+    icon: UsersRound,
+  },
+  {
     title: "Calendar",
     url: "/calendar",
     icon: Calendar,
@@ -81,14 +81,14 @@ const items = [
     icon: Bell,
   },
   {
-    title: "Archive",
-    url: "/archive",
-    icon: Archive,
-  },
-  {
     title: "Settings",
     url: "/settings",
     icon: Settings,
+  },
+  {
+    title: "Archive",
+    url: "/archive",
+    icon: Archive,
   },
 ]
 export function AppSidebar() {
@@ -114,8 +114,8 @@ export function AppSidebar() {
                 <SidebarMenuItem key={item.title}>
                   <SidebarMenuButton asChild tooltip={item.title}>
                     <a href={item.url}>
-                      <item.icon />
-                      <span>{item.title}</span>
+                      <item.icon className="group-data-[collapsible=icon]:mx-auto" />
+                      <span className="group-data-[collapsible=icon]:hidden">{item.title}</span>
                     </a>
                   </SidebarMenuButton>
                 </SidebarMenuItem>
@@ -130,8 +130,9 @@ export function AppSidebar() {
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <SidebarMenuButton>
-                  <User2 /> Username
-                  <ChevronUp className="ml-auto" />
+                  <User2 className="group-data-[collapsible=icon]:mx-auto" />
+                  <span className="group-data-[collapsible=icon]:hidden">Username</span>
+                  <ChevronUp className="ml-auto group-data-[collapsible=icon]:hidden" />
                 </SidebarMenuButton>
               </DropdownMenuTrigger>
               <DropdownMenuContent
