@@ -1,5 +1,5 @@
 "use client"
-import { useState } from "react"
+import { useState, useCallback } from "react"
 import { MarketingLayout } from "@/components/layout/marketing-layout"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
@@ -36,22 +36,22 @@ export default function ContactPage() {
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [isSubmitted, setIsSubmitted] = useState(false)
 
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+  const handleInputChange = useCallback((e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { id, value } = e.target
     setFormData(prev => ({
       ...prev,
       [id.replace('-', '')]: value
     }))
-  }
+  }, [])
 
-  const handleSelectChange = (value: string) => {
+  const handleSelectChange = useCallback((value: string) => {
     setFormData(prev => ({
       ...prev,
       inquiryType: value
     }))
-  }
+  }, [])
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = useCallback(async (e: React.FormEvent) => {
     e.preventDefault()
 
     // Validate required fields
@@ -84,7 +84,8 @@ export default function ContactPage() {
         setIsSubmitted(false)
       }, 3000)
     }, 1500)
-  }
+  }, [formData])
+
   return (
     <MarketingLayout>
       <div className="min-h-screen py-12">

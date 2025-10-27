@@ -8,22 +8,34 @@ import { ClearOldSidebarCache } from "@/components/utils/clear-old-sidebar-cache
 import { ErrorBoundary } from "@/components/error-boundary";
 import "./globals.css";
 
+// Optimize font loading with only necessary weights and subsets
 const shantellSans = Shantell_Sans({
   variable: "--font-shantell-sans",
   subsets: ["latin"],
   display: "swap",
+  preload: false, // Only preload primary font
+  fallback: ['system-ui', 'arial'],
+  adjustFontFallback: true,
 });
 
 const inter = Inter({
   variable: "--font-inter",
   subsets: ["latin"],
   display: "swap",
+  preload: true, // Primary font - preload for faster rendering
+  fallback: ['system-ui', 'arial'],
+  adjustFontFallback: true,
+  weight: ['400', '500', '600', '700'], // Only load needed weights
 });
 
 const dmSans = DM_Sans({
   variable: "--font-dm-sans",
   subsets: ["latin"],
   display: "swap",
+  preload: false, // Secondary font - load on demand
+  fallback: ['system-ui', 'arial'],
+  adjustFontFallback: true,
+  weight: ['400', '500', '600', '700'], // Only load needed weights
 });
 
 export const metadata: Metadata = {

@@ -1,5 +1,6 @@
 "use client"
-import { useState } from "react"
+import { useState, useMemo, useCallback } from "react"
+import dynamic from "next/dynamic"
 import { MainLayout } from "@/components/layout/main-layout"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
@@ -46,11 +47,48 @@ import {
   CheckCircle,
 } from "lucide-react"
 import { toast } from "sonner"
-import { AddProductModal, type ProductFormData } from "@/components/inventory/add-product-modal"
-import { EditProductModal, type InventoryItem } from "@/components/inventory/edit-product-modal"
-import { ImportProductsModal } from "@/components/inventory/import-products-modal"
-import { StockHistoryModal } from "@/components/inventory/stock-history-modal"
-const mockInventory = [
+
+// Lazy load modals for better performance
+const AddProductModal = dynamic(() => import("@/components/inventory/add-product-modal").then(mod => ({ default: mod.AddProductModal })), {
+  ssr: false,
+})
+
+const EditProductModal = dynamic(() => import("@/components/inventory/edit-product-modal").then(mod => ({ default: mod.EditProductModal })), {
+  ssr: false,
+})
+
+const ImportProductsModal = dynamic(() => import("@/components/inventory/import-products-modal").then(mod => ({ default: mod.ImportProductsModal })), {
+  ssr: false,
+})
+
+const StockHistoryModal = dynamic(() => import("@/components/inventory/stock-history-modal").then(mod => ({ default: mod.StockHistoryModal })), {
+  ssr: false,
+})
+
+// Define types directly
+interface ProductFormData {
+  name: string
+  description: string
+  sku: string
+  category: string
+  currentStock: number
+  reorderLevel: number
+  costPrice: number
+  sellingPrice: number
+}
+
+interface InventoryItem extends ProductFormData {
+  id: string
+  totalValue: number
+  image: null
+  bestseller: boolean
+  movements: {
+    thisWeek: { in: number; out: number }
+    lastWeek: { in: number; out: number }
+  }
+}
+
+const mockInventory: InventoryItem[] = [
   {
     id: "1",
     name: "Cotton Kurti - Blue",
@@ -214,25 +252,30 @@ export default function InventoryPage() {
     toast.success("Item marked as handled")
   }
 
-  // Filter products based on search and filters
-  const filteredProducts = inventory.filter(item => {
-    const matchesSearch = item.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                          item.sku.toLowerCase().includes(searchTerm.toLowerCase())
-    const matchesCategory = categoryFilter === "all" || item.category === categoryFilter
-    const matchesStock = stockFilter === "all" ||
-                        (stockFilter === "instock" && item.currentStock > item.reorderLevel) ||
-                        (stockFilter === "lowstock" && item.currentStock <= item.reorderLevel && item.currentStock > 0) ||
-                        (stockFilter === "outofstock" && item.currentStock === 0) ||
-                        (stockFilter === "overstocked" && item.currentStock > item.reorderLevel * 3)
-    return matchesSearch && matchesCategory && matchesStock
-  })
-  const getStockStatus = (item: InventoryItem) => {
+  // Filter products based on search and filters - memoized for performance
+  const filteredProducts = useMemo(() => {
+    return inventory.filter(item => {
+      const matchesSearch = item.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                            item.sku.toLowerCase().includes(searchTerm.toLowerCase())
+      const matchesCategory = categoryFilter === "all" || item.category === categoryFilter
+      const matchesStock = stockFilter === "all" ||
+                          (stockFilter === "instock" && item.currentStock > item.reorderLevel) ||
+                          (stockFilter === "lowstock" && item.currentStock <= item.reorderLevel && item.currentStock > 0) ||
+                          (stockFilter === "outofstock" && item.currentStock === 0) ||
+                          (stockFilter === "overstocked" && item.currentStock > item.reorderLevel * 3)
+      return matchesSearch && matchesCategory && matchesStock
+    })
+  }, [inventory, searchTerm, categoryFilter, stockFilter])
+
+  // Memoize helper function for better performance
+  const getStockStatus = useCallback((item: InventoryItem) => {
     if (item.currentStock === 0) return { status: "Out of Stock", color: "bg-red-100 text-red-800" }
     if (item.currentStock <= item.reorderLevel) return { status: "Low Stock", color: "bg-yellow-100 text-yellow-800" }
     if (item.currentStock > item.reorderLevel * 3) return { status: "Overstocked", color: "bg-blue-100 text-blue-800" }
     return { status: "In Stock", color: "bg-green-100 text-green-800" }
-  }
-  const handleStockAdjustment = (product: InventoryItem) => {
+  }, [])
+
+  const handleStockAdjustment = useCallback((product: InventoryItem) => {
     const quantity = parseInt(adjustmentQuantity)
     if (!quantity || !adjustmentReason) {
       alert("Please enter quantity and reason for adjustment")
@@ -287,9 +330,9 @@ export default function InventoryPage() {
       setSelectedProduct(null)
       setIsProcessing(false)
     }, 1000)
-  }
+  }, [adjustmentType, adjustmentQuantity, adjustmentReason])
 
-  const handleAddProduct = (productData: ProductFormData) => {
+  const handleAddProduct = useCallback((productData: ProductFormData) => {
     const product: InventoryItem = {
       id: (inventory.length + 1).toString(),
       name: productData.name,
@@ -333,9 +376,9 @@ export default function InventoryPage() {
       description: `${productData.name} has been added to inventory`
     })
     setIsAddModalOpen(false)
-  }
+  }, [inventory, stockHistory])
 
-  const handleEditProduct = (product: InventoryItem) => {
+  const handleEditProduct = useCallback((product: InventoryItem) => {
     const oldProduct = inventory.find(item => item.id === product.id)
 
     setInventory(prevInventory =>
@@ -397,9 +440,9 @@ export default function InventoryPage() {
 
     setIsEditModalOpen(false)
     setEditingProduct(null)
-  }
+  }, [inventory, stockHistory])
 
-  const handleDeleteProduct = () => {
+  const handleDeleteProduct = useCallback(() => {
     if (!productToDelete || !deleteReason.trim()) {
       toast.error("Please provide a reason for deletion")
       return
@@ -435,9 +478,9 @@ export default function InventoryPage() {
     setIsDeleteDialogOpen(false)
     setProductToDelete(null)
     setDeleteReason("")
-  }
+  }, [productToDelete, deleteReason, stockHistory, inventory])
 
-  const handleImportProducts = async (file: File) => {
+  const handleImportProducts = useCallback(async (file: File) => {
     // Mock imported products
     const importedProducts: InventoryItem[] = [
       {
@@ -464,21 +507,21 @@ export default function InventoryPage() {
     toast.success("Products imported successfully", {
       description: `${importedProducts.length} products imported from ${file.name}`
     })
-  }
+  }, [inventory])
 
-  const handleAddCategory = (category: string) => {
+  const handleAddCategory = useCallback((category: string) => {
     if (!customCategories.includes(category)) {
       setCustomCategories([...customCategories, category])
       toast.success("Category added", {
         description: `${category} has been added to the category list`
       })
     }
-  }
+  }, [customCategories])
 
-  // Get unique categories from inventory
-  const allCategories = [...new Set([...inventory.map(item => item.category), ...customCategories])]
+  // Get unique categories from inventory - memoized
+  const allCategories = useMemo(() => [...new Set([...inventory.map(item => item.category), ...customCategories])], [inventory, customCategories])
 
-  const handleQuickAddStock = (productId: string, productName: string) => {
+  const handleQuickAddStock = useCallback((productId: string, productName: string) => {
     if (!quickAddQuantity) return
 
     const quantity = parseInt(quickAddQuantity)
@@ -535,7 +578,7 @@ export default function InventoryPage() {
 
     setQuickAddProductId(null)
     setQuickAddQuantity("")
-  }
+  }, [inventory, quickAddQuantity, stockHistory])
 
   return (
     <MainLayout

@@ -1,5 +1,5 @@
 "use client"
-import { useState } from "react"
+import { useState, useMemo } from "react"
 import { MainLayout } from "@/components/layout/main-layout"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
@@ -42,6 +42,46 @@ import {
   CheckCircle,
   Download
 } from "lucide-react"
+
+// Helper functions moved outside component for reuse in modal
+const getStatusColor = (status: string) => {
+  switch (status) {
+    case "VIP":
+      return "bg-purple-100 text-purple-800"
+    case "Regular":
+      return "bg-blue-100 text-blue-800"
+    case "New":
+      return "bg-green-100 text-green-800"
+    case "Inactive":
+      return "bg-gray-100 text-gray-800"
+    default:
+      return "bg-gray-100 text-gray-800"
+  }
+}
+
+const getStatusIcon = (status: string) => {
+  switch (status) {
+    case "VIP":
+      return <Crown className="h-3.5 w-3.5" />
+    case "Regular":
+      return <Users className="h-3.5 w-3.5" />
+    case "New":
+      return <Plus className="h-3.5 w-3.5" />
+    case "Inactive":
+      return <Clock className="h-3.5 w-3.5" />
+    default:
+      return <Users className="h-3.5 w-3.5" />
+  }
+}
+
+const getDaysSinceLastOrder = (lastOrder: string) => {
+  const today = new Date()
+  const orderDate = new Date(lastOrder)
+  const diffTime = Math.abs(today.getTime() - orderDate.getTime())
+  const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24))
+  return diffDays
+}
+
 const mockCustomers = [
   {
     id: "1",
@@ -210,44 +250,9 @@ export default function CustomersPage() {
   const newCustomersThisMonth = 2 // This would be calculated from real data
   const retentionRate = 87.5 // From analytics page
   const churnRate = 12.5
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case "VIP":
-        return "bg-purple-100 text-purple-800"
-      case "Regular":
-        return "bg-blue-100 text-blue-800"
-      case "New":
-        return "bg-green-100 text-green-800"
-      case "Inactive":
-        return "bg-gray-100 text-gray-800"
-      default:
-        return "bg-gray-100 text-gray-800"
-    }
-  }
-  const getStatusIcon = (status: string) => {
-    switch (status) {
-      case "VIP":
-        return <Crown className="h-3.5 w-3.5" />
-      case "Regular":
-        return <Users className="h-3.5 w-3.5" />
-      case "New":
-        return <Plus className="h-3.5 w-3.5" />
-      case "Inactive":
-        return <Clock className="h-3.5 w-3.5" />
-      default:
-        return <Users className="h-3.5 w-3.5" />
-    }
-  }
-  const getDaysSinceLastOrder = (lastOrder: string) => {
-    const today = new Date()
-    const orderDate = new Date(lastOrder)
-    const diffTime = Math.abs(today.getTime() - orderDate.getTime())
-    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24))
-    return diffDays
-  }
 
-  // Filter and sort customers
-  const filteredCustomers = customers
+  // Filter and sort customers - memoized for performance
+  const filteredCustomers = useMemo(() => customers
     .filter(customer => {
       const matchesSearch = searchTerm === "" ||
         customer.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -272,7 +277,7 @@ export default function CustomersPage() {
         default:
           return 0
       }
-    })
+    }), [customers, searchTerm, statusFilter, sortBy])
   return (
     <MainLayout
       breadcrumbs={[
@@ -794,18 +799,4 @@ function CustomerDetailsModal({
       </div>
     </>
   )
-}
-function getStatusColor(status: string) {
-  switch (status) {
-    case "VIP":
-      return "bg-purple-100 text-purple-800"
-    case "Regular":
-      return "bg-blue-100 text-blue-800"
-    case "New":
-      return "bg-green-100 text-green-800"
-    case "Inactive":
-      return "bg-gray-100 text-gray-800"
-    default:
-      return "bg-gray-100 text-gray-800"
-  }
 }

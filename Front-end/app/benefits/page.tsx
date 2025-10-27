@@ -22,12 +22,13 @@ import {
   Target,
   ChevronRight
 } from "lucide-react"
-import { useState } from "react"
+import { useState, useMemo } from "react"
 
 export default function BenefitsPage() {
   const [selectedPainPoint, setSelectedPainPoint] = useState(0)
 
-  const painPoints = [
+  // Memoize static data to avoid recreation on every render
+  const painPoints = useMemo(() => [
     {
       title: "Lost Orders on WhatsApp",
       description: "Messages getting buried, orders forgotten, customers angry",
@@ -56,9 +57,9 @@ export default function BenefitsPage() {
       icon: Users,
       stats: "5x faster customer service"
     }
-  ]
+  ], [])
 
-  const transformations = [
+  const transformations = useMemo(() => [
     {
       before: "Spending 4+ hours daily on manual tasks",
       after: "Everything automated in 30 minutes",
@@ -79,9 +80,9 @@ export default function BenefitsPage() {
       after: "Proactive updates keeping them happy",
       metric: "98% satisfaction"
     }
-  ]
+  ], [])
 
-  const socialProof = [
+  const socialProof = useMemo(() => [
     {
       name: "Fatima's Boutique",
       location: "Dhanmondi",
@@ -103,7 +104,7 @@ export default function BenefitsPage() {
       growth: "150+ daily orders managed",
       avatar: "TK"
     }
-  ]
+  ], [])
 
   return (
     <MarketingLayout>

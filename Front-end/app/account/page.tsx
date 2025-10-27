@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, Suspense } from "react";
+import { useState, useEffect, Suspense, useCallback, useMemo } from "react";
 import { useSearchParams } from "next/navigation";
 import { MainLayout } from "@/components/layout/main-layout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -121,24 +121,25 @@ function AccountContent() {
     loginAlerts: true,
   });
 
-  const handleSaveProfile = async () => {
+  const handleSaveProfile = useCallback(async () => {
     setIsSaving(true);
     await new Promise((resolve) => setTimeout(resolve, 1000));
     setIsSaving(false);
     setIsEditing(false);
     toast.success("Profile updated successfully");
-  };
+  }, []);
 
-  const handleQuickSave = async (
+  const handleQuickSave = useCallback(async (
     field: string,
     value: string | boolean | number
   ) => {
     await new Promise((resolve) => setTimeout(resolve, 300));
     toast.success(`${field} updated with value: ${value}`);
-  };
+  }, []);
 
-  const renderContent = () => {
-    switch (activeSection) {
+  const renderContent = useMemo(() => {
+    const ContentRenderer = () => {
+      switch (activeSection) {
       case "profile":
         return (
           <div className="space-y-4">
@@ -828,8 +829,10 @@ function AccountContent() {
 
       default:
         return null;
+      }
     }
-  };
+    return ContentRenderer
+  }, [activeSection, isEditing, isSaving, profile, notifications, security, handleSaveProfile, handleQuickSave]);
 
   return (
     <MainLayout breadcrumbs={[{ label: "Account Settings" }]}>

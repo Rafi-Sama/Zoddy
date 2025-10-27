@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect, useCallback } from "react"
+import { useState, useEffect, useCallback, useMemo } from "react"
 import { MainLayoutDashboard } from "@/components/layout/main-layout-dashboard"
 import { DashboardGridFixed } from "@/components/dashboard/dashboard-grid-fixed"
 import { Widget, WidgetType, WIDGET_DEFINITIONS } from "@/types/dashboard"
@@ -140,44 +140,53 @@ export default function DashboardPage() {
     loadWidgets()
   }, [])
 
-  // Check for unsaved changes
-  useEffect(() => {
-    const hasChanges = JSON.stringify(widgets) !== JSON.stringify(savedWidgets)
-    setHasUnsavedChanges(hasChanges)
+  // Check for unsaved changes - memoized comparison
+  const hasChanges = useMemo(() => {
+    return JSON.stringify(widgets) !== JSON.stringify(savedWidgets)
   }, [widgets, savedWidgets])
+
+  useEffect(() => {
+    setHasUnsavedChanges(hasChanges)
+  }, [hasChanges])
 
   const handleAddWidget = useCallback((type: WidgetType) => {
     const definition = WIDGET_DEFINITIONS[type]
     if (!definition) return
 
-    // Find optimal position for the new widget
-    const { x, y } = findOptimalPosition(
-      widgets,
-      definition.w || 3,
-      definition.h || 2
-    )
+    setWidgets(prevWidgets => {
+      // Find optimal position for the new widget
+      const { x, y } = findOptimalPosition(
+        prevWidgets,
+        definition.w || 3,
+        definition.h || 2
+      )
 
-    const newWidget: Widget = {
-      id: `${type}-${uuidv4()}`,
-      type,
-      title: definition.title!,
-      description: definition.description,
-      x,
-      y,
-      w: definition.w || 3,
-      h: definition.h || 2,
-      static: definition.static
-    }
+      const newWidget: Widget = {
+        id: `${type}-${uuidv4()}`,
+        type,
+        title: definition.title!,
+        description: definition.description,
+        x,
+        y,
+        w: definition.w || 3,
+        h: definition.h || 2,
+        static: definition.static
+      }
 
-    // Add widget and resolve any potential overlaps
-    const updatedWidgets = resolveOverlaps([...widgets, newWidget])
-    setWidgets(updatedWidgets)
-  }, [widgets])
+      // Add widget and resolve any potential overlaps
+      return resolveOverlaps([...prevWidgets, newWidget])
+    })
+  }, [])
 
   const handleLayoutChange = useCallback((updatedWidgets: Widget[]) => {
-    // Ensure all widgets are within bounds and not overlapping
-    const adjustedWidgets = updatedWidgets.map(w => adjustToGridBounds(w))
-    setWidgets(adjustedWidgets)
+    setWidgets(prevWidgets => {
+      // Only update if there are actual changes
+      if (JSON.stringify(prevWidgets) === JSON.stringify(updatedWidgets)) {
+        return prevWidgets
+      }
+      // Ensure all widgets are within bounds and not overlapping
+      return updatedWidgets.map(w => adjustToGridBounds(w))
+    })
   }, [])
 
   const handleRemoveWidget = useCallback((id: string) => {

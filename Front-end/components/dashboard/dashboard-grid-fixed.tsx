@@ -29,43 +29,45 @@ export function DashboardGridFixed({
   const [isMobile, setIsMobile] = useState(false)
   const containerRef = useRef<HTMLDivElement>(null)
 
-  // Calculate width after mount
+  // Calculate width after mount with debouncing for performance
   useEffect(() => {
+    let timeoutId: NodeJS.Timeout | null = null
+
     const updateWidth = () => {
       if (containerRef.current) {
         const width = containerRef.current.getBoundingClientRect().width
         setContainerWidth(width)
-        // Check if mobile
         setIsMobile(window.innerWidth < 768)
       }
     }
 
-    // Initial setup with multiple attempts to ensure DOM is ready
-    const initializeWidth = () => {
-      updateWidth()
-      // Try again after a short delay to catch any layout shifts
-      setTimeout(updateWidth, 100)
-      setTimeout(updateWidth, 300)
+    // Debounced resize handler for better performance
+    const debouncedUpdateWidth = () => {
+      if (timeoutId) clearTimeout(timeoutId)
+      timeoutId = setTimeout(updateWidth, 150)
     }
 
     setMounted(true)
 
-    // Use requestAnimationFrame to ensure DOM is painted
-    requestAnimationFrame(() => {
-      initializeWidth()
+    // Single initialization with requestAnimationFrame
+    requestAnimationFrame(updateWidth)
+
+    // Efficient resize handling with debounce
+    window.addEventListener('resize', debouncedUpdateWidth)
+
+    // Optimized ResizeObserver for container size changes
+    const resizeObserver = new ResizeObserver(() => {
+      if (timeoutId) clearTimeout(timeoutId)
+      timeoutId = setTimeout(updateWidth, 100)
     })
 
-    // Also listen for resize events
-    window.addEventListener('resize', updateWidth)
-
-    // Listen for sidebar toggle events which might affect width
-    const resizeObserver = new ResizeObserver(updateWidth)
     if (containerRef.current) {
       resizeObserver.observe(containerRef.current)
     }
 
     return () => {
-      window.removeEventListener('resize', updateWidth)
+      if (timeoutId) clearTimeout(timeoutId)
+      window.removeEventListener('resize', debouncedUpdateWidth)
       resizeObserver.disconnect()
     }
   }, [])

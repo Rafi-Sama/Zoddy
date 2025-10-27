@@ -1,12 +1,26 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
+import dynamic from 'next/dynamic'
 import { MainLayout } from '@/components/layout/main-layout'
-import { TeamOverview } from '@/components/team/team-overview'
-import { TeamMembers } from '@/components/team/team-members'
-import { TeamTasks } from '@/components/team/team-tasks'
-import { TeamDiscussion } from '@/components/team/team-discussion'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
+
+// Lazy load heavy team components for better performance
+const TeamOverview = dynamic(() => import('@/components/team/team-overview').then(mod => ({ default: mod.TeamOverview })), {
+  loading: () => <div className="h-64 flex items-center justify-center"><div className="animate-spin h-8 w-8 border-4 border-primary border-t-transparent rounded-full" /></div>
+})
+const TeamMembers = dynamic(() => import('@/components/team/team-members').then(mod => ({ default: mod.TeamMembers })), {
+  ssr: false,
+  loading: () => <div className="h-64 flex items-center justify-center"><div className="animate-spin h-8 w-8 border-4 border-primary border-t-transparent rounded-full" /></div>
+})
+const TeamTasks = dynamic(() => import('@/components/team/team-tasks').then(mod => ({ default: mod.TeamTasks })), {
+  ssr: false,
+  loading: () => <div className="h-64 flex items-center justify-center"><div className="animate-spin h-8 w-8 border-4 border-primary border-t-transparent rounded-full" /></div>
+})
+const TeamDiscussion = dynamic(() => import('@/components/team/team-discussion').then(mod => ({ default: mod.TeamDiscussion })), {
+  ssr: false,
+  loading: () => <div className="h-64 flex items-center justify-center"><div className="animate-spin h-8 w-8 border-4 border-primary border-t-transparent rounded-full" /></div>
+})
 import { Users, MessageSquare, CheckSquare, Activity } from 'lucide-react'
 import type { TeamMember, TeamTask, TeamMessage, TeamStats } from '@/types/team'
 
@@ -18,12 +32,7 @@ export default function TeamPage() {
   const [stats, setStats] = useState<TeamStats | null>(null)
   const [loading, setLoading] = useState(true)
 
-  useEffect(() => {
-    // Load team data
-    loadTeamData()
-  }, [])
-
-  const loadTeamData = async () => {
+  const loadTeamData = useCallback(async () => {
     try {
       // Mock data for now - replace with API calls
       setMembers([
@@ -62,7 +71,12 @@ export default function TeamPage() {
       console.error('Error loading team data:', error)
       setLoading(false)
     }
-  }
+  }, [])
+
+  useEffect(() => {
+    // Load team data
+    loadTeamData()
+  }, [loadTeamData])
 
   return (
     <MainLayout>

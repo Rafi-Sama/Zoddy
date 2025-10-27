@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useCallback, useMemo } from "react"
 import { useRouter } from "next/navigation"
 import { MarketingLayout } from "@/components/layout/marketing-layout"
 import { Button } from "@/components/ui/button"
@@ -25,7 +25,7 @@ export default function PricingPage() {
   const router = useRouter()
   const [billingInterval, setBillingInterval] = useState<"monthly" | "yearly">("monthly")
 
-  const handleGetStarted = (planId: string) => {
+  const handleGetStarted = useCallback((planId: string) => {
     if (planId === 'enterprise') {
       toast.info("Our sales team will contact you shortly!")
       router.push('/contact')
@@ -33,22 +33,23 @@ export default function PricingPage() {
     }
     // Navigate to billing page with selected plan
     router.push(`/account/billing?plan=${planId}&interval=${billingInterval}`)
-  }
+  }, [router, billingInterval])
 
-  const formatPrice = (price: number, interval: "monthly" | "yearly") => {
+  const formatPrice = useCallback((price: number, interval: "monthly" | "yearly") => {
     if (price === 0) return "Free"
     const displayPrice = interval === "yearly" ? price * 10 : price // 2 months free
     return `৳${displayPrice.toLocaleString('en-BD')}`
-  }
+  }, [])
 
-  // Use the shared SUBSCRIPTION_PLANS from billing types
-  const plans = SUBSCRIPTION_PLANS.map(plan => ({
+  // Use the shared SUBSCRIPTION_PLANS from billing types - memoized
+  const plans = useMemo(() => SUBSCRIPTION_PLANS.map(plan => ({
     ...plan,
     cta: plan.id === 'enterprise' ? 'Contact Sales' : plan.price === 0 ? 'Start Free' : 'Get Started',
     ctaVariant: plan.popular ? 'default' as const : 'outline' as const,
     icon: plan.id === 'free' ? Users : plan.id === 'starter' ? Star : plan.id === 'professional' ? Crown : Building
-  }))
-  const faqs = [
+  })), [])
+
+  const faqs = useMemo(() => [
     {
       question: "Can I change plans anytime?",
       answer: "Yes! You can upgrade or downgrade your plan at any time. Changes take effect immediately and we'll prorate the billing."
@@ -73,7 +74,8 @@ export default function PricingPage() {
       question: "Is my data safe and secure?",
       answer: "Your data security is our top priority. We use bank-level encryption and regular backups. Your data belongs to you."
     }
-  ]
+  ], [])
+
   return (
     <MarketingLayout>
       {/* Hero Section */}

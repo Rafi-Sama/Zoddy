@@ -1,8 +1,9 @@
+import { memo } from "react"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Clock, Star } from "lucide-react"
 
-export function InsightsWidget() {
+export const InsightsWidget = memo(function InsightsWidget() {
   return (
     <Card className="h-full overflow-hidden">
       <CardHeader>
@@ -42,4 +43,4 @@ export function InsightsWidget() {
       </CardContent>
     </Card>
   )
-}
+})

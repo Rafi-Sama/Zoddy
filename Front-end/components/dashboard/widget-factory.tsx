@@ -1,3 +1,4 @@
+import { memo } from "react"
 import { WidgetType } from "@/types/dashboard"
 import { RevenueWidget } from "./widgets/revenue-widget"
 import { OrdersWidget } from "./widgets/orders-widget"
@@ -30,7 +31,7 @@ interface WidgetFactoryProps {
   }
 }
 
-export function WidgetFactory({ type, data }: WidgetFactoryProps) {
+export const WidgetFactory = memo(function WidgetFactory({ type, data }: WidgetFactoryProps) {
   switch (type) {
     case 'revenue':
       return <RevenueWidget />
@@ -337,4 +338,4 @@ export function WidgetFactory({ type, data }: WidgetFactoryProps) {
         </Card>
       )
   }
-}
+})

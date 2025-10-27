@@ -1,5 +1,6 @@
 "use client"
-import { useState } from "react"
+import { useState, useMemo } from "react"
+import dynamic from "next/dynamic"
 import { MainLayout } from "@/components/layout/main-layout"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
@@ -35,16 +36,73 @@ import {
   Search,
   Calendar,
   Phone,
-  MapPin,
-  RefreshCw
+  MapPin
 } from "lucide-react"
 import { toast } from "sonner"
 import { DateRangePicker } from "@/components/ui/date-range-picker"
-import { ImportOrdersModal } from "@/components/orders/import-orders-modal"
-import { QuickOrderModal } from "@/components/orders/quick-order-modal"
-import { EditOrderModal } from "@/components/orders/edit-order-modal"
 import { DateRange } from "react-day-picker"
-import { isWithinInterval, parse } from "date-fns"
+import { isWithinInterval } from "date-fns"
+import { parse } from "date-fns"
+
+// Lazy load heavy modals for better initial page load
+const ImportOrdersModal = dynamic(() => import("@/components/orders/import-orders-modal").then(mod => ({ default: mod.ImportOrdersModal })), {
+  loading: () => <Button variant="outline" className="h-10 text-sm px-3" disabled><Download className="h-4 w-4 sm:mr-2" /><span className="hidden sm:inline">Import</span></Button>,
+})
+
+const QuickOrderModal = dynamic(() => import("@/components/orders/quick-order-modal").then(mod => ({ default: mod.QuickOrderModal })), {
+  loading: () => <Button className="bg-accent hover:bg-accent/90 h-10 text-sm px-3" disabled><Plus className="h-4 w-4 sm:mr-2" /><span className="hidden sm:inline">New Order</span></Button>,
+})
+
+const EditOrderModal = dynamic(() => import("@/components/orders/edit-order-modal").then(mod => ({ default: mod.EditOrderModal })), {
+  ssr: false,
+})
+
+// Helper functions moved outside component for reuse in modal
+const getStatusColor = (status: string) => {
+  switch (status) {
+    case "delivered":
+      return "bg-green-100 text-green-800"
+    case "shipped":
+      return "bg-blue-100 text-blue-800"
+    case "confirmed":
+      return "bg-yellow-100 text-yellow-800"
+    case "pending":
+      return "bg-gray-100 text-gray-800"
+    case "returned":
+      return "bg-red-100 text-red-800"
+    default:
+      return "bg-gray-100 text-gray-800"
+  }
+}
+
+const getPaymentStatusColor = (status: string) => {
+  switch (status) {
+    case "paid":
+      return "bg-green-100 text-green-800"
+    case "pending":
+      return "bg-orange-100 text-orange-800"
+    case "partial":
+      return "bg-yellow-100 text-yellow-800"
+    default:
+      return "bg-gray-100 text-gray-800"
+  }
+}
+
+const getStatusIcon = (status: string) => {
+  switch (status) {
+    case "delivered":
+      return <CheckCircle className="h-3.5 w-3.5" />
+    case "shipped":
+      return <Truck className="h-3.5 w-3.5" />
+    case "confirmed":
+      return <Package className="h-3.5 w-3.5" />
+    case "pending":
+      return <Clock className="h-3.5 w-3.5" />
+    default:
+      return <Clock className="h-3.5 w-3.5" />
+  }
+}
+
 const mockOrders = [
   {
     id: "#1234",
@@ -140,48 +198,6 @@ export default function OrdersPage() {
   const [dateRange, setDateRange] = useState<DateRange | undefined>(undefined)
   const [editingOrder, setEditingOrder] = useState<Order | null>(null)
   const [isEditModalOpen, setIsEditModalOpen] = useState(false)
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case "delivered":
-        return "bg-green-100 text-green-800"
-      case "shipped":
-        return "bg-blue-100 text-blue-800"
-      case "confirmed":
-        return "bg-yellow-100 text-yellow-800"
-      case "pending":
-        return "bg-gray-100 text-gray-800"
-      case "returned":
-        return "bg-red-100 text-red-800"
-      default:
-        return "bg-gray-100 text-gray-800"
-    }
-  }
-  const getPaymentStatusColor = (status: string) => {
-    switch (status) {
-      case "paid":
-        return "bg-green-100 text-green-800"
-      case "pending":
-        return "bg-orange-100 text-orange-800"
-      case "partial":
-        return "bg-yellow-100 text-yellow-800"
-      default:
-        return "bg-gray-100 text-gray-800"
-    }
-  }
-  const getStatusIcon = (status: string) => {
-    switch (status) {
-      case "delivered":
-        return <CheckCircle className="h-3.5 w-3.5" />
-      case "shipped":
-        return <Truck className="h-3.5 w-3.5" />
-      case "confirmed":
-        return <Package className="h-3.5 w-3.5" />
-      case "pending":
-        return <Clock className="h-3.5 w-3.5" />
-      default:
-        return <Clock className="h-3.5 w-3.5" />
-    }
-  }
 
   // Handler functions for button actions
   const handleImportOrders = (importedOrders: Order[]) => {
@@ -276,31 +292,33 @@ export default function OrdersPage() {
     })
   }
 
-  // Filter orders based on search and filters
-  const filteredOrders = orders.filter(order => {
-    // Search filter
-    const matchesSearch = searchTerm === "" ||
-      order.id.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      order.customer.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      order.customer.phone.includes(searchTerm) ||
-      order.customer.address.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      order.items.some(item => item.name.toLowerCase().includes(searchTerm.toLowerCase()))
+  // Filter orders based on search and filters - memoized for performance
+  const filteredOrders = useMemo(() => {
+    return orders.filter(order => {
+      // Search filter
+      const matchesSearch = searchTerm === "" ||
+        order.id.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        order.customer.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        order.customer.phone.includes(searchTerm) ||
+        order.customer.address.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        order.items.some(item => item.name.toLowerCase().includes(searchTerm.toLowerCase()))
 
-    // Status filter
-    const matchesStatus = statusFilter === "all" || order.status === statusFilter
+      // Status filter
+      const matchesStatus = statusFilter === "all" || order.status === statusFilter
 
-    // Payment filter
-    const matchesPayment = paymentFilter === "all" || order.paymentStatus === paymentFilter
+      // Payment filter
+      const matchesPayment = paymentFilter === "all" || order.paymentStatus === paymentFilter
 
-    // Date range filter
-    const matchesDateRange = !dateRange?.from || !dateRange?.to ||
-      (order.date && isWithinInterval(parse(order.date, "dd-MM-yyyy", new Date()), {
-        start: dateRange.from,
-        end: dateRange.to
-      }))
+      // Date range filter
+      const matchesDateRange = !dateRange?.from || !dateRange?.to ||
+        (order.date && isWithinInterval(parse(order.date, "dd-MM-yyyy", new Date()), {
+          start: dateRange.from,
+          end: dateRange.to
+        }))
 
-    return matchesSearch && matchesStatus && matchesPayment && matchesDateRange
-  })
+      return matchesSearch && matchesStatus && matchesPayment && matchesDateRange
+    })
+  }, [orders, searchTerm, statusFilter, paymentFilter, dateRange])
 
   return (
     <MainLayout
@@ -792,48 +810,4 @@ function OrderDetailsModal({
       </div>
     </>
   )
-}
-function getStatusColor(status: string) {
-  switch (status) {
-    case "delivered":
-      return "bg-green-100 text-green-800"
-    case "shipped":
-      return "bg-blue-100 text-blue-800"
-    case "confirmed":
-      return "bg-yellow-100 text-yellow-800"
-    case "pending":
-      return "bg-gray-100 text-gray-800"
-    case "returned":
-      return "bg-red-100 text-red-800"
-    default:
-      return "bg-gray-100 text-gray-800"
-  }
-}
-function getPaymentStatusColor(status: string) {
-  switch (status) {
-    case "paid":
-      return "bg-green-100 text-green-800"
-    case "pending":
-      return "bg-orange-100 text-orange-800"
-    case "partial":
-      return "bg-yellow-100 text-yellow-800"
-    default:
-      return "bg-gray-100 text-gray-800"
-  }
-}
-function getStatusIcon(status: string) {
-  switch (status) {
-    case "delivered":
-      return <CheckCircle className="h-3.5 w-3.5" />
-    case "shipped":
-      return <Truck className="h-3.5 w-3.5" />
-    case "confirmed":
-      return <Package className="h-3.5 w-3.5" />
-    case "pending":
-      return <Clock className="h-3.5 w-3.5" />
-    case "returned":
-      return <RefreshCw className="h-3.5 w-3.5" />
-    default:
-      return <Clock className="h-3.5 w-3.5" />
-  }
 }
