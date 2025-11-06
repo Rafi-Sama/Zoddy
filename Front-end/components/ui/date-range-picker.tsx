@@ -105,7 +105,7 @@ export function DateRangePicker({
     }
   ]
 
-  const handlePresetClick = (preset: typeof presets[0]) => {
+  const handlePresetClick = React.useCallback((preset: typeof presets[0]) => {
     const range = preset.value()
     setFromDate(format(range.from, "dd-MM-yyyy"))
     setToDate(format(range.to, "dd-MM-yyyy"))
@@ -113,8 +113,9 @@ export function DateRangePicker({
     if (onDateChange) {
       onDateChange(range)
     }
-    setTimeout(() => setIsOpen(false), 100)
-  }
+    const timer = setTimeout(() => setIsOpen(false), 100)
+    return () => clearTimeout(timer)
+  }, [onDateChange])
 
   const validateAndApply = () => {
     setError("")

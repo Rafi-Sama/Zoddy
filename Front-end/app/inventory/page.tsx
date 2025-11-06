@@ -7,6 +7,8 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Badge } from "@/components/ui/badge"
+import { Alert, AlertDescription } from "@/components/ui/alert"
+import { Skeleton } from "@/components/ui/skeleton"
 import {
   Tooltip,
   TooltipContent,
@@ -26,7 +28,6 @@ import {
   DialogDescription,
   DialogHeader,
   DialogTitle,
-  DialogTrigger,
 } from "@/components/ui/dialog"
 import {
   Plus,
@@ -36,7 +37,6 @@ import {
   DollarSign,
   History,
   Search,
-  TrendingDown,
   Grid3X3,
   List,
   Download,
@@ -45,8 +45,13 @@ import {
   Archive,
   Trash2,
   CheckCircle,
+  Loader2,
+  AlertCircle,
 } from "lucide-react"
 import { toast } from "sonner"
+import { useData, useMutation } from "@/hooks/use-database-optimized"
+import { Product } from "@/types/database"
+import { format } from "date-fns"
 
 // Lazy load modals for better performance
 const AddProductModal = dynamic(() => import("@/components/inventory/add-product-modal").then(mod => ({ default: mod.AddProductModal })), {
@@ -76,110 +81,6 @@ interface ProductFormData {
   costPrice: number
   sellingPrice: number
 }
-
-interface InventoryItem extends ProductFormData {
-  id: string
-  totalValue: number
-  image: null
-  bestseller: boolean
-  movements: {
-    thisWeek: { in: number; out: number }
-    lastWeek: { in: number; out: number }
-  }
-}
-
-const mockInventory: InventoryItem[] = [
-  {
-    id: "1",
-    name: "Cotton Kurti - Blue",
-    description: "Premium cotton kurti with traditional embroidery",
-    sku: "CK001",
-    category: "Women's Fashion",
-    currentStock: 25,
-    reorderLevel: 10,
-    costPrice: 800,
-    sellingPrice: 1200,
-    totalValue: 20000,
-    image: null,
-    bestseller: true,
-    movements: {
-      thisWeek: { in: 50, out: 25 },
-      lastWeek: { in: 30, out: 35 }
-    }
-  },
-  {
-    id: "2",
-    name: "Silk Scarf - Red",
-    description: "Elegant silk scarf with floral patterns",
-    sku: "SS002",
-    category: "Accessories",
-    currentStock: 8,
-    reorderLevel: 15,
-    costPrice: 300,
-    sellingPrice: 500,
-    totalValue: 2400,
-    image: null,
-    bestseller: false,
-    movements: {
-      thisWeek: { in: 0, out: 12 },
-      lastWeek: { in: 20, out: 8 }
-    }
-  },
-  {
-    id: "3",
-    name: "Designer Saree",
-    description: "Handwoven designer saree with golden work",
-    sku: "DS003",
-    category: "Women's Fashion",
-    currentStock: 12,
-    reorderLevel: 5,
-    costPrice: 2200,
-    sellingPrice: 3500,
-    totalValue: 26400,
-    image: null,
-    bestseller: true,
-    movements: {
-      thisWeek: { in: 5, out: 3 },
-      lastWeek: { in: 0, out: 7 }
-    }
-  },
-  {
-    id: "4",
-    name: "Casual T-shirt",
-    description: "Comfortable cotton t-shirt for everyday wear",
-    sku: "CT004",
-    category: "Men's Fashion",
-    currentStock: 0,
-    reorderLevel: 20,
-    costPrice: 250,
-    sellingPrice: 450,
-    totalValue: 0,
-    image: null,
-    bestseller: false,
-    movements: {
-      thisWeek: { in: 0, out: 0 },
-      lastWeek: { in: 0, out: 15 }
-    }
-  },
-  {
-    id: "5",
-    name: "Embroidered Shirt",
-    description: "Traditional shirt with intricate embroidery",
-    sku: "ES005",
-    category: "Men's Fashion",
-    currentStock: 35,
-    reorderLevel: 10,
-    costPrice: 1200,
-    sellingPrice: 1800,
-    totalValue: 42000,
-    image: null,
-    bestseller: false,
-    movements: {
-      thisWeek: { in: 25, out: 10 },
-      lastWeek: { in: 20, out: 15 }
-    }
-  }
-]
 
 interface StockHistoryItem {
   id: number
@@ -211,25 +112,31 @@ interface StockHistoryItem {
 }
 
 export default function InventoryPage() {
-  const [inventory, setInventory] = useState(mockInventory)
-  const [selectedProduct, setSelectedProduct] = useState<InventoryItem | null>(null)
-  const [productToDelete, setProductToDelete] = useState<InventoryItem | null>(null)
+  // Fetch products from database (realtime disabled to reduce API requests)
+  // Data refreshes on manual refetch() calls instead
+  const { data: products, loading: productsLoading, error: productsError } = useData<Product[]>({
+    table: 'products',
+    select: '*',
+    orderBy: { column: 'created_at', ascending: false },
+    realtime: false // Disabled to reduce excessive API requests
+  })
+
+  // Mutations for CRUD operations
+  const { insert: insertProduct, update: updateProduct, remove: deleteProduct, loading: mutationLoading } = useMutation<Product>('products')
+
+  // State management
+  const [productToDelete, setProductToDelete] = useState<Product | null>(null)
   const [deleteReason, setDeleteReason] = useState("")
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false)
-  const [adjustmentType, setAdjustmentType] = useState<"add" | "remove" | "set">("add")
-  const [adjustmentQuantity, setAdjustmentQuantity] = useState("")
-  const [adjustmentReason, setAdjustmentReason] = useState("")
   const [viewMode, setViewMode] = useState<"grid" | "list">("list")
   const [searchTerm, setSearchTerm] = useState("")
   const [categoryFilter, setCategoryFilter] = useState("all")
   const [stockFilter, setStockFilter] = useState("all")
-  const [isProcessing, setIsProcessing] = useState(false)
-  const [successMessage, setSuccessMessage] = useState("")
   const [isAddModalOpen, setIsAddModalOpen] = useState(false)
   const [isImportModalOpen, setIsImportModalOpen] = useState(false)
   const [isHistoryModalOpen, setIsHistoryModalOpen] = useState(false)
   const [isEditModalOpen, setIsEditModalOpen] = useState(false)
-  const [editingProduct, setEditingProduct] = useState<InventoryItem | null>(null)
+  const [editingProduct, setEditingProduct] = useState<Product | null>(null)
   const [dismissedLowStock, setDismissedLowStock] = useState<Set<string>>(new Set())
   const [dismissedOutOfStock, setDismissedOutOfStock] = useState<Set<string>>(new Set())
   const [stockHistory, setStockHistory] = useState<StockHistoryItem[]>([])
@@ -237,10 +144,20 @@ export default function InventoryPage() {
   const [quickAddProductId, setQuickAddProductId] = useState<string | null>(null)
   const [quickAddQuantity, setQuickAddQuantity] = useState("")
 
-  const totalInventoryValue = inventory.reduce((sum, item) => sum + item.totalValue, 0)
-  const lowStockItems = inventory.filter(item => item.currentStock <= item.reorderLevel && item.currentStock > 0 && !dismissedLowStock.has(item.id))
-  const outOfStockItems = inventory.filter(item => item.currentStock === 0 && !dismissedOutOfStock.has(item.id))
-  const overstockedItems = inventory.filter(item => item.currentStock > item.reorderLevel * 3)
+  // Calculate statistics from actual data
+  const inventory = useMemo(() => products || [], [products])
+  const totalInventoryValue = inventory.reduce((sum, item) => sum + (item.current_stock * (item.cost_price || 0)), 0)
+  const lowStockItems = inventory.filter(item =>
+    item.reorder_level &&
+    item.current_stock <= item.reorder_level &&
+    item.current_stock > 0 &&
+    !dismissedLowStock.has(item.id)
+  )
+  const outOfStockItems = inventory.filter(item => item.current_stock === 0 && !dismissedOutOfStock.has(item.id))
+  const overstockedItems = inventory.filter(item =>
+    item.reorder_level &&
+    item.current_stock > item.reorder_level * 3
+  )
 
   const handleDismissLowStock = (itemId: string) => {
     setDismissedLowStock(prev => new Set([...prev, itemId]))
@@ -256,193 +173,136 @@ export default function InventoryPage() {
   const filteredProducts = useMemo(() => {
     return inventory.filter(item => {
       const matchesSearch = item.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                            item.sku.toLowerCase().includes(searchTerm.toLowerCase())
+                            (item.sku && item.sku.toLowerCase().includes(searchTerm.toLowerCase()))
       const matchesCategory = categoryFilter === "all" || item.category === categoryFilter
+      const reorderLevel = item.reorder_level || 10
       const matchesStock = stockFilter === "all" ||
-                          (stockFilter === "instock" && item.currentStock > item.reorderLevel) ||
-                          (stockFilter === "lowstock" && item.currentStock <= item.reorderLevel && item.currentStock > 0) ||
-                          (stockFilter === "outofstock" && item.currentStock === 0) ||
-                          (stockFilter === "overstocked" && item.currentStock > item.reorderLevel * 3)
+                          (stockFilter === "instock" && item.current_stock > reorderLevel) ||
+                          (stockFilter === "lowstock" && item.current_stock <= reorderLevel && item.current_stock > 0) ||
+                          (stockFilter === "outofstock" && item.current_stock === 0) ||
+                          (stockFilter === "overstocked" && item.current_stock > reorderLevel * 3)
       return matchesSearch && matchesCategory && matchesStock
     })
   }, [inventory, searchTerm, categoryFilter, stockFilter])
 
   // Memoize helper function for better performance
-  const getStockStatus = useCallback((item: InventoryItem) => {
-    if (item.currentStock === 0) return { status: "Out of Stock", color: "bg-red-100 text-red-800" }
-    if (item.currentStock <= item.reorderLevel) return { status: "Low Stock", color: "bg-yellow-100 text-yellow-800" }
-    if (item.currentStock > item.reorderLevel * 3) return { status: "Overstocked", color: "bg-blue-100 text-blue-800" }
+  const getStockStatus = useCallback((item: Product) => {
+    const reorderLevel = item.reorder_level || 10
+    if (item.current_stock === 0) return { status: "Out of Stock", color: "bg-red-100 text-red-800" }
+    if (item.current_stock <= reorderLevel) return { status: "Low Stock", color: "bg-yellow-100 text-yellow-800" }
+    if (item.current_stock > reorderLevel * 3) return { status: "Overstocked", color: "bg-blue-100 text-blue-800" }
     return { status: "In Stock", color: "bg-green-100 text-green-800" }
   }, [])
 
-  const handleStockAdjustment = useCallback((product: InventoryItem) => {
-    const quantity = parseInt(adjustmentQuantity)
-    if (!quantity || !adjustmentReason) {
-      alert("Please enter quantity and reason for adjustment")
-      return
-    }
 
-    setIsProcessing(true)
-
-    // Simulate API call delay
-    setTimeout(() => {
-      // Update the inventory state
-      setInventory(prevInventory => {
-        return prevInventory.map(item => {
-          if (item.id === product.id) {
-            let newStock = item.currentStock
-
-            if (adjustmentType === "add") {
-              newStock = item.currentStock + quantity
-            } else if (adjustmentType === "remove") {
-              newStock = Math.max(0, item.currentStock - quantity)
-            } else if (adjustmentType === "set") {
-              newStock = quantity
-            }
-
-            // Update total value based on new stock
-            const newTotalValue = newStock * item.costPrice
-
-            return {
-              ...item,
-              currentStock: newStock,
-              totalValue: newTotalValue,
-              movements: {
-                thisWeek: {
-                  in: adjustmentType === "add" ? item.movements.thisWeek.in + quantity : item.movements.thisWeek.in,
-                  out: adjustmentType === "remove" ? item.movements.thisWeek.out + quantity : item.movements.thisWeek.out
-                },
-                lastWeek: item.movements.lastWeek
-              }
-            }
-          }
-          return item
-        })
-      })
-
-      // Show success message
-      setSuccessMessage(`Stock adjusted successfully for ${product.name}`)
-      setTimeout(() => setSuccessMessage(""), 3000)
-
-      // Reset form
-      setAdjustmentQuantity("")
-      setAdjustmentReason("")
-      setSelectedProduct(null)
-      setIsProcessing(false)
-    }, 1000)
-  }, [adjustmentType, adjustmentQuantity, adjustmentReason])
-
-  const handleAddProduct = useCallback((productData: ProductFormData) => {
-    const product: InventoryItem = {
-      id: (inventory.length + 1).toString(),
+  const handleAddProduct = useCallback(async (productData: ProductFormData) => {
+    const product: Partial<Product> = {
       name: productData.name,
       description: productData.description,
       sku: productData.sku,
       category: productData.category,
-      currentStock: productData.currentStock,
-      reorderLevel: productData.reorderLevel,
-      costPrice: productData.costPrice,
-      sellingPrice: productData.sellingPrice,
-      totalValue: productData.currentStock * productData.costPrice,
-      image: null,
-      bestseller: false,
-      movements: {
-        thisWeek: { in: productData.currentStock, out: 0 },
-        lastWeek: { in: 0, out: 0 }
-      }
+      current_stock: productData.currentStock,
+      reorder_level: productData.reorderLevel,
+      cost_price: productData.costPrice,
+      selling_price: productData.sellingPrice,
+      status: 'active',
     }
 
-    setInventory([...inventory, product])
+    const result = await insertProduct(product)
 
-    // Add to history
-    const now = new Date()
-    const historyEntry: StockHistoryItem = {
-      id: stockHistory.length + 1,
-      date: now.toLocaleDateString('en-GB'),
-      time: now.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: false }),
-      product: productData.name,
-      type: 'added',
-      user: 'Admin', // Replace with actual user
-      initialData: {
-        sku: productData.sku,
-        category: productData.category,
-        initialStock: productData.currentStock,
-        price: productData.sellingPrice
+    if (result) {
+      // Add to history
+      const now = new Date()
+      const historyEntry: StockHistoryItem = {
+        id: stockHistory.length + 1,
+        date: format(now, 'dd/MM/yyyy'),
+        time: format(now, 'HH:mm'),
+        product: productData.name,
+        type: 'added',
+        user: 'Admin',
+        initialData: {
+          sku: productData.sku,
+          category: productData.category,
+          initialStock: productData.currentStock,
+          price: productData.sellingPrice
+        }
       }
+      setStockHistory([historyEntry, ...stockHistory])
+
+      toast.success("Product added successfully", {
+        description: `${productData.name} has been added to inventory`
+      })
+      setIsAddModalOpen(false)
+      // Cache is automatically invalidated by mutation hook, no refetch needed
     }
-    setStockHistory([historyEntry, ...stockHistory])
+  }, [insertProduct, stockHistory])
 
-    toast.success("Product added successfully", {
-      description: `${productData.name} has been added to inventory`
-    })
-    setIsAddModalOpen(false)
-  }, [inventory, stockHistory])
-
-  const handleEditProduct = useCallback((product: InventoryItem) => {
+  const handleEditProduct = useCallback(async (product: Product) => {
     const oldProduct = inventory.find(item => item.id === product.id)
 
-    setInventory(prevInventory =>
-      prevInventory.map(item =>
-        item.id === product.id
-          ? {
-              ...product,
-              totalValue: product.currentStock * product.costPrice
-            }
-          : item
-      )
-    )
+    const result = await updateProduct(product.id, {
+      name: product.name,
+      sku: product.sku,
+      description: product.description,
+      category: product.category,
+      current_stock: product.current_stock,
+      reorder_level: product.reorder_level,
+      cost_price: product.cost_price,
+      selling_price: product.selling_price,
+    })
 
-    // Track changes
-    if (oldProduct) {
+    if (result && oldProduct) {
+      // Track changes
       const changes: { field: string; oldValue: string | number; newValue: string | number }[] = []
 
       if (oldProduct.name !== product.name) {
         changes.push({ field: 'name', oldValue: oldProduct.name, newValue: product.name })
       }
       if (oldProduct.sku !== product.sku) {
-        changes.push({ field: 'SKU', oldValue: oldProduct.sku, newValue: product.sku })
+        changes.push({ field: 'SKU', oldValue: oldProduct.sku || '', newValue: product.sku || '' })
       }
       if (oldProduct.category !== product.category) {
-        changes.push({ field: 'category', oldValue: oldProduct.category, newValue: product.category })
+        changes.push({ field: 'category', oldValue: oldProduct.category || '', newValue: product.category || '' })
       }
-      if (oldProduct.currentStock !== product.currentStock) {
-        changes.push({ field: 'stock', oldValue: oldProduct.currentStock, newValue: product.currentStock })
+      if (oldProduct.current_stock !== product.current_stock) {
+        changes.push({ field: 'stock', oldValue: oldProduct.current_stock, newValue: product.current_stock })
       }
-      if (oldProduct.sellingPrice !== product.sellingPrice) {
-        changes.push({ field: 'price', oldValue: `৳${oldProduct.sellingPrice}`, newValue: `৳${product.sellingPrice}` })
+      if (oldProduct.selling_price !== product.selling_price) {
+        changes.push({ field: 'price', oldValue: `৳${oldProduct.selling_price}`, newValue: `৳${product.selling_price}` })
       }
-      if (oldProduct.costPrice !== product.costPrice) {
-        changes.push({ field: 'cost', oldValue: `৳${oldProduct.costPrice}`, newValue: `৳${product.costPrice}` })
+      if (oldProduct.cost_price !== product.cost_price) {
+        changes.push({ field: 'cost', oldValue: `৳${oldProduct.cost_price || 0}`, newValue: `৳${product.cost_price || 0}` })
       }
-      if (oldProduct.reorderLevel !== product.reorderLevel) {
-        changes.push({ field: 'reorder level', oldValue: oldProduct.reorderLevel, newValue: product.reorderLevel })
+      if (oldProduct.reorder_level !== product.reorder_level) {
+        changes.push({ field: 'reorder level', oldValue: oldProduct.reorder_level || 0, newValue: product.reorder_level || 0 })
       }
 
       if (changes.length > 0) {
         const now = new Date()
         const historyEntry: StockHistoryItem = {
           id: stockHistory.length + 1,
-          date: now.toLocaleDateString('en-GB'),
-          time: now.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: false }),
+          date: format(now, 'dd/MM/yyyy'),
+          time: format(now, 'HH:mm'),
           product: product.name,
-          sku: product.sku,
+          sku: product.sku || '',
           type: 'edited',
-          user: 'Admin', // Replace with actual user
+          user: 'Admin',
           changes
         }
         setStockHistory([historyEntry, ...stockHistory])
       }
+
+      toast.success("Product updated successfully", {
+        description: `${product.name} has been updated`
+      })
+
+      setIsEditModalOpen(false)
+      setEditingProduct(null)
+      // Cache is automatically invalidated by mutation hook, no refetch needed
     }
+  }, [inventory, updateProduct, stockHistory])
 
-    toast.success("Product updated successfully", {
-      description: `${product.name} has been updated`
-    })
-
-    setIsEditModalOpen(false)
-    setEditingProduct(null)
-  }, [inventory, stockHistory])
-
-  const handleDeleteProduct = useCallback(() => {
+  const handleDeleteProduct = useCallback(async () => {
     if (!productToDelete || !deleteReason.trim()) {
       toast.error("Please provide a reason for deletion")
       return
@@ -452,62 +312,42 @@ export default function InventoryPage() {
     const now = new Date()
     const historyEntry: StockHistoryItem = {
       id: stockHistory.length + 1,
-      date: now.toLocaleDateString('en-GB'),
-      time: now.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: false }),
+      date: format(now, 'dd/MM/yyyy'),
+      time: format(now, 'HH:mm'),
       product: productToDelete.name,
       type: 'deleted',
-      user: 'Admin', // Replace with actual user
+      user: 'Admin',
       finalData: {
-        sku: productToDelete.sku,
-        category: productToDelete.category,
-        finalStock: productToDelete.currentStock,
-        cost: productToDelete.costPrice,
-        price: productToDelete.sellingPrice,
+        sku: productToDelete.sku || '',
+        category: productToDelete.category || '',
+        finalStock: productToDelete.current_stock,
+        cost: productToDelete.cost_price,
+        price: productToDelete.selling_price,
         reason: deleteReason
       }
     }
     setStockHistory([historyEntry, ...stockHistory])
 
-    // Remove from inventory
-    setInventory(inventory.filter(item => item.id !== productToDelete.id))
+    const success = await deleteProduct(productToDelete.id)
 
-    toast.success("Product deleted", {
-      description: `${productToDelete.name} has been removed from inventory`
-    })
+    if (success) {
+      toast.success("Product deleted", {
+        description: `${productToDelete.name} has been removed from inventory`
+      })
 
-    setIsDeleteDialogOpen(false)
-    setProductToDelete(null)
-    setDeleteReason("")
-  }, [productToDelete, deleteReason, stockHistory, inventory])
+      setIsDeleteDialogOpen(false)
+      setProductToDelete(null)
+      setDeleteReason("")
+      // Cache is automatically invalidated by mutation hook, no refetch needed
+    }
+  }, [productToDelete, deleteReason, stockHistory, deleteProduct])
 
   const handleImportProducts = useCallback(async (file: File) => {
-    // Mock imported products
-    const importedProducts: InventoryItem[] = [
-      {
-        id: (inventory.length + 1).toString(),
-        name: "Imported Product 1",
-        description: "Imported from " + file.name,
-        sku: "IMP001",
-        category: "Others",
-        currentStock: 20,
-        reorderLevel: 5,
-        costPrice: 500,
-        sellingPrice: 800,
-        totalValue: 10000,
-        image: null,
-        bestseller: false,
-        movements: {
-          thisWeek: { in: 20, out: 0 },
-          lastWeek: { in: 0, out: 0 }
-        }
-      }
-    ]
-
-    setInventory([...inventory, ...importedProducts])
-    toast.success("Products imported successfully", {
-      description: `${importedProducts.length} products imported from ${file.name}`
+    // This would be implemented with actual CSV/Excel parsing
+    toast.success("Import feature coming soon", {
+      description: `File ${file.name} ready for import`
     })
-  }, [inventory])
+  }, [])
 
   const handleAddCategory = useCallback((category: string) => {
     if (!customCategories.includes(category)) {
@@ -519,9 +359,12 @@ export default function InventoryPage() {
   }, [customCategories])
 
   // Get unique categories from inventory - memoized
-  const allCategories = useMemo(() => [...new Set([...inventory.map(item => item.category), ...customCategories])], [inventory, customCategories])
+  const allCategories = useMemo(() => {
+    const cats = [...new Set(inventory.map(item => item.category).filter(Boolean) as string[])]
+    return [...cats, ...customCategories]
+  }, [inventory, customCategories])
 
-  const handleQuickAddStock = useCallback((productId: string, productName: string) => {
+  const handleQuickAddStock = useCallback(async (productId: string, productName: string) => {
     if (!quickAddQuantity) return
 
     const quantity = parseInt(quickAddQuantity)
@@ -533,37 +376,19 @@ export default function InventoryPage() {
     const product = inventory.find(item => item.id === productId)
     if (!product) return
 
-    const oldStock = product.currentStock
+    const oldStock = product.current_stock
     const newStock = oldStock + quantity
 
-    setInventory(prevInventory =>
-      prevInventory.map(item => {
-        if (item.id === productId) {
-          return {
-            ...item,
-            currentStock: newStock,
-            totalValue: newStock * item.costPrice,
-            movements: {
-              thisWeek: {
-                in: item.movements.thisWeek.in + quantity,
-                out: item.movements.thisWeek.out
-              },
-              lastWeek: item.movements.lastWeek
-            }
-          }
-        }
-        return item
-      })
-    )
+    await updateProduct(productId, { current_stock: newStock })
 
     // Add to history
     const now = new Date()
     const historyEntry: StockHistoryItem = {
       id: stockHistory.length + 1,
-      date: now.toLocaleDateString('en-GB'),
-      time: now.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: false }),
+      date: format(now, 'dd/MM/yyyy'),
+      time: format(now, 'HH:mm'),
       product: productName,
-      sku: product.sku,
+      sku: product.sku || '',
       type: 'edited',
       user: 'Admin',
       changes: [
@@ -578,7 +403,53 @@ export default function InventoryPage() {
 
     setQuickAddProductId(null)
     setQuickAddQuantity("")
-  }, [inventory, quickAddQuantity, stockHistory])
+    // Cache is automatically invalidated by mutation hook, no refetch needed
+  }, [inventory, quickAddQuantity, stockHistory, updateProduct])
+
+  // Loading state
+  if (productsLoading) {
+    return (
+      <MainLayout breadcrumbs={[{ label: "Inventory" }]}>
+        <div className="space-y-3">
+          <div className="grid gap-3 md:grid-cols-4">
+            {[1, 2, 3, 4].map((i) => (
+              <Card key={i}>
+                <CardHeader className="pb-2">
+                  <Skeleton className="h-4 w-24" />
+                </CardHeader>
+                <CardContent>
+                  <Skeleton className="h-8 w-32" />
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+          <Card>
+            <CardContent className="pt-6">
+              <div className="space-y-2">
+                {[1, 2, 3, 4, 5].map((i) => (
+                  <Skeleton key={i} className="h-12 w-full" />
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      </MainLayout>
+    )
+  }
+
+  // Error state
+  if (productsError) {
+    return (
+      <MainLayout breadcrumbs={[{ label: "Inventory" }]}>
+        <Alert variant="destructive">
+          <AlertCircle className="h-4 w-4" />
+          <AlertDescription>
+            Failed to load inventory data. {productsError.message}
+          </AlertDescription>
+        </Alert>
+      </MainLayout>
+    )
+  }
 
   return (
     <MainLayout
@@ -586,13 +457,6 @@ export default function InventoryPage() {
         { label: "Inventory" }
       ]}
     >
-      {/* Success Message */}
-      {successMessage && (
-        <div className="p-3 bg-green-50 border border-green-200 rounded-lg flex items-center gap-2 text-green-700">
-          <CheckCircle className="h-4 w-4" />
-          <span className="text-sm">{successMessage}</span>
-        </div>
-      )}
 
       {/* Main Grid Layout */}
       <div className="grid gap-3 md:grid-cols-4 md:grid-rows-2">
@@ -644,7 +508,7 @@ export default function InventoryPage() {
                     <div className="min-w-0 flex-1">
                       <div className="font-medium text-xs truncate">{item.name}</div>
                       <div className="text-[10px] text-muted-foreground">
-                        {item.currentStock} left (reorder at {item.reorderLevel})
+                        {item.current_stock} left (reorder at {item.reorder_level || 10})
                       </div>
                     </div>
                     <Tooltip>
@@ -819,17 +683,13 @@ export default function InventoryPage() {
         <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
           {filteredProducts.map((item) => {
             const status = getStockStatus(item)
+            const reorderLevel = item.reorder_level || 10
             return (
               <Card key={item.id} className="hover:shadow-md transition-shadow relative">
-                {item.currentStock === 0 && (
+                {item.current_stock === 0 && (
                   <div className="absolute inset-0 bg-gray-900/50 rounded-lg flex items-center justify-center z-10">
                     <Badge className="bg-red-600 text-white text-[9px] px-1.5 py-0">Out of Stock</Badge>
                   </div>
-                )}
-                {item.bestseller && (
-                  <Badge className="absolute top-2 left-2 bg-accent text-accent-foreground z-20 text-[9px] px-1.5 py-0">
-                    Bestseller
-                  </Badge>
                 )}
                 <CardHeader className="pb-2">
                   {/* Product Image Placeholder */}
@@ -837,31 +697,24 @@ export default function InventoryPage() {
                     <Package className="h-8 w-8 text-muted-foreground" />
                   </div>
                   <CardTitle className="text-sm line-clamp-1">{item.name}</CardTitle>
-                  <CardDescription className="line-clamp-2 text-xs">{item.description}</CardDescription>
+                  <CardDescription className="line-clamp-2 text-xs">{item.description || 'No description'}</CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-1.5">
                   <div className="flex items-center justify-between">
                     <span className="text-xs text-muted-foreground">SKU</span>
-                    <span className="text-xs font-mono">{item.sku}</span>
+                    <span className="text-xs font-mono">{item.sku || 'N/A'}</span>
                   </div>
                   <div className="flex items-center justify-between">
                     <span className="text-xs text-muted-foreground">Price</span>
-                    <span className="font-bold text-xs">৳{item.sellingPrice}</span>
+                    <span className="font-bold text-xs">৳{item.selling_price}</span>
                   </div>
                   <div className="flex items-center justify-between">
                     <span className="text-xs text-muted-foreground">Stock</span>
                     <Badge className={`${status.color} text-[9px] px-1.5 py-0`}>
-                      {item.currentStock} units
+                      {item.current_stock} units
                     </Badge>
                   </div>
-                  <div className="flex items-center justify-between">
-                    <span className="text-xs text-muted-foreground">This Week</span>
-                    <div className="flex items-center gap-2">
-                      <span className="text-green-600 text-[10px]">+{item.movements.thisWeek.in}</span>
-                      <span className="text-red-600 text-[10px]">-{item.movements.thisWeek.out}</span>
-                    </div>
-                  </div>
-                  {item.currentStock <= item.reorderLevel && item.currentStock > 0 && (
+                  {item.current_stock <= reorderLevel && item.current_stock > 0 && (
                     <div className="p-1 bg-yellow-50 border border-yellow-200 rounded-md">
                       <div className="flex items-center gap-1 text-yellow-800 text-[10px]">
                         <AlertTriangle className="h-3 w-3" />
@@ -870,93 +723,17 @@ export default function InventoryPage() {
                     </div>
                   )}
                   <div className="flex gap-1 pt-1">
-                    <Dialog>
-                      <DialogTrigger asChild>
-                        <Button
-                          variant="outline"
-                          className="flex-1 h-6 text-[10px] px-2"
-                          onClick={() => setSelectedProduct(item)}
-                        >
-                          <Edit className="h-3 w-3 mr-1" />
-                          Adjust
-                        </Button>
-                      </DialogTrigger>
-                      <DialogContent>
-                        <DialogHeader>
-                          <DialogTitle className="text-sm">Adjust Stock - {selectedProduct?.name}</DialogTitle>
-                          <DialogDescription className="text-xs">
-                            Update the stock level for this product
-                          </DialogDescription>
-                        </DialogHeader>
-                        <div className="space-y-2">
-                          <div>
-                            <Label htmlFor="adjustmentType" className="text-xs">Adjustment Type</Label>
-                            <Select value={adjustmentType} onValueChange={(value: "add" | "remove" | "set") => setAdjustmentType(value)} disabled={isProcessing}>
-                              <SelectTrigger className="h-8 text-xs">
-                                <SelectValue />
-                              </SelectTrigger>
-                              <SelectContent>
-                                <SelectItem value="add">Add Stock</SelectItem>
-                                <SelectItem value="remove">Remove Stock</SelectItem>
-                                <SelectItem value="set">Set Stock Level</SelectItem>
-                              </SelectContent>
-                            </Select>
-                          </div>
-                          <div>
-                            <Label htmlFor="quantity" className="text-xs">Quantity</Label>
-                            <Input
-                              id="quantity"
-                              type="number"
-                              placeholder="Enter quantity"
-                              value={adjustmentQuantity}
-                              onChange={(e) => setAdjustmentQuantity(e.target.value)}
-                              className="h-8 text-xs"
-                              disabled={isProcessing}
-                            />
-                          </div>
-                          <div>
-                            <Label htmlFor="reason" className="text-xs">Reason</Label>
-                            <Select value={adjustmentReason} onValueChange={setAdjustmentReason} disabled={isProcessing}>
-                              <SelectTrigger className="h-8 text-xs">
-                                <SelectValue placeholder="Select reason" />
-                              </SelectTrigger>
-                              <SelectContent>
-                                <SelectItem value="restock">New Stock Arrival</SelectItem>
-                                <SelectItem value="damage">Damaged Items</SelectItem>
-                                <SelectItem value="theft">Theft/Loss</SelectItem>
-                                <SelectItem value="return">Customer Return</SelectItem>
-                                <SelectItem value="correction">Stock Correction</SelectItem>
-                                <SelectItem value="transfer">Transfer</SelectItem>
-                              </SelectContent>
-                            </Select>
-                          </div>
-                          <div className="flex gap-2 pt-2">
-                            <Button
-                              onClick={() => selectedProduct && handleStockAdjustment(selectedProduct)}
-                              className="flex-1 bg-accent hover:bg-accent/90 h-8 text-xs px-3"
-                              disabled={isProcessing}
-                            >
-                              {isProcessing ? (
-                                <>
-                                  <span className="animate-spin h-3 w-3 mr-2 border-2 border-white border-t-transparent rounded-full inline-block" />
-                                  Processing...
-                                </>
-                              ) : (
-                                "Update Stock"
-                              )}
-                            </Button>
-                            <Button
-                              variant="outline"
-                              onClick={() => setSelectedProduct(null)}
-                              className="flex-1 h-8 text-xs px-3"
-                              disabled={isProcessing}
-                            >
-                              Cancel
-                            </Button>
-                          </div>
-                        </div>
-                      </DialogContent>
-                    </Dialog>
+                    <Button
+                      variant="outline"
+                      className="flex-1 h-6 text-[10px] px-2"
+                      onClick={() => {
+                        setEditingProduct(item)
+                        setIsEditModalOpen(true)
+                      }}
+                    >
+                      <Edit className="h-3 w-3 mr-1" />
+                      Edit
+                    </Button>
                     <Button variant="outline" className="h-6 px-2">
                       <Copy className="h-3 w-3" />
                     </Button>
@@ -987,7 +764,6 @@ export default function InventoryPage() {
                         <th className="text-left py-3 px-3 text-xs font-medium text-muted-foreground">Price</th>
                         <th className="text-left py-3 px-3 text-xs font-medium text-muted-foreground">Stock</th>
                         <th className="text-left py-3 px-3 text-xs font-medium text-muted-foreground hidden lg:table-cell">Reorder</th>
-                        <th className="text-left py-3 px-3 text-xs font-medium text-muted-foreground hidden sm:table-cell">This Week</th>
                         <th className="text-left py-3 px-3 text-xs font-medium text-muted-foreground hidden lg:table-cell">Value</th>
                         <th className="text-left py-3 px-3 text-xs font-medium text-muted-foreground">Status</th>
                         <th className="text-left py-3 px-3 text-xs font-medium text-muted-foreground">Actions</th>
@@ -996,6 +772,8 @@ export default function InventoryPage() {
                     <tbody className="divide-y divide-border bg-background">
                       {filteredProducts.map((item) => {
                         const status = getStockStatus(item)
+                        const reorderLevel = item.reorder_level || 10
+                        const totalValue = item.current_stock * (item.cost_price || 0)
                         return (
                           <tr key={item.id} className="hover:bg-muted/50">
                             <td className="py-3 px-3">
@@ -1005,43 +783,28 @@ export default function InventoryPage() {
                                 </div>
                                 <div>
                                   <div className="font-medium text-xs">{item.name}</div>
-                                  <div className="text-[10px] text-muted-foreground truncate max-w-[120px]">{item.description}</div>
+                                  <div className="text-[10px] text-muted-foreground truncate max-w-[120px]">{item.description || 'No description'}</div>
                                 </div>
-                                {item.bestseller && (
-                                  <Badge className="bg-accent text-accent-foreground text-[9px] px-1.5 py-0">Best</Badge>
-                                )}
                               </div>
                             </td>
-                            <td className="py-3 px-3 font-mono text-xs hidden md:table-cell whitespace-nowrap">{item.sku}</td>
+                            <td className="py-3 px-3 font-mono text-xs hidden md:table-cell whitespace-nowrap">{item.sku || 'N/A'}</td>
                             <td className="py-3 px-3">
-                              <div className="font-medium text-xs">৳{item.sellingPrice}</div>
-                              {item.costPrice > 0 && (
+                              <div className="font-medium text-xs">৳{item.selling_price}</div>
+                              {item.cost_price && item.cost_price > 0 && (
                                 <>
-                                  <div className="text-[8px] text-muted-foreground">Cost: ৳{item.costPrice}</div>
-                                  <div className="text-[8px] text-muted-foreground">Margin: ৳{item.sellingPrice - item.costPrice}</div>
+                                  <div className="text-[8px] text-muted-foreground">Cost: ৳{item.cost_price}</div>
+                                  <div className="text-[8px] text-muted-foreground">Margin: ৳{item.selling_price - item.cost_price}</div>
                                 </>
                             )}
                             </td>
                             <td className="py-3 px-3 font-medium text-xs whitespace-nowrap">
-                              {item.currentStock}
-                              {item.currentStock <= item.reorderLevel && item.currentStock > 0 && (
+                              {item.current_stock}
+                              {item.current_stock <= reorderLevel && item.current_stock > 0 && (
                                 <AlertTriangle className="h-3 w-3 text-yellow-600 mt-0.5 inline ml-1" />
                               )}
                             </td>
-                            <td className="py-3 px-3 text-xs hidden lg:table-cell whitespace-nowrap">{item.reorderLevel}</td>
-                            <td className="py-3 px-3 hidden sm:table-cell">
-                              <div className="space-y-0.5">
-                                <div className="flex items-center gap-0.5 text-green-600 text-[10px]">
-                                  <TrendingUp className="h-2.5 w-2.5" />
-                                  +{item.movements.thisWeek.in}
-                                </div>
-                                <div className="flex items-center gap-0.5 text-red-600 text-[10px]">
-                                  <TrendingDown className="h-2.5 w-2.5" />
-                                  -{item.movements.thisWeek.out}
-                                </div>
-                              </div>
-                            </td>
-                            <td className="py-3 px-3 font-medium text-xs hidden lg:table-cell whitespace-nowrap">৳{item.totalValue.toLocaleString()}</td>
+                            <td className="py-3 px-3 text-xs hidden lg:table-cell whitespace-nowrap">{reorderLevel}</td>
+                            <td className="py-3 px-3 font-medium text-xs hidden lg:table-cell whitespace-nowrap">৳{totalValue.toLocaleString()}</td>
                             <td className="py-3 px-3">
                               <Badge className={`${status.color} text-[9px] px-2 py-1 whitespace-nowrap`}>
                                 {status.status}
@@ -1072,7 +835,7 @@ export default function InventoryPage() {
                                     className="h-8 w-8 p-0 bg-green-600 hover:bg-green-700"
                                     disabled={!quickAddQuantity || parseInt(quickAddQuantity || "0") <= 0}
                                   >
-                                    <CheckCircle className="h-4 w-4" />
+                                    {mutationLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <CheckCircle className="h-4 w-4" />}
                                   </Button>
                                   <Button
                                     variant="ghost"
@@ -1169,8 +932,37 @@ export default function InventoryPage() {
       <EditProductModal
         open={isEditModalOpen}
         onOpenChange={setIsEditModalOpen}
-        product={editingProduct}
-        onSave={handleEditProduct}
+        product={editingProduct ? {
+          id: editingProduct.id,
+          name: editingProduct.name,
+          description: editingProduct.description || '',
+          sku: editingProduct.sku,
+          category: editingProduct.category,
+          currentStock: editingProduct.current_stock,
+          reorderLevel: editingProduct.reorder_level,
+          costPrice: editingProduct.cost_price,
+          sellingPrice: editingProduct.selling_price,
+          totalValue: editingProduct.current_stock * editingProduct.cost_price,
+          image: null,
+          bestseller: editingProduct.bestseller || false,
+          movements: {
+            thisWeek: { in: 0, out: 0 },
+            lastWeek: { in: 0, out: 0 }
+          }
+        } : null}
+        onSave={(inventoryItem) => {
+          handleEditProduct({
+            ...editingProduct!,
+            name: inventoryItem.name,
+            description: inventoryItem.description,
+            sku: inventoryItem.sku,
+            category: inventoryItem.category,
+            current_stock: inventoryItem.currentStock,
+            reorder_level: inventoryItem.reorderLevel,
+            cost_price: inventoryItem.costPrice,
+            selling_price: inventoryItem.sellingPrice
+          })
+        }}
         categories={customCategories}
         onAddCategory={handleAddCategory}
       />
@@ -1188,8 +980,8 @@ export default function InventoryPage() {
             <div className="space-y-3">
               <div className="p-3 bg-red-50 border border-red-200 rounded-lg">
                 <div className="font-semibold text-sm mb-1">{productToDelete.name}</div>
-                <div className="text-xs text-muted-foreground">SKU: {productToDelete.sku}</div>
-                <div className="text-xs text-muted-foreground">Current Stock: {productToDelete.currentStock} units</div>
+                <div className="text-xs text-muted-foreground">SKU: {productToDelete.sku || 'N/A'}</div>
+                <div className="text-xs text-muted-foreground">Current Stock: {productToDelete.current_stock} units</div>
               </div>
               <div>
                 <Label htmlFor="deleteReason" className="text-xs">Reason for deletion *</Label>
@@ -1217,10 +1009,19 @@ export default function InventoryPage() {
                   variant="destructive"
                   onClick={handleDeleteProduct}
                   className="flex-1 h-9 text-sm"
-                  disabled={!deleteReason.trim()}
+                  disabled={!deleteReason.trim() || mutationLoading}
                 >
-                  <Trash2 className="h-4 w-4 mr-2" />
-                  Delete Product
+                  {mutationLoading ? (
+                    <>
+                      <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                      Deleting...
+                    </>
+                  ) : (
+                    <>
+                      <Trash2 className="h-4 w-4 mr-2" />
+                      Delete Product
+                    </>
+                  )}
                 </Button>
               </div>
             </div>

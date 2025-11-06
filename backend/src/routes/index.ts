@@ -1,6 +1,8 @@
 import { Router } from 'express';
 import healthRoutes from './health.routes';
 import authRoutes from './auth.routes';
+import onboardingRoutes from './onboarding.routes';
+import organizationRoutes from './organization.routes';
 import orderRoutes from './order.routes';
 import customerRoutes from './customer.routes';
 import productRoutes from './product.routes';
@@ -16,6 +18,8 @@ router.use('/health', healthRoutes);
 
 // API Routes
 router.use('/auth', authRoutes);
+router.use('/onboarding', onboardingRoutes);
+router.use('/organizations', organizationRoutes);
 router.use('/orders', orderRoutes);
 router.use('/customers', customerRoutes);
 router.use('/products', productRoutes);

@@ -1,4 +1,4 @@
-import { createSupabaseClientWithToken } from './supabase'
+import { createClient } from '@supabase/supabase-js'
 
 interface ApiError {
   message: string
@@ -44,6 +44,22 @@ class ApiClient {
     }
   }
 
+  private createSupabaseClientWithToken(accessToken: string) {
+    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!
+    const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+
+    return createClient(supabaseUrl, supabaseAnonKey, {
+      global: {
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+        },
+      },
+      auth: {
+        persistSession: false,
+      },
+    })
+  }
+
   async fetchWithAuth<T>(
     table: string,
     accessToken: string,
@@ -55,7 +71,7 @@ class ApiClient {
     }
   ): Promise<ApiResponse<T>> {
     try {
-      const supabase = createSupabaseClientWithToken(accessToken)
+      const supabase = this.createSupabaseClientWithToken(accessToken)
 
       let query = supabase.from(table).select(options?.select || '*')
 
@@ -107,7 +123,7 @@ class ApiClient {
     insertData: Partial<T>
   ): Promise<ApiResponse<T>> {
     try {
-      const supabase = createSupabaseClientWithToken(accessToken)
+      const supabase = this.createSupabaseClientWithToken(accessToken)
 
       const result = await this.executeWithRetry(async () =>
         await supabase.from(table).insert(insertData).select().single()
@@ -141,7 +157,7 @@ class ApiClient {
     updateData: Partial<T>
   ): Promise<ApiResponse<T>> {
     try {
-      const supabase = createSupabaseClientWithToken(accessToken)
+      const supabase = this.createSupabaseClientWithToken(accessToken)
 
       const result = await this.executeWithRetry(async () =>
         await supabase.from(table).update(updateData).eq('id', id).select().single()
@@ -174,7 +190,7 @@ class ApiClient {
     id: string | number
   ): Promise<ApiResponse<void>> {
     try {
-      const supabase = createSupabaseClientWithToken(accessToken)
+      const supabase = this.createSupabaseClientWithToken(accessToken)
 
       const result = await this.executeWithRetry(async () =>
         await supabase.from(table).delete().eq('id', id)

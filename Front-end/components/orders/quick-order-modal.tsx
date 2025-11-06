@@ -54,7 +54,7 @@ interface QuickOrderModalProps {
   trigger?: React.ReactNode
 }
 
-export function QuickOrderModal({ onCreateOrder, trigger }: QuickOrderModalProps) {
+export const QuickOrderModal = React.memo(function QuickOrderModal({ onCreateOrder, trigger }: QuickOrderModalProps) {
   const [isOpen, setIsOpen] = useState(false)
   const [orderContent, setOrderContent] = useState("")
   const [uploadedImages, setUploadedImages] = useState<string[]>([])
@@ -499,4 +499,4 @@ export function QuickOrderModal({ onCreateOrder, trigger }: QuickOrderModalProps
       </DialogContent>
     </Dialog>
   )
-}
+})

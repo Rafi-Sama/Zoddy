@@ -1,17 +1,23 @@
-"use client"
+"use client";
 
-import { useState, useCallback, useMemo } from "react"
-import { useRouter } from "next/navigation"
-import { MarketingLayout } from "@/components/layout/marketing-layout"
-import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Badge } from "@/components/ui/badge"
-import { Switch } from "@/components/ui/switch"
-import { Label } from "@/components/ui/label"
-import Link from "next/link"
-import { cn } from "@/lib/utils"
-import { SUBSCRIPTION_PLANS } from "@/types/billing"
-import { toast } from "sonner"
+import { useState, useCallback, useMemo } from "react";
+import { useRouter } from "next/navigation";
+import { MarketingLayout } from "@/components/layout/marketing-layout";
+import { Button } from "@/components/ui/button";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Switch } from "@/components/ui/switch";
+import { Label } from "@/components/ui/label";
+import Link from "next/link";
+import { cn } from "@/lib/utils";
+import { SUBSCRIPTION_PLANS } from "@/types/billing";
+import { toast } from "sonner";
 import {
   CheckCircle,
   ArrowRight,
@@ -19,62 +25,97 @@ import {
   Building,
   Users,
   Star,
-  Phone
-} from "lucide-react"
+  Phone,
+} from "lucide-react";
 export default function PricingPage() {
-  const router = useRouter()
-  const [billingInterval, setBillingInterval] = useState<"monthly" | "yearly">("monthly")
+  const router = useRouter();
+  const [billingInterval, setBillingInterval] = useState<"monthly" | "yearly">(
+    "monthly"
+  );
 
-  const handleGetStarted = useCallback((planId: string) => {
-    if (planId === 'enterprise') {
-      toast.info("Our sales team will contact you shortly!")
-      router.push('/contact')
-      return
-    }
-    // Navigate to billing page with selected plan
-    router.push(`/account/billing?plan=${planId}&interval=${billingInterval}`)
-  }, [router, billingInterval])
+  const handleGetStarted = useCallback(
+    (planId: string) => {
+      if (planId === "enterprise") {
+        toast.info("Our sales team will contact you shortly!");
+        router.push("/contact");
+        return;
+      }
+      // Navigate to billing page with selected plan
+      router.push(
+        `/account/billing?plan=${planId}&interval=${billingInterval}`
+      );
+    },
+    [router, billingInterval]
+  );
 
-  const formatPrice = useCallback((price: number, interval: "monthly" | "yearly") => {
-    if (price === 0) return "Free"
-    const displayPrice = interval === "yearly" ? price * 10 : price // 2 months free
-    return `৳${displayPrice.toLocaleString('en-BD')}`
-  }, [])
+  const formatPrice = useCallback(
+    (price: number, interval: "monthly" | "yearly") => {
+      if (price === 0) return "Free";
+      const displayPrice = interval === "yearly" ? price * 10 : price; // 2 months free
+      return `৳${displayPrice.toLocaleString("en-BD")}`;
+    },
+    []
+  );
 
   // Use the shared SUBSCRIPTION_PLANS from billing types - memoized
-  const plans = useMemo(() => SUBSCRIPTION_PLANS.map(plan => ({
-    ...plan,
-    cta: plan.id === 'enterprise' ? 'Contact Sales' : plan.price === 0 ? 'Start Free' : 'Get Started',
-    ctaVariant: plan.popular ? 'default' as const : 'outline' as const,
-    icon: plan.id === 'free' ? Users : plan.id === 'starter' ? Star : plan.id === 'professional' ? Crown : Building
-  })), [])
+  const plans = useMemo(
+    () =>
+      SUBSCRIPTION_PLANS.map((plan) => ({
+        ...plan,
+        cta:
+          plan.id === "enterprise"
+            ? "Contact Sales"
+            : plan.price === 0
+            ? "Start Free"
+            : "Get Started",
+        ctaVariant: plan.popular ? ("default" as const) : ("outline" as const),
+        icon:
+          plan.id === "free"
+            ? Users
+            : plan.id === "starter"
+            ? Star
+            : plan.id === "professional"
+            ? Crown
+            : Building,
+      })),
+    []
+  );
 
-  const faqs = useMemo(() => [
-    {
-      question: "Can I change plans anytime?",
-      answer: "Yes! You can upgrade or downgrade your plan at any time. Changes take effect immediately and we'll prorate the billing."
-    },
-    {
-      question: "What payment methods do you accept?",
-      answer: "We accept all major credit cards, bKash, Nagad, Rocket, and bank transfers. All payments are processed securely."
-    },
-    {
-      question: "Is there a setup fee?",
-      answer: "No setup fees! You can start using Zoddy immediately after signing up. We also provide free onboarding support."
-    },
-    {
-      question: "Can I cancel anytime?",
-      answer: "Absolutely! You can cancel your subscription at any time. No long-term contracts or cancellation fees."
-    },
-    {
-      question: "Do you offer support in Bengali?",
-      answer: "Yes! Our support team is fluent in both Bengali and English. We understand local business needs."
-    },
-    {
-      question: "Is my data safe and secure?",
-      answer: "Your data security is our top priority. We use bank-level encryption and regular backups. Your data belongs to you."
-    }
-  ], [])
+  const faqs = useMemo(
+    () => [
+      {
+        question: "Can I change plans anytime?",
+        answer:
+          "Yes! You can upgrade or downgrade your plan at any time. Changes take effect immediately and we'll prorate the billing.",
+      },
+      {
+        question: "What payment methods do you accept?",
+        answer:
+          "We accept all major credit cards, bKash, Nagad, Rocket, and bank transfers. All payments are processed securely.",
+      },
+      {
+        question: "Is there a setup fee?",
+        answer:
+          "No setup fees! You can start using Zoddy immediately after signing up. We also provide free onboarding support.",
+      },
+      {
+        question: "Can I cancel anytime?",
+        answer:
+          "Absolutely! You can cancel your subscription at any time. No long-term contracts or cancellation fees.",
+      },
+      {
+        question: "Do you offer support in Bengali?",
+        answer:
+          "Yes! Our support team is fluent in both Bengali and English. We understand local business needs.",
+      },
+      {
+        question: "Is my data safe and secure?",
+        answer:
+          "Your data security is our top priority. We use bank-level encryption and regular backups. Your data belongs to you.",
+      },
+    ],
+    []
+  );
 
   return (
     <MarketingLayout>
@@ -85,8 +126,8 @@ export default function PricingPage() {
             Simple, Transparent <span className="text-accent">Pricing</span>
           </h1>
           <p className="text-xl text-muted-foreground mb-8 max-w-2xl mx-auto">
-            Choose the perfect plan for your business. Start free, upgrade when youre ready.
-            All plans include our core features to help you grow.
+            Choose the perfect plan for your business. Start free, upgrade when
+            youre ready. All plans include our core features to help you grow.
           </p>
           <div className="flex items-center justify-center gap-8 text-sm text-muted-foreground mb-12">
             <div className="flex items-center gap-2">
@@ -107,21 +148,29 @@ export default function PricingPage() {
       {/* Billing Toggle */}
       <section className="container mx-auto px-4 pb-8">
         <div className="flex items-center justify-center gap-4">
-          <Label htmlFor="billing-toggle" className={cn(
-            "text-base font-medium",
-            billingInterval === "monthly" && "text-primary"
-          )}>
+          <Label
+            htmlFor="billing-toggle"
+            className={cn(
+              "text-base font-medium",
+              billingInterval === "monthly" && "text-primary"
+            )}
+          >
             Monthly
           </Label>
           <Switch
             id="billing-toggle"
             checked={billingInterval === "yearly"}
-            onCheckedChange={(checked) => setBillingInterval(checked ? "yearly" : "monthly")}
+            onCheckedChange={(checked) =>
+              setBillingInterval(checked ? "yearly" : "monthly")
+            }
           />
-          <Label htmlFor="billing-toggle" className={cn(
-            "text-base font-medium",
-            billingInterval === "yearly" && "text-primary"
-          )}>
+          <Label
+            htmlFor="billing-toggle"
+            className={cn(
+              "text-base font-medium",
+              billingInterval === "yearly" && "text-primary"
+            )}
+          >
             Yearly
             <Badge variant="default" className="ml-2 bg-green-500">
               Save 2 months!
@@ -134,8 +183,11 @@ export default function PricingPage() {
       <section className="container mx-auto px-4 pb-16">
         <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8 max-w-7xl mx-auto">
           {plans.map((plan) => {
-            const isEnterprise = plan.id === 'enterprise'
-            const savings = billingInterval === "yearly" && !isEnterprise && plan.price > 0 ? plan.price * 2 : 0
+            const isEnterprise = plan.id === "enterprise";
+            const savings =
+              billingInterval === "yearly" && !isEnterprise && plan.price > 0
+                ? plan.price * 2
+                : 0;
 
             return (
               <Card
@@ -150,12 +202,12 @@ export default function PricingPage() {
                     {plan.badge}
                   </div>
                 )}
-                <CardHeader className={plan.popular ? 'pt-12' : ''}>
+                <CardHeader className={plan.popular ? "pt-12" : ""}>
                   <div className="flex items-center gap-3 mb-4">
                     <div className="p-2 rounded-lg bg-accent/10">
                       {(() => {
-                        const Icon = plan.icon
-                        return <Icon className="h-6 w-6 text-accent" />
+                        const Icon = plan.icon;
+                        return <Icon className="h-6 w-6 text-accent" />;
                       })()}
                     </div>
                     {plan.badge && !plan.popular && (
@@ -163,11 +215,15 @@ export default function PricingPage() {
                     )}
                   </div>
                   <CardTitle className="text-2xl">{plan.name}</CardTitle>
-                  <CardDescription className="text-base">{plan.description}</CardDescription>
+                  <CardDescription className="text-base">
+                    {plan.description}
+                  </CardDescription>
                   <div className="py-4">
                     <div className="flex items-baseline gap-2">
                       <span className="text-4xl font-bold">
-                        {isEnterprise ? "Custom" : formatPrice(plan.price, billingInterval)}
+                        {isEnterprise
+                          ? "Custom"
+                          : formatPrice(plan.price, billingInterval)}
                       </span>
                       {!isEnterprise && plan.price > 0 && (
                         <span className="text-muted-foreground">
@@ -177,7 +233,7 @@ export default function PricingPage() {
                     </div>
                     {savings > 0 && (
                       <div className="text-sm text-green-600 font-medium mt-1">
-                        Save ৳{savings.toLocaleString('en-BD')} yearly
+                        Save ৳{savings.toLocaleString("en-BD")} yearly
                       </div>
                     )}
                   </div>
@@ -196,17 +252,20 @@ export default function PricingPage() {
                       variant={plan.ctaVariant}
                       className={cn(
                         "w-full",
-                        plan.ctaVariant === 'default' && "bg-accent hover:bg-accent/90"
+                        plan.ctaVariant === "default" &&
+                          "bg-accent hover:bg-accent/90"
                       )}
                       onClick={() => handleGetStarted(plan.id)}
                     >
                       {plan.cta}
-                      {plan.id !== "enterprise" && <ArrowRight className="ml-2 h-4 w-4" />}
+                      {plan.id !== "enterprise" && (
+                        <ArrowRight className="ml-2 h-4 w-4" />
+                      )}
                     </Button>
                   </div>
                 </CardContent>
               </Card>
-            )
+            );
           })}
         </div>
       </section>
@@ -233,14 +292,62 @@ export default function PricingPage() {
             </thead>
             <tbody>
               {[
-                { feature: "Orders", free: "50", starter: "Unlimited", growth: "Unlimited", enterprise: "Unlimited" },
-                { feature: "Products", free: "5", starter: "Unlimited", growth: "Unlimited", enterprise: "Unlimited" },
-                { feature: "Team Members", free: "1", starter: "1", growth: "3", enterprise: "Unlimited" },
-                { feature: "WhatsApp Integration", free: "✓", starter: "✓", growth: "✓", enterprise: "✓" },
-                { feature: "Analytics", free: "Basic", starter: "Advanced", growth: "Advanced", enterprise: "Custom" },
-                { feature: "Payment Reminders", free: "✗", starter: "✓", growth: "✓", enterprise: "✓" },
-                { feature: "API Access", free: "✗", starter: "✗", growth: "✓", enterprise: "✓" },
-                { feature: "Phone Support", free: "✗", starter: "✗", growth: "✓", enterprise: "24/7" },
+                {
+                  feature: "Orders",
+                  free: "50",
+                  starter: "Unlimited",
+                  growth: "Unlimited",
+                  enterprise: "Unlimited",
+                },
+                {
+                  feature: "Products",
+                  free: "5",
+                  starter: "Unlimited",
+                  growth: "Unlimited",
+                  enterprise: "Unlimited",
+                },
+                {
+                  feature: "Team Members",
+                  free: "1",
+                  starter: "1",
+                  growth: "3",
+                  enterprise: "Unlimited",
+                },
+                {
+                  feature: "WhatsApp Integration",
+                  free: "✓",
+                  starter: "✓",
+                  growth: "✓",
+                  enterprise: "✓",
+                },
+                {
+                  feature: "Analytics",
+                  free: "Basic",
+                  starter: "Advanced",
+                  growth: "Advanced",
+                  enterprise: "Custom",
+                },
+                {
+                  feature: "Payment Reminders",
+                  free: "✗",
+                  starter: "✓",
+                  growth: "✓",
+                  enterprise: "✓",
+                },
+                {
+                  feature: "API Access",
+                  free: "✗",
+                  starter: "✗",
+                  growth: "✓",
+                  enterprise: "✓",
+                },
+                {
+                  feature: "Phone Support",
+                  free: "✗",
+                  starter: "✗",
+                  growth: "✓",
+                  enterprise: "24/7",
+                },
               ].map((row, index) => (
                 <tr key={index} className="border-b last:border-b-0">
                   <td className="p-4 font-medium">{row.feature}</td>
@@ -270,44 +377,58 @@ export default function PricingPage() {
               name: "Rashida Begum",
               business: "Rashidas Boutique",
               plan: "Starter Plan",
-              quote: "The Starter plan is perfect for my small boutique. I can track all my orders and the payment reminders saved me ৳25,000 last month!",
-              rating: 5
+              quote:
+                "The Starter plan is perfect for my small boutique. I can track all my orders and the payment reminders saved me ৳25,000 last month!",
+              rating: 5,
             },
             {
               name: "Karim Sheikh",
               business: "Sheikh Electronics",
               plan: "Growth Plan",
-              quote: "Growth plan's team features help me manage my 3 shop assistants. The analytics show exactly which products to order more.",
-              rating: 5
+              quote:
+                "Growth plan's team features help me manage my 3 shop assistants. The analytics show exactly which products to order more.",
+              rating: 5,
             },
             {
               name: "Fatema Khan",
               business: "Khan Handicrafts",
               plan: "Starter Plan",
-              quote: "Started with free trial, upgraded to Starter within a week. The WhatsApp integration alone is worth the price!",
-              rating: 5
-            }
+              quote:
+                "Started with free trial, upgraded to Starter within a week. The WhatsApp integration alone is worth the price!",
+              rating: 5,
+            },
           ].map((testimonial, index) => (
             <Card key={index}>
               <CardHeader>
                 <div className="flex items-center gap-4">
                   <div className="w-12 h-12 rounded-full bg-accent/10 flex items-center justify-center">
-                    <span className="font-bold text-accent">{testimonial.name[0]}</span>
+                    <span className="font-bold text-accent">
+                      {testimonial.name[0]}
+                    </span>
                   </div>
                   <div>
                     <div className="font-semibold">{testimonial.name}</div>
-                    <div className="text-sm text-muted-foreground">{testimonial.business}</div>
-                    <Badge variant="outline" className="text-xs mt-1">{testimonial.plan}</Badge>
+                    <div className="text-sm text-muted-foreground">
+                      {testimonial.business}
+                    </div>
+                    <Badge variant="outline" className="text-xs mt-1">
+                      {testimonial.plan}
+                    </Badge>
                   </div>
                 </div>
                 <div className="flex items-center gap-1">
                   {[...Array(testimonial.rating)].map((_, i) => (
-                    <Star key={i} className="w-4 h-4 fill-yellow-400 text-yellow-400" />
+                    <Star
+                      key={i}
+                      className="w-4 h-4 fill-yellow-400 text-yellow-400"
+                    />
                   ))}
                 </div>
               </CardHeader>
               <CardContent>
-                <p className="italic text-sm">&ldquo;{testimonial.quote}&rdquo;</p>
+                <p className="italic text-sm">
+                  &ldquo;{testimonial.quote}&rdquo;
+                </p>
               </CardContent>
             </Card>
           ))}
@@ -338,16 +459,20 @@ export default function PricingPage() {
       </section>
       {/* Final CTA */}
       <section className="container mx-auto px-4 py-16">
-        <div className="text-center max-w-3xl mx-auto bg-gradient-to-br from-accent/10 to-primary/10 rounded-2xl p-12">
+        <div className="text-center max-w-3xl mx-auto bg-linear-to-br from-accent/10 to-primary/10 rounded-2xl p-12">
           <h2 className="text-3xl font-bold font-display mb-4">
             Ready to Transform Your Business?
           </h2>
           <p className="text-xl text-muted-foreground mb-8">
-            Join thousands of successful businesses. Start your free trial today—no credit card required.
+            Join thousands of successful businesses. Start your free trial
+            today—no credit card required.
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <Link href="/login">
-              <Button size="lg" className="bg-accent hover:bg-accent/90 text-lg px-8 py-6">
+            <Link href="/auth">
+              <Button
+                size="lg"
+                className="bg-accent hover:bg-accent/90 text-lg px-8 py-6"
+              >
                 Start Free Trial
                 <ArrowRight className="ml-2 h-5 w-5" />
               </Button>
@@ -362,5 +487,5 @@ export default function PricingPage() {
         </div>
       </section>
     </MarketingLayout>
-  )
+  );
 }

@@ -272,7 +272,8 @@ export default function CalendarPage() {
     try {
       await navigator.clipboard.writeText(content);
       setCopiedNoteId(note.id);
-      setTimeout(() => setCopiedNoteId(null), 2000);
+      const timer = setTimeout(() => setCopiedNoteId(null), 2000);
+      return () => clearTimeout(timer);
     } catch (err) {
       console.error("Failed to copy:", err);
     }

@@ -16,32 +16,14 @@ import {
 import { Progress } from "@/components/ui/progress"
 import { toast } from "sonner"
 import { cn } from "@/lib/utils"
-
-interface Order {
-  id: string
-  customer: {
-    name: string
-    phone: string
-    address: string
-  }
-  date: string
-  items: Array<{
-    name: string
-    quantity: number
-    price: number
-  }>
-  amount: number
-  status: string
-  paymentStatus: string
-  delivery: string
-}
+import type { Order } from "@/types/database"
 
 interface ImportOrdersModalProps {
   onImport: (data: Order[]) => void
   trigger?: React.ReactNode
 }
 
-export function ImportOrdersModal({ onImport, trigger }: ImportOrdersModalProps) {
+export const ImportOrdersModal = React.memo(function ImportOrdersModal({ onImport, trigger }: ImportOrdersModalProps) {
   const [isOpen, setIsOpen] = useState(false)
   const [file, setFile] = useState<File | null>(null)
   const [importing, setImporting] = useState(false)
@@ -120,18 +102,23 @@ export function ImportOrdersModal({ onImport, trigger }: ImportOrdersModalProps)
       // Simulate file processing
       await new Promise(resolve => setTimeout(resolve, 2000))
 
-      // Mock imported data
+      // Mock imported data in database Order format
       const today = new Date()
-      const mockImportedData = [
+      const mockImportedData: Order[] = [
         {
-          id: "#IMP001",
-          customer: { name: "Imported Customer 1", phone: "+880 1712-111111", address: "Imported Address 1" },
-          date: `${today.getDate().toString().padStart(2, '0')}-${(today.getMonth() + 1).toString().padStart(2, '0')}-${today.getFullYear()}`,
-          items: [{ name: "Imported Product", quantity: 1, price: 1000 }],
-          amount: 1000,
-          status: "pending",
-          paymentStatus: "pending",
-          delivery: "Standard"
+          id: crypto.randomUUID(),
+          order_number: "IMP001",
+          organization_id: "", // Will be set by backend
+          customer_name: "Imported Customer 1",
+          customer_phone: "+880 1712-111111",
+          shipping_address: "Imported Address 1",
+          items: [{ product_name: "Imported Product", quantity: 1, price: 1000, total: 1000 }],
+          subtotal: 1000,
+          total_amount: 1000,
+          status: "pending" as const,
+          payment_status: "pending" as const,
+          created_at: today.toISOString(),
+          updated_at: today.toISOString()
         }
       ]
 
@@ -278,4 +265,4 @@ export function ImportOrdersModal({ onImport, trigger }: ImportOrdersModalProps)
       </DialogContent>
     </Dialog>
   )
-}
+})

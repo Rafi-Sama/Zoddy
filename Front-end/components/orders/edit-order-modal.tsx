@@ -33,15 +33,10 @@ import {
 import { Badge } from "@/components/ui/badge"
 import { Separator } from "@/components/ui/separator"
 import { toast } from "sonner"
+import type { Order } from "@/types/database"
 
-interface OrderItem {
-  id?: string
-  name: string
-  quantity: number
-  price: number
-}
-
-interface Order {
+// Internal type for editing - matches the structure used in the component
+interface EditableOrder {
   id: string
   customer: {
     name: string
@@ -49,7 +44,12 @@ interface Order {
     address: string
   }
   date: string
-  items: OrderItem[]
+  items: Array<{
+    id?: string
+    name: string
+    quantity: number
+    price: number
+  }>
   amount: number
   status: string
   paymentStatus: string
@@ -57,27 +57,48 @@ interface Order {
 }
 
 interface EditOrderModalProps {
-  order: Order | null
+  order: Order | EditableOrder | null
   isOpen: boolean
   onClose: () => void
-  onSave: (updatedOrder: Order) => void
+  onSave: (updatedOrder: Order | EditableOrder) => void | Promise<void>
 }
 
 export function EditOrderModal({ order, isOpen, onClose, onSave }: EditOrderModalProps) {
-  const [editedOrder, setEditedOrder] = useState<Order | null>(null)
+  const [editedOrder, setEditedOrder] = useState<EditableOrder | null>(null)
   const [hasChanges, setHasChanges] = useState(false)
 
   // Initialize form when order changes
   useEffect(() => {
     if (order) {
-      setEditedOrder(JSON.parse(JSON.stringify(order))) // Deep clone
+      // Convert database Order to EditableOrder if needed
+      const editableOrder: EditableOrder = 'customer_name' in order ? {
+        id: order.id,
+        customer: {
+          name: order.customer_name || '',
+          phone: order.customer_phone || '',
+          address: order.shipping_address || ''
+        },
+        date: order.created_at || '',
+        items: order.items?.map(item => ({
+          id: item.product_id,
+          name: item.product_name,
+          quantity: item.quantity,
+          price: item.price
+        })) || [],
+        amount: order.total_amount,
+        status: order.status,
+        paymentStatus: order.payment_status,
+        delivery: order.delivery_provider || 'Standard'
+      } : JSON.parse(JSON.stringify(order)) as EditableOrder
+
+      setEditedOrder(editableOrder)
       setHasChanges(false)
     }
   }, [order])
 
   if (!editedOrder) return null
 
-  const updateCustomerField = (field: keyof Order["customer"], value: string) => {
+  const updateCustomerField = (field: keyof EditableOrder["customer"], value: string) => {
     setEditedOrder(prev => {
       if (!prev) return null
       return {
@@ -91,7 +112,7 @@ export function EditOrderModal({ order, isOpen, onClose, onSave }: EditOrderModa
     setHasChanges(true)
   }
 
-  const updateOrderField = (field: keyof Order, value: string) => {
+  const updateOrderField = (field: keyof EditableOrder, value: string) => {
     setEditedOrder(prev => {
       if (!prev) return null
       return {
@@ -178,7 +199,7 @@ export function EditOrderModal({ order, isOpen, onClose, onSave }: EditOrderModa
     setHasChanges(true)
   }
 
-  const calculateTotal = (items: OrderItem[]) => {
+  const calculateTotal = (items: EditableOrder["items"]) => {
     return items.reduce((sum, item) => sum + (item.price * item.quantity), 0)
   }
 

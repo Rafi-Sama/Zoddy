@@ -1,13 +1,23 @@
 "use client"
 import { useState, useMemo } from "react"
+import dynamic from "next/dynamic"
 import { MainLayout } from "@/components/layout/main-layout"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Badge } from "@/components/ui/badge"
 import { toast } from "sonner"
-import { AddCustomerModal, type CustomerFormData } from "@/components/customers/add-customer-modal"
-import { ImportCustomersModal } from "@/components/customers/import-customers-modal"
+import type { CustomerFormData } from "@/components/customers/add-customer-modal"
+import { getCustomerStatusColor, getCustomerStatusIcon } from "@/lib/status-utils"
+
+// Lazy load modals for better initial page load
+const AddCustomerModal = dynamic(() => import("@/components/customers/add-customer-modal").then(mod => ({ default: mod.AddCustomerModal })), {
+  loading: () => <Button className="bg-accent hover:bg-accent/90" disabled><Plus className="h-4 w-4 mr-2" />Add Customer</Button>,
+})
+
+const ImportCustomersModal = dynamic(() => import("@/components/customers/import-customers-modal").then(mod => ({ default: mod.ImportCustomersModal })), {
+  loading: () => <Button variant="outline" disabled><Download className="h-4 w-4 mr-2" />Import</Button>,
+})
 import {
   Select,
   SelectContent,
@@ -21,15 +31,12 @@ import {
   DialogDescription,
   DialogHeader,
   DialogTitle,
-  DialogTrigger,
 } from "@/components/ui/dialog"
 import {
   Plus,
   TrendingUp,
   ShoppingCart,
   AlertTriangle,
-  Crown,
-  Clock,
   Users,
   Search,
   MessageSquare,
@@ -38,140 +45,56 @@ import {
   Grid3X3,
   List,
   Mail,
-  Edit,
   CheckCircle,
-  Download
+  Download,
+  Loader2,
+  AlertCircle
 } from "lucide-react"
+import { useData, useMutation } from "@/hooks/use-database-optimized"
+import { Customer } from "@/types/database"
+import { Alert, AlertDescription } from "@/components/ui/alert"
+import { Skeleton } from "@/components/ui/skeleton"
+import { parseISO, format, differenceInDays } from "date-fns"
 
-// Helper functions moved outside component for reuse in modal
-const getStatusColor = (status: string) => {
-  switch (status) {
-    case "VIP":
-      return "bg-purple-100 text-purple-800"
-    case "Regular":
-      return "bg-blue-100 text-blue-800"
-    case "New":
-      return "bg-green-100 text-green-800"
-    case "Inactive":
-      return "bg-gray-100 text-gray-800"
-    default:
-      return "bg-gray-100 text-gray-800"
-  }
+const getDaysSinceLastOrder = (lastOrderDate: string | null | undefined) => {
+  if (!lastOrderDate) return null
+  return differenceInDays(new Date(), parseISO(lastOrderDate))
 }
 
-const getStatusIcon = (status: string) => {
-  switch (status) {
-    case "VIP":
-      return <Crown className="h-3.5 w-3.5" />
-    case "Regular":
-      return <Users className="h-3.5 w-3.5" />
-    case "New":
-      return <Plus className="h-3.5 w-3.5" />
-    case "Inactive":
-      return <Clock className="h-3.5 w-3.5" />
-    default:
-      return <Users className="h-3.5 w-3.5" />
-  }
+// Helper to determine customer status based on order history
+const getCustomerStatus = (customer: Customer): string => {
+  const totalSpent = customer.total_spent || 0
+  const orderCount = customer.total_orders || 0
+  const daysSinceLastOrder = getDaysSinceLastOrder(customer.last_order_date || null)
+
+  if (totalSpent > 50000 || orderCount > 20) return "VIP"
+  if (daysSinceLastOrder && daysSinceLastOrder > 60) return "Inactive"
+  if (orderCount <= 3) return "New"
+  return "Regular"
 }
 
-const getDaysSinceLastOrder = (lastOrder: string) => {
-  const today = new Date()
-  const orderDate = new Date(lastOrder)
-  const diffTime = Math.abs(today.getTime() - orderDate.getTime())
-  const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24))
-  return diffDays
-}
+// Format customer for display
+const formatCustomerForDisplay = (customer: Customer) => {
+  const status = getCustomerStatus(customer)
+  const averageOrderValue = customer.total_orders && customer.total_orders > 0
+    ? Math.round(customer.total_spent / customer.total_orders)
+    : 0
 
-const mockCustomers = [
-  {
-    id: "1",
-    name: "Fatima Rahman",
-    phone: "+880 1712-345678",
-    email: "fatima@email.com",
-    address: "Dhanmondi, Dhaka",
-    totalOrders: 15,
-    totalSpent: 45000,
-    lastOrder: "2024-01-10",
-    status: "VIP",
-    averageOrderValue: 3000,
-    joinDate: "2023-06-15",
-    favoriteCategory: "Fashion"
-  },
-  {
-    id: "2",
-    name: "Ahmed Hassan",
-    phone: "+880 1801-234567",
-    email: "ahmed@email.com",
-    address: "Gulshan, Dhaka",
-    totalOrders: 8,
-    totalSpent: 22000,
-    lastOrder: "2024-01-05",
-    status: "Regular",
-    averageOrderValue: 2750,
-    joinDate: "2023-09-20",
-    favoriteCategory: "Electronics"
-  },
-  {
-    id: "3",
-    name: "Nusrat Jahan",
-    phone: "+880 1915-876543",
-    email: "nusrat@email.com",
-    address: "Uttara, Dhaka",
-    totalOrders: 25,
-    totalSpent: 78000,
-    lastOrder: "2024-01-12",
-    status: "VIP",
-    averageOrderValue: 3120,
-    joinDate: "2023-03-10",
-    favoriteCategory: "Fashion"
-  },
-  {
-    id: "4",
-    name: "Sakib Ahmed",
-    phone: "+880 1704-987654",
-    email: "sakib@email.com",
-    address: "Banani, Dhaka",
-    totalOrders: 3,
-    totalSpent: 8500,
-    lastOrder: "2023-12-20",
-    status: "New",
-    averageOrderValue: 2833,
-    joinDate: "2023-11-15",
-    favoriteCategory: "Fashion"
-  },
-  {
-    id: "5",
-    name: "Rashida Begum",
-    phone: "+880 1556-123456",
-    email: "rashida@email.com",
-    address: "Mirpur, Dhaka",
-    totalOrders: 12,
-    totalSpent: 35000,
-    lastOrder: "2023-11-25",
-    status: "Inactive",
-    averageOrderValue: 2917,
-    joinDate: "2023-05-08",
-    favoriteCategory: "Home & Kitchen"
+  return {
+    ...customer,
+    status,
+    averageOrderValue,
+    favoriteCategory: customer.metadata?.favorite_category || "N/A",
+    joinDate: customer.created_at ? format(parseISO(customer.created_at), 'yyyy-MM-dd') : 'N/A',
+    lastOrder: customer.last_order_date ? format(parseISO(customer.last_order_date), 'yyyy-MM-dd') : 'Never',
+    totalOrders: customer.total_orders || 0,
+    totalSpent: customer.total_spent || 0
   }
-]
-
-interface Customer {
-  id: string
-  name: string
-  phone: string
-  email: string
-  address: string
-  totalOrders: number
-  totalSpent: number
-  lastOrder: string
-  status: string
-  averageOrderValue: number
-  joinDate: string
-  favoriteCategory: string
 }
 
 export default function CustomersPage() {
   const [selectedCustomer, setSelectedCustomer] = useState<Customer | null>(null)
+  const [isDetailsDialogOpen, setIsDetailsDialogOpen] = useState(false)
   const [viewMode, setViewMode] = useState<"grid" | "list">("list")
   const [searchTerm, setSearchTerm] = useState("")
   const [statusFilter, setStatusFilter] = useState("all")
@@ -179,620 +102,557 @@ export default function CustomersPage() {
   const [successMessage, setSuccessMessage] = useState("")
   const [isImportModalOpen, setIsImportModalOpen] = useState(false)
   const [isAddModalOpen, setIsAddModalOpen] = useState(false)
-  const [customers, setCustomers] = useState(mockCustomers)
 
-  const handleImportCustomers = async (file: File) => {
-    // Mock imported customers
-    const importedCustomers = [
-      {
-        id: (customers.length + 1).toString(),
-        name: "Imported Customer",
-        phone: "+880 1700-000000",
-        email: "imported@email.com",
-        address: "Imported from " + file.name,
-        totalOrders: 0,
-        totalSpent: 0,
-        lastOrder: new Date().toISOString().split('T')[0],
-        status: "New",
-        averageOrderValue: 0,
-        joinDate: new Date().toISOString().split('T')[0],
-        favoriteCategory: "Fashion"
-      }
-    ]
+  // Fetch customers from database (realtime disabled to reduce API requests)
+  // Data refreshes on manual refetch() calls instead
+  const { data: customersData, loading, error, refetch } = useData<Customer[]>({
+    table: 'customers',
+    orderBy: { column: 'created_at', ascending: false },
+    realtime: false // Disabled to reduce excessive API requests
+  })
 
-    setCustomers([...customers, ...importedCustomers])
-    toast.success("Customers imported successfully", {
-      description: `${importedCustomers.length} customers imported from ${file.name}`
-    })
-  }
+  // Mutation hooks for customer operations
+  const { insert: insertCustomer } = useMutation<Customer>('customers')
 
-  const handleAddCustomer = (customerData: CustomerFormData) => {
-    const newCustomer = {
-      id: (customers.length + 1).toString(),
-      name: customerData.name,
-      phone: customerData.phone,
-      email: customerData.email,
-      address: customerData.address,
-      totalOrders: 0,
-      totalSpent: 0,
-      lastOrder: new Date().toISOString().split('T')[0],
-      status: customerData.status || "New",
-      averageOrderValue: 0,
-      joinDate: new Date().toISOString().split('T')[0],
-      favoriteCategory: customerData.favoriteCategory || "Fashion"
+  const customers = useMemo(() => customersData || [], [customersData])
+
+  // Calculate statistics CLIENT-SIDE instead of 2 separate API calls
+  // This eliminates 2 aggregate queries by computing from already-fetched data
+  const { totalCustomers, activeCustomers, retentionRate, churnRate } = useMemo(() => {
+    const total = customers.length
+    // Active customers = those with orders in last 60 days (not 'Inactive' status)
+    const active = customers.filter(c => {
+      const status = getCustomerStatus(c)
+      return status !== 'Inactive'
+    }).length
+    const retention = total > 0 ? ((active / total) * 100).toFixed(1) : '0'
+    const churn = total > 0 ? (100 - parseFloat(retention)).toFixed(1) : '0'
+
+    return {
+      totalCustomers: total,
+      activeCustomers: active,
+      retentionRate: retention,
+      churnRate: churn
     }
+  }, [customers])
 
-    setCustomers([...customers, newCustomer])
-    toast.success("Customer added successfully", {
-      description: `${customerData.name} has been added to your customer database`
-    })
-    setIsAddModalOpen(false)
+  const handleImportCustomers = async () => {
+    toast.info("Import functionality coming soon")
+    setIsImportModalOpen(false)
   }
 
-  const handleSendMessage = (customer: Customer) => {
+  const handleAddCustomer = async (customerData: CustomerFormData) => {
+    const result = await insertCustomer({
+      name: customerData.name,
+      email: customerData.email || undefined,
+      phone: customerData.phone || undefined,
+      address: customerData.address || undefined,
+      city: undefined,
+      total_spent: 0,
+      total_orders: 0
+    })
+
+    if (result) {
+      setSuccessMessage(`Successfully added ${customerData.name}`)
+      setIsAddModalOpen(false)
+      setTimeout(() => setSuccessMessage(""), 3000)
+      // Cache is automatically invalidated by mutation hook, no refetch needed
+    }
+  }
+
+  const handleMessage = (customer: Customer) => {
     const message = prompt(`Enter message to send to ${customer.name}:`)
     if (message) {
-      setSuccessMessage(`Message sent to ${customer.name}`)
-      setTimeout(() => setSuccessMessage(""), 3000)
+      toast.success(`Message queued for ${customer.name}`)
     }
   }
 
   const handleNewOrder = (customer: Customer) => {
-    alert(`Creating new order for ${customer.name} - Feature coming soon!`)
+    toast.info(`Creating order for ${customer.name} - Navigate to Orders page`)
   }
 
   const handleViewOrders = (customer: Customer) => {
-    alert(`Viewing orders for ${customer.name} - Feature coming soon!`)
+    toast.info(`Viewing orders for ${customer.name} - Navigate to Orders page with filter`)
   }
 
-  // Customer analytics
-  const totalCustomers = customers.length
-  const newCustomersThisMonth = 2 // This would be calculated from real data
-  const retentionRate = 87.5 // From analytics page
-  const churnRate = 12.5
-
   // Filter and sort customers - memoized for performance
-  const filteredCustomers = useMemo(() => customers
-    .filter(customer => {
-      const matchesSearch = searchTerm === "" ||
-        customer.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        customer.phone.includes(searchTerm) ||
-        customer.email.toLowerCase().includes(searchTerm.toLowerCase())
+  const filteredCustomers = useMemo(() => {
+    const displayCustomers = customers.map(formatCustomerForDisplay)
 
-      const matchesStatus = statusFilter === "all" ||
-        customer.status.toLowerCase() === statusFilter.toLowerCase()
+    return displayCustomers
+      .filter(customer => {
+        const matchesSearch = searchTerm === "" ||
+          customer.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+          customer.phone?.includes(searchTerm) ||
+          customer.email?.toLowerCase().includes(searchTerm.toLowerCase())
 
-      return matchesSearch && matchesStatus
-    })
-    .sort((a, b) => {
-      switch (sortBy) {
-        case "name":
-          return a.name.localeCompare(b.name)
-        case "totalSpent":
-          return b.totalSpent - a.totalSpent
-        case "lastOrder":
-          return new Date(b.lastOrder).getTime() - new Date(a.lastOrder).getTime()
-        case "totalOrders":
-          return b.totalOrders - a.totalOrders
-        default:
-          return 0
-      }
-    }), [customers, searchTerm, statusFilter, sortBy])
+        const matchesStatus = statusFilter === "all" ||
+          customer.status.toLowerCase() === statusFilter.toLowerCase()
+
+        return matchesSearch && matchesStatus
+      })
+      .sort((a, b) => {
+        switch (sortBy) {
+          case "name":
+            return a.name.localeCompare(b.name)
+          case "totalSpent":
+            return b.totalSpent - a.totalSpent
+          case "lastOrder":
+            if (!a.last_order_date && !b.last_order_date) return 0
+            if (!a.last_order_date) return 1
+            if (!b.last_order_date) return -1
+            return new Date(b.last_order_date).getTime() - new Date(a.last_order_date).getTime()
+          case "totalOrders":
+            return b.totalOrders - a.totalOrders
+          default:
+            return 0
+        }
+      })
+  }, [customers, searchTerm, statusFilter, sortBy])
+
   return (
     <MainLayout
-      breadcrumbs={[
-        { label: "Customers" }
-      ]}
+      breadcrumbs={[{ label: "Customers" }]}
     >
-      {/* Success Message */}
-      {successMessage && (
-        <div className="p-3 bg-green-50 border border-green-200 rounded-lg flex items-center gap-2 text-green-700">
-          <CheckCircle className="h-4 w-4" />
-          <span className="text-sm">{successMessage}</span>
-        </div>
-      )}
-
-      {/* Main Grid Layout */}
-      <div className="grid gap-3 md:grid-cols-4 md:grid-rows-2">
-
-        {/* Total Customers - Row 1, Col 1 (1x1) */}
-        <Card className="md:col-span-1 md:row-span-1">
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-1.5">
-            <CardTitle className="text-xs font-medium">Total Customers</CardTitle>
-            <Users className="h-2.5 w-2.5 text-muted-foreground" />
+      {/* Header Stats */}
+      <div className="grid gap-4 md:grid-cols-4">
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Total Customers</CardTitle>
+            <Users className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-lg font-bold">{totalCustomers}</div>
-            <p className="text-[10px] text-muted-foreground">
-              +{newCustomersThisMonth} this month
+            <div className="text-2xl font-bold">{loading ? <Skeleton className="h-8 w-20" /> : totalCustomers}</div>
+            <p className="text-xs text-muted-foreground">
+              {activeCustomers} active this month
             </p>
           </CardContent>
         </Card>
 
-        {/* Retention Rate - Row 2, Col 1 (1x1) */}
-        <Card className="md:col-span-1 md:row-span-1">
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-1.5">
-            <CardTitle className="text-xs font-medium">Retention Rate</CardTitle>
-            <Users className="h-2.5 w-2.5 text-muted-foreground" />
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Retention Rate</CardTitle>
+            <TrendingUp className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-lg font-bold text-green-600">{retentionRate}%</div>
-            <p className="text-[10px] text-muted-foreground">
-              Churn: {churnRate}%
-            </p>
+            <div className="text-2xl font-bold">{loading ? <Skeleton className="h-8 w-20" /> : `${retentionRate}%`}</div>
+            <p className="text-xs text-green-600">Active customers</p>
           </CardContent>
         </Card>
 
-        {/* Top Customers - Row 1-2, Col 4 (2x1) */}
-        <Card className="md:col-span-1 md:row-span-2 h-full max-h-[332px] overflow-hidden">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-1.5 text-accent text-sm">
-              <Crown className="h-3.5 w-3.5" />
-              Top Customers
-            </CardTitle>
-            <CardDescription className="text-xs">
-              By total revenue
-            </CardDescription>
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Churn Rate</CardTitle>
+            <AlertTriangle className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
-          <CardContent className="space-y-1.5 max-h-[280px] overflow-y-auto scrollbar-hide">
-            {customers
-              .sort((a, b) => b.totalSpent - a.totalSpent)
-              .slice(0, 5)
-              .map((customer, index) => (
-                <div key={customer.id} className="flex items-center justify-between p-1.5 border rounded">
-                  <div className="min-w-0 flex-1">
-                    <div className="flex items-center gap-1.5">
-                      <div className="w-5 h-5 rounded-full bg-accent/10 flex items-center justify-center shrink-0">
-                        <span className="font-bold text-accent text-[10px]">{index + 1}</span>
-                      </div>
-                      <div className="min-w-0">
-                        <div className="font-medium text-xs truncate">{customer.name}</div>
-                        <div className="text-[10px] text-muted-foreground">{customer.totalOrders} orders</div>
-                      </div>
-                    </div>
-                  </div>
-                  <div className="text-right ml-2 flex-shrink-0">
-                    <div className="font-bold text-xs">৳{customer.totalSpent.toLocaleString()}</div>
-                    <Badge className={`${getStatusColor(customer.status)} text-[9px] px-1.5 py-0`} variant="secondary">
-                      {customer.status}
-                    </Badge>
-                  </div>
-                </div>
-              ))}
+          <CardContent>
+            <div className="text-2xl font-bold">{loading ? <Skeleton className="h-8 w-20" /> : `${churnRate}%`}</div>
+            <p className="text-xs text-red-600">Need attention</p>
           </CardContent>
         </Card>
 
-        {/* Need Attention - Row 1-2, Col 2 (2x1) */}
-        <Card className="md:col-span-1 md:row-span-2 h-full max-h-[332px] overflow-hidden">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-1.5 text-orange-600 text-sm">
-              <AlertTriangle className="h-3.5 w-3.5" />
-              Need Attention ({customers.filter(c => getDaysSinceLastOrder(c.lastOrder) > 30).length})
-            </CardTitle>
-            <CardDescription className="text-xs">
-              Customers requiring follow-up
-            </CardDescription>
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Average Order Value</CardTitle>
+            <ShoppingCart className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
-          <CardContent className="space-y-1.5 max-h-[280px] overflow-y-auto scrollbar-hide">
-            {customers
-              .filter(c => getDaysSinceLastOrder(c.lastOrder) > 30)
-              .map((customer) => (
-                <div key={customer.id} className="flex items-center justify-between p-1.5 border rounded">
-                  <div className="min-w-0 flex-1">
-                    <div className="font-medium text-xs truncate">{customer.name}</div>
-                    <div className="text-[10px] text-muted-foreground">
-                      Last order: {getDaysSinceLastOrder(customer.lastOrder)}d ago
-                    </div>
-                  </div>
-                  <Button className="h-5 text-[10px] px-2 ml-1 flex-shrink-0" variant="outline" onClick={() => handleSendMessage(customer)}>
-                    <MessageSquare className="h-3 w-3 mr-1" />
-                    Generate Message
-                  </Button>
-                </div>
-              ))}
-          </CardContent>
-        </Card>
-
-        {/* Search, Filter & Actions - Row 1, Col 2-3 (1x2) */}
-        <Card className="md:col-span-2 md:row-span-1">
-          <CardContent className="pt-4">
-            <div className="flex flex-col gap-3">
-              {/* Search, Filters and View Toggle Row - Responsive layout */}
-              <div className="flex flex-col md:flex-row gap-3">
-                {/* Search Input - Takes 2/3 space on desktop, full width on mobile */}
-                <div className="relative flex-1 md:flex-[2]">
-                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                  <Input
-                    placeholder="Search by name, phone, email..."
-                    className="pl-10 h-10 text-sm w-full"
-                    value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.target.value)}
-                  />
-                </div>
-
-                {/* Filters - Takes 1/3 space on desktop */}
-                <div className="flex gap-2 md:flex-[1]">
-                  <Select value={statusFilter} onValueChange={setStatusFilter}>
-                    <SelectTrigger className="flex-1 h-10 text-sm">
-                      <SelectValue placeholder="Status" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="all">All Status</SelectItem>
-                      <SelectItem value="vip">VIP</SelectItem>
-                      <SelectItem value="regular">Regular</SelectItem>
-                      <SelectItem value="new">New</SelectItem>
-                      <SelectItem value="inactive">Inactive</SelectItem>
-                    </SelectContent>
-                  </Select>
-                  <Select value={sortBy} onValueChange={setSortBy}>
-                    <SelectTrigger className="flex-1 h-10 text-sm">
-                      <SelectValue placeholder="Sort by" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="name">Name</SelectItem>
-                      <SelectItem value="totalSpent">Total Spent</SelectItem>
-                      <SelectItem value="lastOrder">Last Order</SelectItem>
-                      <SelectItem value="totalOrders">Order Count</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-
-                {/* View Toggle - Positioned to the far right */}
-                <div className="flex rounded-md border md:ml-auto">
-                  <Button
-                    variant={viewMode === "list" ? "default" : "ghost"}
-                    size="sm"
-                    onClick={() => setViewMode("list")}
-                    className="rounded-r-none h-10 px-3"
-                  >
-                    <List className="h-4 w-4" />
-                  </Button>
-                  <Button
-                    variant={viewMode === "grid" ? "default" : "ghost"}
-                    size="sm"
-                    onClick={() => setViewMode("grid")}
-                    className="rounded-l-none h-10 px-3"
-                  >
-                    <Grid3X3 className="h-4 w-4" />
-                  </Button>
-                </div>
-              </div>
-
-              {/* Action Buttons - Stack on mobile */}
-              <div className="flex gap-2">
-                <Button
-                  variant="outline"
-                  className="h-10 text-sm px-3"
-                  onClick={() => setIsImportModalOpen(true)}
-                >
-                  <Download className="h-4 w-4 sm:mr-2" />
-                  <span className="hidden sm:inline">Import</span>
-                </Button>
-                <Button
-                  className="bg-accent hover:bg-accent/90 h-10 text-sm px-3"
-                  onClick={() => setIsAddModalOpen(true)}
-                >
-                  <Plus className="h-4 w-4 sm:mr-2" />
-                  <span className="hidden sm:inline">Add Customer</span>
-                  <span className="sm:hidden">Add</span>
-                </Button>
-              </div>
+          <CardContent>
+            <div className="text-2xl font-bold">
+              {loading ? <Skeleton className="h-8 w-20" /> :
+                `৳${customers.length > 0 ?
+                  Math.round(customers.reduce((sum, c) => sum + (c.total_spent / Math.max(c.total_orders, 1)), 0) / customers.length) :
+                  0}`
+              }
             </div>
+            <p className="text-xs text-muted-foreground">Per customer</p>
           </CardContent>
         </Card>
       </div>
-      {/* Customers Display - Grid or List View */}
-      {viewMode === "grid" ? (
-        <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-          {filteredCustomers.map((customer) => (
-              <Card key={customer.id} className="hover:shadow-md transition-shadow">
-                <CardHeader className="pb-1.5">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-1.5">
-                      <div className="w-8 h-8 rounded-full bg-accent/10 flex items-center justify-center">
-                        <span className="font-bold text-accent text-xs">{customer.name[0]}</span>
-                      </div>
-                      <div>
-                        <div className="font-semibold text-xs">{customer.name}</div>
-                        <div className="text-[10px] text-muted-foreground">{customer.favoriteCategory}</div>
-                      </div>
-                    </div>
-                    <Badge className={`${getStatusColor(customer.status)} text-[9px] px-1 py-0`}>
-                      {customer.status}
-                    </Badge>
-                  </div>
-                </CardHeader>
-                <CardContent className="space-y-1.5">
-                  <div className="grid grid-cols-2 gap-2 text-[10px]">
-                    <div>
-                      <div className="text-muted-foreground">Total Orders</div>
-                      <div className="font-semibold text-xs">{customer.totalOrders}</div>
-                    </div>
-                    <div>
-                      <div className="text-muted-foreground">Total Spent</div>
-                      <div className="font-semibold text-xs">৳{customer.totalSpent.toLocaleString()}</div>
-                    </div>
-                    <div>
-                      <div className="text-muted-foreground">Avg Order</div>
-                      <div className="font-semibold text-xs">৳{Math.round(customer.averageOrderValue).toLocaleString()}</div>
-                    </div>
-                    <div>
-                      <div className="text-muted-foreground">Last Order</div>
-                      <div className="font-semibold text-xs">{getDaysSinceLastOrder(customer.lastOrder)}d ago</div>
-                    </div>
-                  </div>
-                  <div className="space-y-1 text-[10px]">
-                    <div className="flex items-center gap-1 text-muted-foreground">
-                      <Phone className="h-3 w-3" />
-                      <span className="truncate">{customer.phone}</span>
-                    </div>
-                    <div className="flex items-center gap-1 text-muted-foreground">
-                      <MapPin className="h-3 w-3" />
-                      <span className="truncate">{customer.address}</span>
-                    </div>
-                  </div>
-                  {getDaysSinceLastOrder(customer.lastOrder) > 30 && (
-                    <div className="p-1 bg-orange-50 border border-orange-200 rounded">
-                      <div className="flex items-center gap-1 text-orange-800 text-[10px]">
-                        <AlertTriangle className="h-3 w-3" />
-                        Inactive - needs outreach
-                      </div>
-                    </div>
-                  )}
-                  <div className="flex gap-1 pt-1">
-                    <Dialog>
-                      <DialogTrigger asChild>
-                        <Button
-                          variant="outline"
-                          className="flex-1 h-6 text-[10px] px-2"
-                          onClick={() => setSelectedCustomer(customer)}
-                        >
-                          <Edit className="h-3 w-3 mr-1" />
-                          Details
-                        </Button>
-                      </DialogTrigger>
-                      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
-                        <CustomerDetailsModal
-                          customer={selectedCustomer}
-                          onSendMessage={handleSendMessage}
-                          onNewOrder={handleNewOrder}
-                          onViewOrders={handleViewOrders}
-                        />
-                      </DialogContent>
-                    </Dialog>
-                    <Button variant="outline" className="h-6 px-1.5" onClick={() => handleSendMessage(customer)}>
-                      <MessageSquare className="h-3 w-3" />
-                    </Button>
-                    <Button variant="outline" className="h-6 px-1.5" onClick={() => handleNewOrder(customer)}>
-                      <ShoppingCart className="h-3 w-3" />
-                    </Button>
-                  </div>
-                </CardContent>
-            </Card>
-          ))}
-        </div>
-      ) : (
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-base sm:text-lg">Customer Management</CardTitle>
-            <CardDescription className="text-xs">Complete customer database with analytics</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="overflow-x-auto -mx-4 sm:mx-0">
-              <div className="inline-block min-w-full align-middle">
-                <div className="overflow-hidden">
-                  <table className="min-w-full divide-y divide-border">
-                    <thead className="bg-muted/50">
-                      <tr>
-                        <th className="text-left py-3 px-3 text-xs font-medium text-muted-foreground">Customer</th>
-                        <th className="text-left py-3 px-3 text-xs font-medium text-muted-foreground hidden md:table-cell">Contact</th>
-                        <th className="text-left py-3 px-3 text-xs font-medium text-muted-foreground">Orders</th>
-                        <th className="text-left py-3 px-3 text-xs font-medium text-muted-foreground">Total Spent</th>
-                        <th className="text-left py-3 px-3 text-xs font-medium text-muted-foreground hidden lg:table-cell">Avg Order</th>
-                        <th className="text-left py-3 px-3 text-xs font-medium text-muted-foreground hidden sm:table-cell">Last Order</th>
-                        <th className="text-left py-3 px-3 text-xs font-medium text-muted-foreground">Status</th>
-                        <th className="text-left py-3 px-3 text-xs font-medium text-muted-foreground">Actions</th>
-                      </tr>
-                    </thead>
-                    <tbody className="divide-y divide-border bg-background">
-                      {filteredCustomers.map((customer) => {
-                        const daysSinceLastOrder = getDaysSinceLastOrder(customer.lastOrder)
-                        return (
-                          <tr key={customer.id} className="hover:bg-muted/50">
-                            <td className="py-3 px-3">
-                              <div className="flex items-center gap-2">
-                                <div className="w-8 h-8 rounded-full bg-accent/10 flex items-center justify-center shrink-0">
-                                  <span className="font-bold text-accent text-xs">{customer.name[0]}</span>
-                                </div>
-                                <div>
-                                  <div className="font-medium text-xs">{customer.name}</div>
-                                  <div className="text-[10px] text-muted-foreground truncate max-w-[120px]">{customer.favoriteCategory}</div>
-                                </div>
-                              </div>
-                            </td>
-                            <td className="py-3 px-3 hidden md:table-cell">
-                              <div className="space-y-0.5">
-                                <div className="flex items-center gap-1 text-[10px] text-muted-foreground">
-                                  <Phone className="h-2.5 w-2.5" />
-                                  {customer.phone}
-                                </div>
-                                <div className="flex items-center gap-1 text-[10px] text-muted-foreground">
-                                  <Mail className="h-2.5 w-2.5" />
-                                  {customer.email}
-                                </div>
-                              </div>
-                            </td>
-                            <td className="py-3 px-3 font-medium text-xs whitespace-nowrap">{customer.totalOrders}</td>
-                            <td className="py-3 px-3 font-medium text-xs whitespace-nowrap">৳{customer.totalSpent.toLocaleString()}</td>
-                            <td className="py-3 px-3 text-xs hidden lg:table-cell whitespace-nowrap">৳{customer.averageOrderValue.toLocaleString()}</td>
-                            <td className="py-3 px-3 text-xs hidden sm:table-cell whitespace-nowrap">
-                              <div>{daysSinceLastOrder}d ago</div>
-                              {daysSinceLastOrder > 30 && (
-                                <AlertTriangle className="h-3 w-3 text-yellow-600 mt-0.5" />
-                              )}
-                            </td>
-                            <td className="py-3 px-3">
-                              <Badge className={`${getStatusColor(customer.status)} text-[9px] px-2 py-1 whitespace-nowrap`}>
-                                {getStatusIcon(customer.status)}
-                                <span className="ml-1 capitalize">{customer.status}</span>
-                              </Badge>
-                            </td>
-                            <td className="py-3 px-3">
-                              <div className="flex gap-1">
-                                <Dialog>
-                                  <DialogTrigger asChild>
-                                    <Button
-                                      variant="ghost"
-                                      size="sm"
-                                      onClick={() => setSelectedCustomer(customer)}
-                                      className="h-9 w-9 p-0"
-                                    >
-                                      <Edit className="h-4 w-4" />
-                                    </Button>
-                                  </DialogTrigger>
-                                  <DialogContent className="sm:max-w-2xl max-h-[90vh] overflow-y-auto">
-                                    <CustomerDetailsModal
-                                      customer={selectedCustomer}
-                                      onSendMessage={handleSendMessage}
-                                      onNewOrder={handleNewOrder}
-                                      onViewOrders={handleViewOrders}
-                                    />
-                                  </DialogContent>
-                                </Dialog>
-                                <Button
-                                  variant="ghost"
-                                  size="sm"
-                                  className="h-9 w-9 p-0 hidden sm:inline-flex"
-                                  onClick={() => handleSendMessage(customer)}
-                                >
-                                  <MessageSquare className="h-4 w-4" />
-                                </Button>
-                                <Button
-                                  variant="ghost"
-                                  size="sm"
-                                  className="h-9 w-9 p-0 hidden md:inline-flex"
-                                  onClick={() => handleNewOrder(customer)}
-                                >
-                                  <ShoppingCart className="h-4 w-4" />
-                                </Button>
-                              </div>
-                            </td>
-                          </tr>
-                        )
-                      })}
-                    </tbody>
-                  </table>
-                </div>
+
+      {/* Success Message */}
+      {successMessage && (
+        <Alert className="bg-green-50 border-green-200">
+          <CheckCircle className="h-4 w-4 text-green-600" />
+          <AlertDescription className="text-green-800">
+            {successMessage}
+          </AlertDescription>
+        </Alert>
+      )}
+
+      {/* Filters and Actions */}
+      <Card>
+        <CardContent className="pt-4">
+          <div className="flex flex-col gap-3">
+            <div className="flex flex-col md:flex-row gap-3">
+              <div className="relative flex-1 md:flex-[2]">
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                <Input
+                  placeholder="Search customers by name, phone, or email..."
+                  className="pl-10"
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                />
               </div>
+              <Select value={statusFilter} onValueChange={setStatusFilter}>
+                <SelectTrigger className="w-full md:w-[180px]">
+                  <SelectValue placeholder="Filter by status" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Status</SelectItem>
+                  <SelectItem value="vip">VIP</SelectItem>
+                  <SelectItem value="regular">Regular</SelectItem>
+                  <SelectItem value="new">New</SelectItem>
+                  <SelectItem value="inactive">Inactive</SelectItem>
+                </SelectContent>
+              </Select>
+              <Select value={sortBy} onValueChange={setSortBy}>
+                <SelectTrigger className="w-full md:w-[180px]">
+                  <SelectValue placeholder="Sort by" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="name">Name</SelectItem>
+                  <SelectItem value="totalSpent">Total Spent</SelectItem>
+                  <SelectItem value="lastOrder">Last Order</SelectItem>
+                  <SelectItem value="totalOrders">Total Orders</SelectItem>
+                </SelectContent>
+              </Select>
+              <div className="flex rounded-md border md:ml-auto">
+                <Button
+                  variant={viewMode === "list" ? "default" : "ghost"}
+                  size="sm"
+                  onClick={() => setViewMode("list")}
+                  className="rounded-r-none"
+                >
+                  <List className="h-4 w-4" />
+                </Button>
+                <Button
+                  variant={viewMode === "grid" ? "default" : "ghost"}
+                  size="sm"
+                  onClick={() => setViewMode("grid")}
+                  className="rounded-l-none"
+                >
+                  <Grid3X3 className="h-4 w-4" />
+                </Button>
+              </div>
+            </div>
+            <div className="flex gap-2">
+              <Button
+                className="bg-accent hover:bg-accent/90"
+                onClick={() => setIsAddModalOpen(true)}
+              >
+                <Plus className="h-4 w-4 mr-2" />
+                Add Customer
+              </Button>
+              <AddCustomerModal
+                open={isAddModalOpen}
+                onOpenChange={setIsAddModalOpen}
+                onAdd={handleAddCustomer}
+              />
+              <Button
+                variant="outline"
+                onClick={() => setIsImportModalOpen(true)}
+              >
+                <Download className="h-4 w-4 mr-2" />
+                Import
+              </Button>
+              <ImportCustomersModal
+                open={isImportModalOpen}
+                onOpenChange={setIsImportModalOpen}
+                onImport={handleImportCustomers}
+              />
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Loading State */}
+      {loading && (
+        <Card>
+          <CardContent className="py-8">
+            <div className="flex flex-col items-center justify-center space-y-4">
+              <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+              <p className="text-sm text-muted-foreground">Loading customers...</p>
             </div>
           </CardContent>
         </Card>
       )}
 
-      {/* Modals */}
-      <AddCustomerModal
-        open={isAddModalOpen}
-        onOpenChange={setIsAddModalOpen}
-        onAdd={handleAddCustomer}
-      />
+      {/* Error State */}
+      {error && !loading && (
+        <Alert variant="destructive">
+          <AlertCircle className="h-4 w-4" />
+          <AlertDescription>
+            Failed to load customers: {error.message}
+            <Button
+              variant="outline"
+              size="sm"
+              className="ml-4"
+              onClick={() => refetch()}
+            >
+              Retry
+            </Button>
+          </AlertDescription>
+        </Alert>
+      )}
 
-      <ImportCustomersModal
-        open={isImportModalOpen}
-        onOpenChange={setIsImportModalOpen}
-        onImport={handleImportCustomers}
-      />
+      {/* Customer List/Grid */}
+      {!loading && !error && (
+        viewMode === "list" ? (
+          <Card>
+            <CardHeader>
+              <CardTitle>Customer List</CardTitle>
+              <CardDescription>
+                {filteredCustomers.length === 0 ? "No customers found" : `${filteredCustomers.length} customers`}
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="overflow-x-auto">
+                <table className="min-w-full divide-y divide-border">
+                  <thead className="bg-muted/50">
+                    <tr>
+                      <th className="text-left py-3 px-4 text-xs font-medium text-muted-foreground">Customer</th>
+                      <th className="text-left py-3 px-4 text-xs font-medium text-muted-foreground">Contact</th>
+                      <th className="text-left py-3 px-4 text-xs font-medium text-muted-foreground">Orders</th>
+                      <th className="text-left py-3 px-4 text-xs font-medium text-muted-foreground">Spent</th>
+                      <th className="text-left py-3 px-4 text-xs font-medium text-muted-foreground">Last Order</th>
+                      <th className="text-left py-3 px-4 text-xs font-medium text-muted-foreground">Status</th>
+                      <th className="text-left py-3 px-4 text-xs font-medium text-muted-foreground">Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-border bg-background">
+                    {filteredCustomers.length === 0 ? (
+                      <tr>
+                        <td colSpan={7} className="py-8 text-center">
+                          <div className="flex flex-col items-center justify-center">
+                            <Users className="h-10 w-10 text-muted-foreground mb-3" />
+                            <p className="text-sm text-muted-foreground">No customers found</p>
+                          </div>
+                        </td>
+                      </tr>
+                    ) : (
+                      filteredCustomers.map((customer) => (
+                        <tr key={customer.id} className="hover:bg-muted/50">
+                          <td className="py-3 px-4">
+                            <div>
+                              <div className="font-medium text-sm">{customer.name}</div>
+                              <div className="text-xs text-muted-foreground">{customer.joinDate}</div>
+                            </div>
+                          </td>
+                          <td className="py-3 px-4">
+                            <div>
+                              <div className="text-sm flex items-center gap-1">
+                                <Phone className="h-3 w-3" />
+                                {customer.phone || 'N/A'}
+                              </div>
+                              <div className="text-xs text-muted-foreground flex items-center gap-1">
+                                <Mail className="h-3 w-3" />
+                                {customer.email || 'N/A'}
+                              </div>
+                            </div>
+                          </td>
+                          <td className="py-3 px-4 text-sm">{customer.totalOrders}</td>
+                          <td className="py-3 px-4 font-medium text-sm">৳{customer.totalSpent}</td>
+                          <td className="py-3 px-4 text-sm">{customer.lastOrder}</td>
+                          <td className="py-3 px-4">
+                            <Badge className={getCustomerStatusColor(customer.status) + " text-xs"}>
+                              {getCustomerStatusIcon(customer.status)}
+                              <span className="ml-1">{customer.status}</span>
+                            </Badge>
+                          </td>
+                          <td className="py-3 px-4">
+                            <div className="flex gap-1">
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => {
+                                  setSelectedCustomer(customer)
+                                  setIsDetailsDialogOpen(true)
+                                }}
+                              >
+                                <MessageSquare className="h-4 w-4" />
+                              </Button>
+                            </div>
+                          </td>
+                        </tr>
+                      ))
+                    )}
+                  </tbody>
+                </table>
+              </div>
+            </CardContent>
+          </Card>
+        ) : (
+          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+            {filteredCustomers.map((customer) => (
+              <Card key={customer.id} className="hover:shadow-md transition-shadow">
+                <CardHeader className="pb-3">
+                  <div className="flex items-center justify-between">
+                    <CardTitle className="text-base">{customer.name}</CardTitle>
+                    <Badge className={getCustomerStatusColor(customer.status) + " text-xs"}>
+                      {getCustomerStatusIcon(customer.status)}
+                      <span className="ml-1">{customer.status}</span>
+                    </Badge>
+                  </div>
+                  <CardDescription className="text-xs">Customer since {customer.joinDate}</CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-2">
+                  <div className="flex items-center gap-2 text-sm">
+                    <Phone className="h-4 w-4 text-muted-foreground" />
+                    <span>{customer.phone || 'No phone'}</span>
+                  </div>
+                  <div className="flex items-center gap-2 text-sm">
+                    <Mail className="h-4 w-4 text-muted-foreground" />
+                    <span className="truncate">{customer.email || 'No email'}</span>
+                  </div>
+                  <div className="flex items-center gap-2 text-sm">
+                    <MapPin className="h-4 w-4 text-muted-foreground" />
+                    <span className="truncate">{customer.address || 'No address'}</span>
+                  </div>
+                  <div className="pt-2 border-t">
+                    <div className="flex justify-between text-sm">
+                      <span className="text-muted-foreground">Total Orders</span>
+                      <span className="font-medium">{customer.totalOrders}</span>
+                    </div>
+                    <div className="flex justify-between text-sm">
+                      <span className="text-muted-foreground">Total Spent</span>
+                      <span className="font-medium">৳{customer.totalSpent}</span>
+                    </div>
+                    <div className="flex justify-between text-sm">
+                      <span className="text-muted-foreground">Last Order</span>
+                      <span className="font-medium">{customer.lastOrder}</span>
+                    </div>
+                  </div>
+                  <div className="flex gap-2 pt-2">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="flex-1"
+                      onClick={() => handleMessage(customer)}
+                    >
+                      <MessageSquare className="h-4 w-4" />
+                    </Button>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="flex-1"
+                      onClick={() => handleNewOrder(customer)}
+                    >
+                      <Plus className="h-4 w-4" />
+                    </Button>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="flex-1"
+                      onClick={() => handleViewOrders(customer)}
+                    >
+                      <ShoppingCart className="h-4 w-4" />
+                    </Button>
+                  </div>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+        )
+      )}
+
+      {/* Shared Customer Details Dialog - Single instance for all customers */}
+      <Dialog open={isDetailsDialogOpen} onOpenChange={setIsDetailsDialogOpen}>
+        <DialogContent>
+          <CustomerDetailsModal
+            customer={selectedCustomer}
+            onMessage={handleMessage}
+            onNewOrder={handleNewOrder}
+            onViewOrders={handleViewOrders}
+          />
+        </DialogContent>
+      </Dialog>
     </MainLayout>
   )
 }
+
+interface CustomerDetailsModalProps {
+  customer: Customer | null
+  onMessage: (customer: Customer) => void
+  onNewOrder: (customer: Customer) => void
+  onViewOrders: (customer: Customer) => void
+}
+
 function CustomerDetailsModal({
   customer,
-  onSendMessage,
+  onMessage,
   onNewOrder,
   onViewOrders
-}: {
-  customer: Customer | null
-  onSendMessage?: (customer: Customer) => void
-  onNewOrder?: (customer: Customer) => void
-  onViewOrders?: (customer: Customer) => void
-}) {
+}: CustomerDetailsModalProps) {
   if (!customer) return null
+
+  const displayCustomer = formatCustomerForDisplay(customer)
+  const daysSince = getDaysSinceLastOrder(customer.last_order_date)
+
   return (
     <>
       <DialogHeader>
-        <DialogTitle className="text-lg">Customer Details - {customer.name}</DialogTitle>
-        <DialogDescription className="text-xs">
-          Complete customer information and order history
-        </DialogDescription>
+        <DialogTitle>{customer.name}</DialogTitle>
+        <DialogDescription>Customer Details</DialogDescription>
       </DialogHeader>
       <div className="space-y-4">
-        {/* Customer Info */}
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm">Contact Information</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-2">
-            <div className="grid grid-cols-2 gap-3">
-              <div>
-                <div className="text-xs text-muted-foreground">Full Name</div>
-                <div className="font-medium text-sm">{customer.name}</div>
-              </div>
-              <div>
-                <div className="text-xs text-muted-foreground">Status</div>
-                <Badge className={`${getStatusColor(customer.status)} text-[9px] px-1.5 py-0`}>{customer.status}</Badge>
-              </div>
-              <div>
-                <div className="text-xs text-muted-foreground">Phone</div>
-                <div className="font-medium text-sm">{customer.phone}</div>
-              </div>
-              <div>
-                <div className="text-xs text-muted-foreground">Email</div>
-                <div className="font-medium text-sm">{customer.email}</div>
-              </div>
-            </div>
-            <div>
-              <div className="text-xs text-muted-foreground">Address</div>
-              <div className="font-medium text-sm">{customer.address}</div>
-            </div>
-          </CardContent>
-        </Card>
-        {/* Order Statistics */}
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm">Order Statistics</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-              <div className="text-center p-2 border rounded-lg">
-                <div className="text-xl font-bold text-accent">{customer.totalOrders}</div>
-                <div className="text-xs text-muted-foreground">Total Orders</div>
-              </div>
-              <div className="text-center p-2 border rounded-lg">
-                <div className="text-xl font-bold text-green-600">৳{customer.totalSpent.toLocaleString()}</div>
-                <div className="text-xs text-muted-foreground">Total Spent</div>
-              </div>
-              <div className="text-center p-2 border rounded-lg">
-                <div className="text-xl font-bold text-blue-600">৳{customer.averageOrderValue.toLocaleString()}</div>
-                <div className="text-xs text-muted-foreground">Avg Order Value</div>
-              </div>
-              <div className="text-center p-2 border rounded-lg">
-                <div className="text-xl font-bold text-purple-600">{customer.favoriteCategory}</div>
-                <div className="text-xs text-muted-foreground">Favorite Category</div>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-        {/* Quick Actions */}
-        <div className="flex gap-1.5">
-          <Button className="flex-1 bg-accent hover:bg-accent/90 h-8 text-xs px-3" onClick={() => onSendMessage?.(customer)}>
-            <MessageSquare className="h-3.5 w-3.5 mr-2" />
-            Send Message
+        <div className="flex items-center gap-2">
+          <Badge className={getCustomerStatusColor(displayCustomer.status) + " text-xs"}>
+            {getCustomerStatusIcon(displayCustomer.status)}
+            <span className="ml-1">{displayCustomer.status}</span>
+          </Badge>
+          {daysSince && daysSince > 30 && (
+            <Badge variant="outline" className="text-xs">
+              <AlertTriangle className="h-3 w-3 mr-1" />
+              {daysSince} days since last order
+            </Badge>
+          )}
+        </div>
+
+        <div className="grid gap-2">
+          <div className="flex items-center gap-2 text-sm">
+            <Phone className="h-4 w-4 text-muted-foreground" />
+            <span>{customer.phone || 'No phone'}</span>
+          </div>
+          <div className="flex items-center gap-2 text-sm">
+            <Mail className="h-4 w-4 text-muted-foreground" />
+            <span>{customer.email || 'No email'}</span>
+          </div>
+          <div className="flex items-center gap-2 text-sm">
+            <MapPin className="h-4 w-4 text-muted-foreground" />
+            <span>{customer.address || 'No address'}</span>
+          </div>
+        </div>
+
+        <div className="grid grid-cols-2 gap-4 pt-4 border-t">
+          <div>
+            <p className="text-xs text-muted-foreground">Total Orders</p>
+            <p className="text-lg font-semibold">{displayCustomer.totalOrders}</p>
+          </div>
+          <div>
+            <p className="text-xs text-muted-foreground">Total Spent</p>
+            <p className="text-lg font-semibold">৳{displayCustomer.totalSpent}</p>
+          </div>
+          <div>
+            <p className="text-xs text-muted-foreground">Average Order</p>
+            <p className="text-lg font-semibold">৳{displayCustomer.averageOrderValue}</p>
+          </div>
+          <div>
+            <p className="text-xs text-muted-foreground">Last Order</p>
+            <p className="text-lg font-semibold">{displayCustomer.lastOrder}</p>
+          </div>
+        </div>
+
+        <div className="flex gap-2">
+          <Button className="flex-1" onClick={() => onMessage(customer)}>
+            <MessageSquare className="h-4 w-4 mr-2" />
+            Message
           </Button>
-          <Button variant="outline" className="flex-1 h-8 text-xs px-3" onClick={() => onNewOrder?.(customer)}>
-            <ShoppingCart className="h-3.5 w-3.5 mr-2" />
+          <Button variant="outline" className="flex-1" onClick={() => onNewOrder(customer)}>
+            <Plus className="h-4 w-4 mr-2" />
             New Order
           </Button>
-          <Button variant="outline" className="flex-1 h-8 text-xs px-3" onClick={() => onViewOrders?.(customer)}>
-            <TrendingUp className="h-3.5 w-3.5 mr-2" />
+          <Button variant="outline" className="flex-1" onClick={() => onViewOrders(customer)}>
+            <ShoppingCart className="h-4 w-4 mr-2" />
             View Orders
           </Button>
         </div>

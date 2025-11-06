@@ -3,8 +3,8 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import Link from "next/link"
-import { getSignUpUrl, withAuth } from '@workos-inc/authkit-nextjs'
 import { redirect } from 'next/navigation'
+import { createClient } from '@/lib/supabase/server'
 import {
   TrendingUp,
   ShoppingCart,
@@ -22,15 +22,14 @@ import {
 
 export default async function Home() {
   // Check if user is already authenticated
-  const { user } = await withAuth({ ensureSignedIn: false });
+  const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
 
   // If user is signed in, redirect to dashboard
   if (user) {
-    redirect('/dashboard');
+    redirect('/dashboard')
   }
 
-  // Get the sign-up URL for the CTA buttons
-  const signUpUrl = await getSignUpUrl();
   return (
     <MarketingLayout>
       {/* Hero Section */}
@@ -44,326 +43,448 @@ export default async function Home() {
             <span className="text-primary"> Data-Driven Success</span>
           </h1>
           <p className="text-xl text-muted-foreground mb-8 max-w-2xl mx-auto">
-            From WhatsApp orders to business empire. Zoddy helps Bangladeshs entrepreneurs
+            From WhatsApp orders to business empire. Zoddy helps Bangladesh&apos;s entrepreneurs
             track sales, manage customers, and grow revenue with powerful insights—all in Bangla.
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center mb-12">
-            <Link href={signUpUrl}>
-              <Button size="lg" className="bg-accent hover:bg-accent/90 text-lg px-8 py-6">
+            <Button asChild size="lg" className="text-lg px-8">
+              <Link href="/auth">
                 Start Free Trial
                 <ArrowRight className="ml-2 h-5 w-5" />
-              </Button>
-            </Link>
-            <Button variant="outline" size="lg" className="text-lg px-8 py-6">
-              <PlayCircle className="mr-2 h-5 w-5" />
-              Watch Demo
+              </Link>
+            </Button>
+            <Button asChild size="lg" variant="outline" className="text-lg px-8">
+              <Link href="#demo">
+                <PlayCircle className="mr-2 h-5 w-5" />
+                Watch Demo
+              </Link>
             </Button>
           </div>
-          {/* Social Proof */}
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-8 text-center">
-            <div>
-              <div className="text-3xl font-bold text-accent">৳50L+</div>
+
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-8 max-w-2xl mx-auto">
+            <div className="text-center">
+              <div className="text-3xl font-bold text-primary">10K+</div>
+              <div className="text-sm text-muted-foreground">Orders Processed</div>
+            </div>
+            <div className="text-center">
+              <div className="text-3xl font-bold text-primary">৳2.5Cr</div>
               <div className="text-sm text-muted-foreground">Revenue Tracked</div>
             </div>
-            <div>
-              <div className="text-3xl font-bold text-accent">1,000+</div>
-              <div className="text-sm text-muted-foreground">Active Businesses</div>
+            <div className="text-center">
+              <div className="text-3xl font-bold text-primary">98%</div>
+              <div className="text-sm text-muted-foreground">Happy Customers</div>
             </div>
-            <div>
-              <div className="text-3xl font-bold text-accent">99.9%</div>
-              <div className="text-sm text-muted-foreground">Uptime</div>
-            </div>
-            <div>
-              <div className="text-3xl font-bold text-accent">24/7</div>
-              <div className="text-sm text-muted-foreground">Support</div>
+            <div className="text-center">
+              <div className="text-3xl font-bold text-primary">24/7</div>
+              <div className="text-sm text-muted-foreground">Support Available</div>
             </div>
           </div>
         </div>
       </section>
-      {/* Dashboard Preview */}
-      <section className="container mx-auto px-4 py-16 bg-muted/30">
-        <div className="text-center mb-12">
-          <h2 className="text-3xl md:text-4xl font-bold font-display mb-4">
-            See Your Business Growth in Real-Time
+
+      {/* Pain Points Section */}
+      <section className="container mx-auto px-4 py-16 border-t">
+        <div className="max-w-4xl mx-auto">
+          <h2 className="text-3xl md:text-4xl font-bold text-center mb-4">
+            Sound Familiar? 🤔
           </h2>
-          <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
-            Beautiful dashboards that show what matters most—your revenue, customers, and growth.
+          <p className="text-center text-muted-foreground mb-12 text-lg">
+            These are the daily struggles of Bangladeshi online sellers
           </p>
-        </div>
-        {/* Dashboard Screenshot Placeholder */}
-        <div className="max-w-6xl mx-auto">
-          <div className="relative">
-            <div className="bg-background border rounded-xl shadow-2xl p-6">
-              <div className="flex items-center gap-2 mb-4">
-                <div className="w-3 h-3 rounded-full bg-red-500"></div>
-                <div className="w-3 h-3 rounded-full bg-yellow-500"></div>
-                <div className="w-3 h-3 rounded-full bg-green-500"></div>
-                <div className="text-sm text-muted-foreground ml-4">Zoddy Dashboard</div>
-              </div>
-              {/* Mock Dashboard Content */}
-              <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
-                <Card>
-                  <CardContent className="p-4">
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <div className="text-2xl font-bold text-accent">৳45,231</div>
-                        <div className="text-sm text-muted-foreground">Revenue</div>
-                      </div>
-                      <TrendingUp className="h-8 w-8 text-green-500" />
-                    </div>
-                  </CardContent>
-                </Card>
-                <Card>
-                  <CardContent className="p-4">
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <div className="text-2xl font-bold">152</div>
-                        <div className="text-sm text-muted-foreground">Orders</div>
-                      </div>
-                      <ShoppingCart className="h-8 w-8 text-blue-500" />
-                    </div>
-                  </CardContent>
-                </Card>
-                <Card>
-                  <CardContent className="p-4">
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <div className="text-2xl font-bold">89</div>
-                        <div className="text-sm text-muted-foreground">Customers</div>
-                      </div>
-                      <Users className="h-8 w-8 text-purple-500" />
-                    </div>
-                  </CardContent>
-                </Card>
-                <Card>
-                  <CardContent className="p-4">
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <div className="text-2xl font-bold text-orange-600">৳8,450</div>
-                        <div className="text-sm text-muted-foreground">Pending</div>
-                      </div>
-                      <Clock className="h-8 w-8 text-orange-500" />
-                    </div>
-                  </CardContent>
-                </Card>
-              </div>
-              <div className="h-32 bg-gradient-to-r from-accent/20 to-primary/20 rounded-lg flex items-center justify-center">
-                <BarChart3 className="h-16 w-16 text-muted-foreground" />
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
-      {/* Features Section */}
-      <section id="features" className="container mx-auto px-4 py-16">
-        <div className="text-center mb-16">
-          <h2 className="text-3xl md:text-4xl font-bold font-display mb-4">
-            Everything You Need to Grow Your Business
-          </h2>
-          <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
-            From order tracking to customer insights, Zoddy provides all the tools
-            you need to run and scale your business efficiently.
-          </p>
-        </div>
-        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
-          {[
-            {
-              icon: ShoppingCart,
-              title: "Smart Order Management",
-              description: "Track orders from WhatsApp, Facebook, or phone calls. Never lose a sale again.",
-              highlight: "50% time saved"
-            },
-            {
-              icon: Users,
-              title: "Customer Intelligence",
-              description: "Know your customers better. See who buys what, when, and how often.",
-              highlight: "Increase repeat sales"
-            },
-            {
-              icon: BarChart3,
-              title: "Business Analytics",
-              description: "Beautiful charts showing your growth, profit margins, and key metrics.",
-              highlight: "Data-driven decisions"
-            },
-            {
-              icon: MessageCircle,
-              title: "WhatsApp Integration",
-              description: "Connect your WhatsApp Business for automated order tracking and customer updates.",
-              highlight: "Most requested feature"
-            },
-            {
-              icon: DollarSign,
-              title: "Payment Tracking",
-              description: "Track bKash, cash, bank transfers. Never forget who owes you money.",
-              highlight: "Improve cash flow"
-            },
-            {
-              icon: Smartphone,
-              title: "Mobile-First Design",
-              description: "Works perfectly on your phone. Manage your business from anywhere.",
-              highlight: "Works offline too"
-            }
-          ].map((feature, index) => (
-            <Card key={index} className="relative overflow-hidden group hover:shadow-lg transition-shadow">
+
+          <div className="grid md:grid-cols-2 gap-6">
+            <Card className="border-destructive/50 bg-destructive/5">
               <CardHeader>
-                <div className="flex items-center gap-3">
-                  <div className="p-2 rounded-lg bg-accent/10">
-                    <feature.icon className="h-6 w-6 text-accent" />
-                  </div>
-                  <Badge variant="secondary" className="text-xs">{feature.highlight}</Badge>
-                </div>
-                <CardTitle className="text-xl">{feature.title}</CardTitle>
-                <CardDescription className="text-base">{feature.description}</CardDescription>
-              </CardHeader>
-            </Card>
-          ))}
-        </div>
-      </section>
-      {/* Problem/Solution Section */}
-      <section className="container mx-auto px-4 py-16 bg-muted/30">
-        <div className="grid md:grid-cols-2 gap-16 items-center">
-          <div>
-            <h2 className="text-3xl font-bold font-display mb-6 text-red-600">
-              Stop Losing Money on Manual Tracking
-            </h2>
-            <div className="space-y-4 mb-8">
-              {[
-                "Lost orders in WhatsApp chats",
-                "Customers who never paid",
-                "No idea which products sell best",
-                "Hours wasted on Excel sheets",
-                "Missing growth opportunities"
-              ].map((problem, index) => (
-                <div key={index} className="flex items-center gap-3">
-                  <div className="w-2 h-2 rounded-full bg-red-500"></div>
-                  <span className="text-muted-foreground">{problem}</span>
-                </div>
-              ))}
-            </div>
-          </div>
-          <div>
-            <h2 className="text-3xl font-bold font-display mb-6 text-green-600">
-              Zoddy Solves All of This
-            </h2>
-            <div className="space-y-4 mb-8">
-              {[
-                "All orders organized automatically",
-                "Payment reminders that actually work",
-                "Know exactly what to stock more",
-                "Automated reporting and insights",
-                "Clear growth roadmap"
-              ].map((solution, index) => (
-                <div key={index} className="flex items-center gap-3">
-                  <CheckCircle className="w-5 h-5 text-green-500" />
-                  <span>{solution}</span>
-                </div>
-              ))}
-            </div>
-            <Link href={signUpUrl}>
-              <Button size="lg" className="bg-accent hover:bg-accent/90">
-                Start Growing Today
-                <ArrowRight className="ml-2 h-4 w-4" />
-              </Button>
-            </Link>
-          </div>
-        </div>
-      </section>
-      {/* Testimonials */}
-      <section id="testimonials" className="container mx-auto px-4 py-16">
-        <div className="text-center mb-16">
-          <h2 className="text-3xl md:text-4xl font-bold font-display mb-4">
-            Success Stories from Real Businesses
-          </h2>
-          <p className="text-xl text-muted-foreground">
-            See how Zoddy helped these entrepreneurs grow their revenue
-          </p>
-        </div>
-        <div className="grid md:grid-cols-3 gap-8">
-          {[
-            {
-              name: "Fatima Rahman",
-              business: "Fatimas Fashion House",
-              location: "Dhanmondi, Dhaka",
-              growth: "300% revenue increase",
-              quote: "Zoddy helped me track my WhatsApp orders properly. I discovered I was losing ৳50,000 per month in missed follow-ups!",
-              rating: 5
-            },
-            {
-              name: "Ahmed Hassan",
-              business: "Hassan Electronics",
-              location: "Chittagong",
-              growth: "5x customer retention",
-              quote: "The customer insights feature is amazing. Now I know exactly when to restock and which customers to focus on.",
-              rating: 5
-            },
-            {
-              name: "Nasir Uddin",
-              business: "Nasir's Handicrafts",
-              location: "Sylhet",
-              growth: "2x profit margins",
-              quote: "I used to spend 3 hours daily on Excel. Now Zoddy does everything automatically. More time for family!",
-              rating: 5
-            }
-          ].map((testimonial, index) => (
-            <Card key={index} className="relative">
-              <CardHeader>
-                <div className="flex items-center gap-4">
-                  <div className="w-12 h-12 rounded-full bg-accent/10 flex items-center justify-center">
-                    <span className="font-bold text-accent">{testimonial.name[0]}</span>
-                  </div>
-                  <div>
-                    <div className="font-semibold">{testimonial.name}</div>
-                    <div className="text-sm text-muted-foreground">{testimonial.business}</div>
-                    <div className="text-xs text-muted-foreground">{testimonial.location}</div>
-                  </div>
-                </div>
-                <div className="flex items-center gap-1 mb-2">
-                  {[...Array(testimonial.rating)].map((_, i) => (
-                    <Star key={i} className="w-4 h-4 fill-yellow-400 text-yellow-400" />
-                  ))}
-                </div>
+                <CardTitle className="flex items-center gap-2">
+                  <MessageCircle className="h-5 w-5 text-destructive" />
+                  Lost in WhatsApp Chaos
+                </CardTitle>
               </CardHeader>
               <CardContent>
-                <Badge className="mb-4 bg-green-100 text-green-800">{testimonial.growth}</Badge>
-                <p className="italic text-sm">&ldquo;{testimonial.quote}&rdquo;</p>
+                <p className="text-muted-foreground">
+                  Orders scattered across WhatsApp, Facebook, and phone calls.
+                  No idea which customer ordered what or when.
+                </p>
               </CardContent>
             </Card>
-          ))}
+
+            <Card className="border-destructive/50 bg-destructive/5">
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <DollarSign className="h-5 w-5 text-destructive" />
+                  Money Mystery
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <p className="text-muted-foreground">
+                  &ldquo;How much did I earn this month?&rdquo; becomes a detective mission
+                  through bKash, Nagad, and bank statements.
+                </p>
+              </CardContent>
+            </Card>
+
+            <Card className="border-destructive/50 bg-destructive/5">
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Users className="h-5 w-5 text-destructive" />
+                  Customer Amnesia
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <p className="text-muted-foreground">
+                  &ldquo;This customer bought before, but what did they buy?&rdquo;
+                  No customer history, no repeat business strategy.
+                </p>
+              </CardContent>
+            </Card>
+
+            <Card className="border-destructive/50 bg-destructive/5">
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <ShoppingCart className="h-5 w-5 text-destructive" />
+                  Inventory Nightmares
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <p className="text-muted-foreground">
+                  Promising products you don&apos;t have, missing sales because
+                  you forgot to restock popular items.
+                </p>
+              </CardContent>
+            </Card>
+          </div>
         </div>
       </section>
+
+      {/* Features Section */}
+      <section className="container mx-auto px-4 py-16 border-t">
+        <div className="max-w-5xl mx-auto">
+          <h2 className="text-3xl md:text-4xl font-bold text-center mb-4">
+            Everything You Need to <span className="text-primary">Grow Your Business</span>
+          </h2>
+          <p className="text-center text-muted-foreground mb-12 text-lg">
+            Built specifically for Bangladeshi entrepreneurs like you
+          </p>
+
+          <div className="grid md:grid-cols-3 gap-8">
+            <Card className="relative overflow-hidden">
+              <div className="absolute top-0 right-0 w-20 h-20 bg-primary/10 rounded-bl-full" />
+              <CardHeader>
+                <div className="h-12 w-12 bg-primary/10 rounded-lg flex items-center justify-center mb-4">
+                  <ShoppingCart className="h-6 w-6 text-primary" />
+                </div>
+                <CardTitle>Multi-Channel Orders</CardTitle>
+                <CardDescription>
+                  Manage all your WhatsApp, Facebook, and phone orders in one place.
+                  Never lose track of a sale again.
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <ul className="space-y-2 text-sm">
+                  <li className="flex items-center">
+                    <CheckCircle className="h-4 w-4 text-green-500 mr-2 flex-shrink-0" />
+                    WhatsApp integration
+                  </li>
+                  <li className="flex items-center">
+                    <CheckCircle className="h-4 w-4 text-green-500 mr-2 flex-shrink-0" />
+                    Facebook order tracking
+                  </li>
+                  <li className="flex items-center">
+                    <CheckCircle className="h-4 w-4 text-green-500 mr-2 flex-shrink-0" />
+                    Phone order entry
+                  </li>
+                </ul>
+              </CardContent>
+            </Card>
+
+            <Card className="relative overflow-hidden">
+              <div className="absolute top-0 right-0 w-20 h-20 bg-accent/10 rounded-bl-full" />
+              <CardHeader>
+                <div className="h-12 w-12 bg-accent/10 rounded-lg flex items-center justify-center mb-4">
+                  <DollarSign className="h-6 w-6 text-accent" />
+                </div>
+                <CardTitle>Bangladesh Payments</CardTitle>
+                <CardDescription>
+                  Track bKash, Nagad, Rocket, and bank payments. Know exactly
+                  where your money is.
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <ul className="space-y-2 text-sm">
+                  <li className="flex items-center">
+                    <CheckCircle className="h-4 w-4 text-green-500 mr-2 flex-shrink-0" />
+                    bKash & Nagad tracking
+                  </li>
+                  <li className="flex items-center">
+                    <CheckCircle className="h-4 w-4 text-green-500 mr-2 flex-shrink-0" />
+                    Partial payment support
+                  </li>
+                  <li className="flex items-center">
+                    <CheckCircle className="h-4 w-4 text-green-500 mr-2 flex-shrink-0" />
+                    Auto payment reminders
+                  </li>
+                </ul>
+              </CardContent>
+            </Card>
+
+            <Card className="relative overflow-hidden">
+              <div className="absolute top-0 right-0 w-20 h-20 bg-primary/10 rounded-bl-full" />
+              <CardHeader>
+                <div className="h-12 w-12 bg-primary/10 rounded-lg flex items-center justify-center mb-4">
+                  <BarChart3 className="h-6 w-6 text-primary" />
+                </div>
+                <CardTitle>Smart Analytics</CardTitle>
+                <CardDescription>
+                  See your best products, top customers, and revenue trends.
+                  Make data-driven decisions.
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <ul className="space-y-2 text-sm">
+                  <li className="flex items-center">
+                    <CheckCircle className="h-4 w-4 text-green-500 mr-2 flex-shrink-0" />
+                    Daily/monthly reports
+                  </li>
+                  <li className="flex items-center">
+                    <CheckCircle className="h-4 w-4 text-green-500 mr-2 flex-shrink-0" />
+                    Product performance
+                  </li>
+                  <li className="flex items-center">
+                    <CheckCircle className="h-4 w-4 text-green-500 mr-2 flex-shrink-0" />
+                    Customer insights
+                  </li>
+                </ul>
+              </CardContent>
+            </Card>
+
+            <Card className="relative overflow-hidden">
+              <div className="absolute top-0 right-0 w-20 h-20 bg-accent/10 rounded-bl-full" />
+              <CardHeader>
+                <div className="h-12 w-12 bg-accent/10 rounded-lg flex items-center justify-center mb-4">
+                  <Users className="h-6 w-6 text-accent" />
+                </div>
+                <CardTitle>Customer CRM</CardTitle>
+                <CardDescription>
+                  Build relationships, track purchase history, and create
+                  targeted marketing campaigns.
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <ul className="space-y-2 text-sm">
+                  <li className="flex items-center">
+                    <CheckCircle className="h-4 w-4 text-green-500 mr-2 flex-shrink-0" />
+                    Customer profiles
+                  </li>
+                  <li className="flex items-center">
+                    <CheckCircle className="h-4 w-4 text-green-500 mr-2 flex-shrink-0" />
+                    Purchase history
+                  </li>
+                  <li className="flex items-center">
+                    <CheckCircle className="h-4 w-4 text-green-500 mr-2 flex-shrink-0" />
+                    VIP customer tags
+                  </li>
+                </ul>
+              </CardContent>
+            </Card>
+
+            <Card className="relative overflow-hidden">
+              <div className="absolute top-0 right-0 w-20 h-20 bg-primary/10 rounded-bl-full" />
+              <CardHeader>
+                <div className="h-12 w-12 bg-primary/10 rounded-lg flex items-center justify-center mb-4">
+                  <Clock className="h-6 w-6 text-primary" />
+                </div>
+                <CardTitle>Inventory Control</CardTitle>
+                <CardDescription>
+                  Never run out of bestsellers. Get alerts when stock is low
+                  and track what&apos;s selling fast.
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <ul className="space-y-2 text-sm">
+                  <li className="flex items-center">
+                    <CheckCircle className="h-4 w-4 text-green-500 mr-2 flex-shrink-0" />
+                    Stock level tracking
+                  </li>
+                  <li className="flex items-center">
+                    <CheckCircle className="h-4 w-4 text-green-500 mr-2 flex-shrink-0" />
+                    Low stock alerts
+                  </li>
+                  <li className="flex items-center">
+                    <CheckCircle className="h-4 w-4 text-green-500 mr-2 flex-shrink-0" />
+                    Supplier management
+                  </li>
+                </ul>
+              </CardContent>
+            </Card>
+
+            <Card className="relative overflow-hidden">
+              <div className="absolute top-0 right-0 w-20 h-20 bg-accent/10 rounded-bl-full" />
+              <CardHeader>
+                <div className="h-12 w-12 bg-accent/10 rounded-lg flex items-center justify-center mb-4">
+                  <Smartphone className="h-6 w-6 text-accent" />
+                </div>
+                <CardTitle>Mobile First</CardTitle>
+                <CardDescription>
+                  Manage your entire business from your phone. Works perfectly
+                  on any device, anywhere.
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <ul className="space-y-2 text-sm">
+                  <li className="flex items-center">
+                    <CheckCircle className="h-4 w-4 text-green-500 mr-2 flex-shrink-0" />
+                    Mobile responsive
+                  </li>
+                  <li className="flex items-center">
+                    <CheckCircle className="h-4 w-4 text-green-500 mr-2 flex-shrink-0" />
+                    Offline support
+                  </li>
+                  <li className="flex items-center">
+                    <CheckCircle className="h-4 w-4 text-green-500 mr-2 flex-shrink-0" />
+                    Quick actions
+                  </li>
+                </ul>
+              </CardContent>
+            </Card>
+          </div>
+        </div>
+      </section>
+
+      {/* Social Proof Section */}
+      <section className="container mx-auto px-4 py-16 border-t bg-muted/50">
+        <div className="max-w-5xl mx-auto">
+          <h2 className="text-3xl md:text-4xl font-bold text-center mb-12">
+            What Our <span className="text-primary">Successful Sellers</span> Say
+          </h2>
+
+          <div className="grid md:grid-cols-3 gap-8">
+            <Card>
+              <CardHeader>
+                <div className="flex gap-1 mb-2">
+                  {[...Array(5)].map((_, i) => (
+                    <Star key={i} className="h-4 w-4 fill-yellow-400 text-yellow-400" />
+                  ))}
+                </div>
+                <CardTitle className="text-lg">Game Changer for My Business!</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <p className="text-muted-foreground mb-4">
+                  &ldquo;I used to spend hours tracking orders in notebooks. Now Zoddy does
+                  everything automatically. My revenue increased 40% in just 3 months!&rdquo;
+                </p>
+                <div className="flex items-center gap-3">
+                  <div className="h-10 w-10 bg-primary/10 rounded-full flex items-center justify-center">
+                    <span className="text-sm font-bold">RK</span>
+                  </div>
+                  <div>
+                    <p className="font-semibold text-sm">Rashida Khatun</p>
+                    <p className="text-xs text-muted-foreground">Fashion Boutique, Dhaka</p>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader>
+                <div className="flex gap-1 mb-2">
+                  {[...Array(5)].map((_, i) => (
+                    <Star key={i} className="h-4 w-4 fill-yellow-400 text-yellow-400" />
+                  ))}
+                </div>
+                <CardTitle className="text-lg">Perfect for Online Sellers</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <p className="text-muted-foreground mb-4">
+                  &ldquo;Managing Facebook and WhatsApp orders was a nightmare. Zoddy made it
+                  so simple! The Bangla interface is perfect for my team.&rdquo;
+                </p>
+                <div className="flex items-center gap-3">
+                  <div className="h-10 w-10 bg-primary/10 rounded-full flex items-center justify-center">
+                    <span className="text-sm font-bold">MH</span>
+                  </div>
+                  <div>
+                    <p className="font-semibold text-sm">Mahmud Hassan</p>
+                    <p className="text-xs text-muted-foreground">Electronics Store, Chittagong</p>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader>
+                <div className="flex gap-1 mb-2">
+                  {[...Array(5)].map((_, i) => (
+                    <Star key={i} className="h-4 w-4 fill-yellow-400 text-yellow-400" />
+                  ))}
+                </div>
+                <CardTitle className="text-lg">Worth Every Taka!</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <p className="text-muted-foreground mb-4">
+                  &ldquo;The inventory alerts saved me thousands. I never miss restocking
+                  bestsellers now. Customer data helps me do targeted marketing.&rdquo;
+                </p>
+                <div className="flex items-center gap-3">
+                  <div className="h-10 w-10 bg-primary/10 rounded-full flex items-center justify-center">
+                    <span className="text-sm font-bold">SA</span>
+                  </div>
+                  <div>
+                    <p className="font-semibold text-sm">Shahana Akter</p>
+                    <p className="text-xs text-muted-foreground">Cosmetics Business, Sylhet</p>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+        </div>
+      </section>
+
       {/* CTA Section */}
-      <section className="container mx-auto px-4 py-16 bg-gradient-to-br from-accent/10 to-primary/10">
-        <div className="text-center max-w-3xl mx-auto">
-          <h2 className="text-3xl md:text-4xl font-bold font-display mb-6">
-            Ready to 3x Your Business Revenue?
+      <section className="container mx-auto px-4 py-16 border-t">
+        <div className="max-w-3xl mx-auto text-center">
+          <h2 className="text-3xl md:text-4xl font-bold mb-4">
+            Ready to <span className="text-primary">Transform Your Business</span>?
           </h2>
           <p className="text-xl text-muted-foreground mb-8">
-            Join successful business owners who are already using Zoddy to track,
-            analyze, and grow their businesses. Start your free trial today.
+            Join thousands of successful Bangladeshi entrepreneurs.
+            Start your free trial today—no credit card required!
           </p>
-          <div className="flex flex-col sm:flex-row gap-4 justify-center mb-8">
-            <Link href={signUpUrl}>
-              <Button size="lg" className="bg-accent hover:bg-accent/90 text-lg px-8 py-6">
-                Start Free Trial - No Credit Card Required
-              </Button>
-            </Link>
+
+          <div className="bg-primary/5 rounded-lg p-6 mb-8">
+            <div className="flex flex-col sm:flex-row items-center justify-center gap-4 mb-4">
+              <Badge variant="secondary" className="text-lg px-4 py-1">
+                <TrendingUp className="h-4 w-4 mr-2" />
+                Limited Time Offer
+              </Badge>
+              <span className="text-2xl font-bold text-primary">50% OFF</span>
+              <span className="text-muted-foreground">First 3 Months</span>
+            </div>
+            <p className="text-sm text-muted-foreground">
+              🎉 Special launch pricing for the next 100 sign-ups only!
+            </p>
           </div>
-          <div className="flex items-center justify-center gap-8 text-sm text-muted-foreground">
-            <div className="flex items-center gap-2">
-              <CheckCircle className="w-4 h-4 text-green-500" />
-              <span>14-day free trial</span>
-            </div>
-            <div className="flex items-center gap-2">
-              <CheckCircle className="w-4 h-4 text-green-500" />
-              <span>Cancel anytime</span>
-            </div>
-            <div className="flex items-center gap-2">
-              <CheckCircle className="w-4 h-4 text-green-500" />
-              <span>Setup in 5 minutes</span>
-            </div>
+
+          <div className="flex flex-col sm:flex-row gap-4 justify-center">
+            <Button asChild size="lg" className="text-lg px-8">
+              <Link href="/auth">
+                Start Free 14-Day Trial
+                <ArrowRight className="ml-2 h-5 w-5" />
+              </Link>
+            </Button>
+            <Button asChild size="lg" variant="outline" className="text-lg px-8">
+              <Link href="/pricing">
+                View Pricing
+              </Link>
+            </Button>
           </div>
+
+          <p className="text-sm text-muted-foreground mt-6">
+            ✓ No credit card required &nbsp;&nbsp;
+            ✓ Full access to all features &nbsp;&nbsp;
+            ✓ Cancel anytime
+          </p>
         </div>
       </section>
     </MarketingLayout>
-  );
+  )
 }

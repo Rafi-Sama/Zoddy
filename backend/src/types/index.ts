@@ -2,13 +2,16 @@
 export interface User {
   id: string;
   email: string;
-  first_name: string;
-  last_name: string;
   email_verified: boolean;
   profile_picture_url?: string;
   organization_id?: string;
+  role?: 'owner' | 'admin' | 'member';
   created_at: string;
   updated_at: string;
+  // Deprecated fields - kept for backward compatibility
+  first_name?: string;
+  last_name?: string;
+  phone?: string;
 }
 
 export interface JWTPayload {

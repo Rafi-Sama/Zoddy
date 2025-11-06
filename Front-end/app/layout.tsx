@@ -1,11 +1,12 @@
 import type { Metadata } from "next";
 import { Shantell_Sans, Inter, DM_Sans } from "next/font/google";
 import { ThemeProvider } from "@/components/theme-provider";
-import { AuthKitProvider } from '@workos-inc/authkit-nextjs/components';
 import { NotificationsProvider } from "@/contexts/notifications-context";
 import { CalendarProvider } from "@/contexts/calendar-context";
+import { OrganizationProvider } from "@/contexts/organization-context";
 import { ClearOldSidebarCache } from "@/components/utils/clear-old-sidebar-cache";
 import { ErrorBoundary } from "@/components/error-boundary";
+import { Toaster } from "sonner";
 import "./globals.css";
 
 // Optimize font loading with only necessary weights and subsets
@@ -54,21 +55,22 @@ export default function RootLayout({
         className={`${shantellSans.variable} ${inter.variable} ${dmSans.variable} antialiased font-sans`}
       >
         <ErrorBoundary>
-          <AuthKitProvider>
-            <ThemeProvider
-              attribute="class"
-              defaultTheme="light"
-              enableSystem
-              disableTransitionOnChange
-            >
+          <ThemeProvider
+            attribute="class"
+            defaultTheme="light"
+            enableSystem
+            disableTransitionOnChange
+          >
+            <OrganizationProvider>
               <NotificationsProvider>
                 <CalendarProvider>
                   <ClearOldSidebarCache />
                   {children}
+                  <Toaster position="bottom-right" richColors />
                 </CalendarProvider>
               </NotificationsProvider>
-            </ThemeProvider>
-          </AuthKitProvider>
+            </OrganizationProvider>
+          </ThemeProvider>
         </ErrorBoundary>
       </body>
     </html>

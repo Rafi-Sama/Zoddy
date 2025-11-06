@@ -19,7 +19,6 @@ import {
   DialogDescription,
   DialogHeader,
   DialogTitle,
-  DialogTrigger,
 } from "@/components/ui/dialog"
 import {
   Plus,
@@ -27,8 +26,6 @@ import {
   Eye,
   Edit,
   CheckCircle,
-  Clock,
-  Truck,
   Package,
   DollarSign,
   Grid3X3,
@@ -36,13 +33,18 @@ import {
   Search,
   Calendar,
   Phone,
-  MapPin
+  MapPin,
+  AlertCircle,
+  Loader2
 } from "lucide-react"
 import { toast } from "sonner"
 import { DateRangePicker } from "@/components/ui/date-range-picker"
 import { DateRange } from "react-day-picker"
-import { isWithinInterval } from "date-fns"
-import { parse } from "date-fns"
+import { isWithinInterval, parseISO, format } from "date-fns"
+import { useData, useMutation } from "@/hooks/use-database-optimized"
+import { Order } from "@/types/database"
+import { getStatusColor, getStatusIcon, getPaymentStatusColor } from "@/lib/status-utils"
+import { Alert, AlertDescription } from "@/components/ui/alert"
 
 // Lazy load heavy modals for better initial page load
 const ImportOrdersModal = dynamic(() => import("@/components/orders/import-orders-modal").then(mod => ({ default: mod.ImportOrdersModal })), {
@@ -57,118 +59,21 @@ const EditOrderModal = dynamic(() => import("@/components/orders/edit-order-moda
   ssr: false,
 })
 
-// Helper functions moved outside component for reuse in modal
-const getStatusColor = (status: string) => {
-  switch (status) {
-    case "delivered":
-      return "bg-green-100 text-green-800"
-    case "shipped":
-      return "bg-blue-100 text-blue-800"
-    case "confirmed":
-      return "bg-yellow-100 text-yellow-800"
-    case "pending":
-      return "bg-gray-100 text-gray-800"
-    case "returned":
-      return "bg-red-100 text-red-800"
-    default:
-      return "bg-gray-100 text-gray-800"
+// Type for formatted order display
+interface FormattedOrder extends Order {
+  customer: {
+    name: string
+    phone: string
+    address: string
   }
+  date: string
+  amount: number
+  paymentStatus: string
+  delivery: string
 }
 
-const getPaymentStatusColor = (status: string) => {
-  switch (status) {
-    case "paid":
-      return "bg-green-100 text-green-800"
-    case "pending":
-      return "bg-orange-100 text-orange-800"
-    case "partial":
-      return "bg-yellow-100 text-yellow-800"
-    default:
-      return "bg-gray-100 text-gray-800"
-  }
-}
-
-const getStatusIcon = (status: string) => {
-  switch (status) {
-    case "delivered":
-      return <CheckCircle className="h-3.5 w-3.5" />
-    case "shipped":
-      return <Truck className="h-3.5 w-3.5" />
-    case "confirmed":
-      return <Package className="h-3.5 w-3.5" />
-    case "pending":
-      return <Clock className="h-3.5 w-3.5" />
-    default:
-      return <Clock className="h-3.5 w-3.5" />
-  }
-}
-
-const mockOrders = [
-  {
-    id: "#1234",
-    customer: { name: "Fatima Khan", phone: "+880 1712-345678", address: "Dhanmondi, Dhaka" },
-    date: "15-01-2024",
-    items: [
-      { name: "Cotton Kurti - Blue", quantity: 2, price: 1200 },
-      { name: "Silk Scarf", quantity: 1, price: 500 }
-    ],
-    amount: 2900,
-    status: "delivered",
-    paymentStatus: "paid",
-    delivery: "Standard"
-  },
-  {
-    id: "#1235",
-    customer: { name: "Rahman Ali", phone: "+880 1801-234567", address: "Gulshan, Dhaka" },
-    date: "14-01-2024",
-    items: [
-      { name: "Embroidered Shirt", quantity: 1, price: 1800 }
-    ],
-    amount: 1800,
-    status: "shipped",
-    paymentStatus: "paid",
-    delivery: "Express"
-  },
-  {
-    id: "#1236",
-    customer: { name: "Nusrat Jahan", phone: "+880 1915-876543", address: "Uttara, Dhaka" },
-    date: "13-01-2024",
-    items: [
-      { name: "Designer Saree", quantity: 1, price: 3500 },
-      { name: "Matching Blouse", quantity: 1, price: 800 }
-    ],
-    amount: 4300,
-    status: "confirmed",
-    paymentStatus: "pending",
-    delivery: "Standard"
-  },
-  {
-    id: "#1237",
-    customer: { name: "Sakib Ahmed", phone: "+880 1704-987654", address: "Banani, Dhaka" },
-    date: "12-01-2024",
-    items: [
-      { name: "Casual T-shirt", quantity: 3, price: 450 }
-    ],
-    amount: 1350,
-    status: "pending",
-    paymentStatus: "pending",
-    delivery: "Standard"
-  },
-  {
-    id: "#1238",
-    customer: { name: "Ayesha Rahman", phone: "+880 1812-654321", address: "Mohammadpur, Dhaka" },
-    date: "11-01-2024",
-    items: [
-      { name: "Winter Jacket", quantity: 1, price: 2500 }
-    ],
-    amount: 2500,
-    status: "returned",
-    paymentStatus: "paid",
-    delivery: "Express"
-  }
-]
-
-interface Order {
+// Type for editable order (used by EditOrderModal)
+interface EditableOrder {
   id: string
   customer: {
     name: string
@@ -177,49 +82,77 @@ interface Order {
   }
   date: string
   items: Array<{
+    id?: string
     name: string
     quantity: number
     price: number
   }>
   amount: number
-  status: string
-  paymentStatus: string
-  delivery: string
+  status: 'pending' | 'confirmed' | 'processing' | 'shipped' | 'delivered' | 'cancelled' | 'returned' | string
+  paymentStatus: 'pending' | 'paid' | 'partial' | 'refunded' | 'failed' | string
+  delivery: 'ecourier' | 'redx' | 'pathao' | 'steadfast' | 'paperfly' | 'sundarban' | string
+}
+
+// Helper function to format order for display
+const formatOrderForDisplay = (order: Order): FormattedOrder => {
+  return {
+    ...order,
+    customer: {
+      name: order.customer_name || 'Unknown Customer',
+      phone: order.customer_phone || '',
+      address: order.shipping_address || ''
+    },
+    date: order.created_at ? format(parseISO(order.created_at), 'dd-MM-yyyy') : '',
+    amount: order.total_amount,
+    paymentStatus: order.payment_status,
+    delivery: order.delivery_provider || 'Standard'
+  }
 }
 
 export default function OrdersPage() {
   const [viewMode, setViewMode] = useState<"grid" | "list">("list")
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null)
+  const [isDetailsDialogOpen, setIsDetailsDialogOpen] = useState(false)
   const [searchTerm, setSearchTerm] = useState("")
   const [statusFilter, setStatusFilter] = useState("all")
   const [paymentFilter, setPaymentFilter] = useState("all")
-  const [orders, setOrders] = useState<Order[]>(mockOrders)
-  const [isProcessing, setIsProcessing] = useState(false)
   const [dateRange, setDateRange] = useState<DateRange | undefined>(undefined)
   const [editingOrder, setEditingOrder] = useState<Order | null>(null)
   const [isEditModalOpen, setIsEditModalOpen] = useState(false)
+  const [isProcessing, setIsProcessing] = useState(false)
+
+  // Fetch orders from database (realtime disabled to reduce API requests)
+  // Realtime updates removed to prevent excessive HEAD/GET requests
+  // Data refreshes on manual refetch() calls instead
+  const { data: ordersData, loading, error, refetch } = useData<Order[]>({
+    table: 'orders',
+    select: 'id,order_number,customer_name,customer_phone,customer_email,customer_address,items,subtotal,discount,delivery_charge,total_amount,status,payment_status,payment_method,channel,created_at,updated_at',
+    orderBy: { column: 'created_at', ascending: false },
+    limit: 1000, // Fetch up to 1000 orders
+    realtime: false // Disabled to reduce 7k+ excessive API requests
+  })
+
+  // Mutation hook for order operations
+  const { update: updateOrder } = useMutation<Order>('orders')
+
+  // Use database data or empty array
+  const orders = useMemo(() => ordersData || [], [ordersData])
 
   // Handler functions for button actions
   const handleImportOrders = (importedOrders: Order[]) => {
-    // Add imported orders to the existing orders
-    const today = new Date()
-    const newOrders = importedOrders.map(order => ({
-      ...order,
-      id: order.id || `#${Math.floor(Math.random() * 10000)}`,
-      date: order.date || `${today.getDate().toString().padStart(2, '0')}-${(today.getMonth() + 1).toString().padStart(2, '0')}-${today.getFullYear()}`
-    }))
-
-    setOrders([...newOrders, ...orders])
+    // The ImportOrdersModal handles the order import
     toast.success("Orders imported successfully", {
       description: `${importedOrders.length} orders have been added`
     })
+    // Cache is automatically invalidated by mutation hook, no refetch needed
   }
 
-  const handleCreateOrder = (newOrder: Order) => {
-    setOrders([newOrder, ...orders])
+  const handleCreateOrder = async () => {
+    // New order will be handled by the modal component using the mutation hook
     toast.success("Order created successfully", {
-      description: `Order ${newOrder.id} has been created`
+      description: `Order has been created`
     })
+    // Cache is automatically invalidated by mutation hook, no refetch needed
   }
 
   const handleDateRangeChange = (range: DateRange | undefined) => {
@@ -231,52 +164,69 @@ export default function OrdersPage() {
     }
   }
 
-
   const handleEditOrder = (order: Order) => {
     setEditingOrder(order)
     setIsEditModalOpen(true)
   }
 
-  const handleSaveEdit = (updatedOrder: Order) => {
-    setOrders(prevOrders =>
-      prevOrders.map(order =>
-        order.id === updatedOrder.id ? updatedOrder : order
-      )
-    )
+  const handleSaveEdit = async (updatedOrder: Order | EditableOrder) => {
+    // Convert EditableOrder format to database Order format if needed
+    let orderToSave: Partial<Order>
 
-    // Update selected order if it's the one being edited
-    if (selectedOrder?.id === updatedOrder.id) {
-      setSelectedOrder(updatedOrder)
+    if ('customer' in updatedOrder && typeof updatedOrder.customer === 'object') {
+      // This is an EditableOrder, convert to database Order format
+      const editable = updatedOrder as EditableOrder
+      orderToSave = {
+        id: editable.id,
+        customer_name: editable.customer.name,
+        customer_phone: editable.customer.phone,
+        shipping_address: editable.customer.address,
+        items: editable.items?.map(item => ({
+          product_id: item.id,
+          product_name: item.name,
+          quantity: item.quantity,
+          price: item.price,
+          total: item.price * item.quantity
+        })) || [],
+        total_amount: editable.amount,
+        status: editable.status as Order['status'],
+        payment_status: editable.paymentStatus as Order['payment_status'],
+        delivery_provider: editable.delivery as Order['delivery_provider']
+      }
+    } else {
+      // Already in database Order format
+      orderToSave = updatedOrder as Order
     }
 
-    toast.success("Order updated successfully", {
-      description: `Order ${updatedOrder.id} has been updated`
-    })
+    const result = await updateOrder(updatedOrder.id, orderToSave)
+
+    if (result) {
+      // Update selected order if it's the one being edited
+      if (selectedOrder?.id === updatedOrder.id) {
+        setSelectedOrder(result)
+      }
+
+      setIsEditModalOpen(false)
+      setEditingOrder(null)
+      // Cache is automatically invalidated by mutation hook, no refetch needed
+    }
   }
 
   const handleMarkPaid = async (orderId: string) => {
     setIsProcessing(true)
     try {
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 1000))
+      const result = await updateOrder(orderId, { payment_status: 'paid' })
 
-      // Update order payment status
-      setOrders(prevOrders =>
-        prevOrders.map(order =>
-          order.id === orderId
-            ? { ...order, paymentStatus: "paid" }
-            : order
-        )
-      )
-
-      // Update selected order if it's the one being modified
-      if (selectedOrder?.id === orderId) {
-        setSelectedOrder(prev => prev ? { ...prev, paymentStatus: "paid" } : null)
+      if (result) {
+        // Update selected order if it's the one being modified
+        if (selectedOrder?.id === orderId) {
+          setSelectedOrder(result)
+        }
+        // Cache is automatically invalidated by mutation hook, no refetch needed
+        toast.success("Payment status updated", {
+          description: "Order marked as paid successfully"
+        })
       }
-
-      toast.success("Payment status updated", {
-        description: `Order ${orderId} has been marked as paid`
-      })
     } catch {
       toast.error("Failed to update payment status", {
         description: "Please try again later"
@@ -297,21 +247,21 @@ export default function OrdersPage() {
     return orders.filter(order => {
       // Search filter
       const matchesSearch = searchTerm === "" ||
-        order.id.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        order.customer.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        order.customer.phone.includes(searchTerm) ||
-        order.customer.address.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        order.items.some(item => item.name.toLowerCase().includes(searchTerm.toLowerCase()))
+        order.order_number?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        order.customer_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        order.customer_phone?.includes(searchTerm) ||
+        order.shipping_address?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        order.items?.some(item => item.product_name.toLowerCase().includes(searchTerm.toLowerCase()))
 
       // Status filter
       const matchesStatus = statusFilter === "all" || order.status === statusFilter
 
       // Payment filter
-      const matchesPayment = paymentFilter === "all" || order.paymentStatus === paymentFilter
+      const matchesPayment = paymentFilter === "all" || order.payment_status === paymentFilter
 
       // Date range filter
       const matchesDateRange = !dateRange?.from || !dateRange?.to ||
-        (order.date && isWithinInterval(parse(order.date, "dd-MM-yyyy", new Date()), {
+        (order.created_at && isWithinInterval(parseISO(order.created_at), {
           start: dateRange.from,
           end: dateRange.to
         }))
@@ -451,8 +401,38 @@ export default function OrdersPage() {
         </Card>
       )}
 
+      {/* Loading State */}
+      {loading && (
+        <Card>
+          <CardContent className="py-8">
+            <div className="flex flex-col items-center justify-center space-y-4">
+              <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+              <p className="text-sm text-muted-foreground">Loading orders...</p>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Error State */}
+      {error && !loading && (
+        <Alert variant="destructive">
+          <AlertCircle className="h-4 w-4" />
+          <AlertDescription>
+            Failed to load orders: {error.message}
+            <Button
+              variant="outline"
+              size="sm"
+              className="ml-4"
+              onClick={() => refetch()}
+            >
+              Retry
+            </Button>
+          </AlertDescription>
+        </Alert>
+      )}
+
       {/* Orders List/Grid */}
-      {viewMode === "list" ? (
+      {!loading && !error && viewMode === "list" ? (
         <Card>
           <CardHeader>
             <CardTitle className="text-base sm:text-lg">Orders List</CardTitle>
@@ -491,52 +471,44 @@ export default function OrdersPage() {
                           </td>
                         </tr>
                       ) : (
-                        filteredOrders.map((order) => (
-                        <tr key={order.id} className="hover:bg-muted/50">
-                          <td className="py-3 px-3 font-medium text-xs whitespace-nowrap">{order.id}</td>
-                          <td className="py-3 px-3">
-                            <div>
-                              <div className="font-medium text-xs">{order.customer.name}</div>
-                              <div className="text-[10px] text-muted-foreground truncate max-w-[120px]">{order.customer.phone}</div>
-                            </div>
-                          </td>
-                          <td className="py-3 px-3 text-xs hidden sm:table-cell whitespace-nowrap">{order.date}</td>
-                          <td className="py-3 px-3 text-xs hidden md:table-cell">{order.items.length} items</td>
-                          <td className="py-3 px-3 font-medium text-xs whitespace-nowrap">৳{order.amount}</td>
-                          <td className="py-3 px-3">
-                            <Badge className={getStatusColor(order.status) + " text-[9px] px-2 py-1 whitespace-nowrap"}>
-                              {getStatusIcon(order.status)}
-                              <span className="ml-1 capitalize hidden sm:inline">{order.status}</span>
-                            </Badge>
-                          </td>
-                          <td className="py-3 px-3 hidden lg:table-cell">
-                            <Badge className={getPaymentStatusColor(order.paymentStatus) + " text-[9px] px-2 py-1 capitalize"}>
-                              {order.paymentStatus}
-                            </Badge>
-                          </td>
+                        filteredOrders.map((order) => {
+                          const displayOrder = formatOrderForDisplay(order)
+                          return (
+                          <tr key={order.id} className="hover:bg-muted/50">
+                            <td className="py-3 px-3 font-medium text-xs whitespace-nowrap">{order.order_number || order.id.slice(0, 8)}</td>
+                            <td className="py-3 px-3">
+                              <div>
+                                <div className="font-medium text-xs">{displayOrder.customer.name}</div>
+                                <div className="text-[10px] text-muted-foreground truncate max-w-[120px]">{displayOrder.customer.phone}</div>
+                              </div>
+                            </td>
+                            <td className="py-3 px-3 text-xs hidden sm:table-cell whitespace-nowrap">{displayOrder.date}</td>
+                            <td className="py-3 px-3 text-xs hidden md:table-cell">{order.items?.length || 0} items</td>
+                            <td className="py-3 px-3 font-medium text-xs whitespace-nowrap">৳{order.total_amount || 0}</td>
+                            <td className="py-3 px-3">
+                              <Badge className={getStatusColor(order.status) + " text-[9px] px-2 py-1 whitespace-nowrap"}>
+                                {getStatusIcon(order.status)}
+                                <span className="ml-1 capitalize hidden sm:inline">{order.status}</span>
+                              </Badge>
+                            </td>
+                            <td className="py-3 px-3 hidden lg:table-cell">
+                              <Badge className={getPaymentStatusColor(order.payment_status) + " text-[9px] px-2 py-1 capitalize"}>
+                                {order.payment_status}
+                              </Badge>
+                            </td>
                           <td className="py-3 px-3">
                             <div className="flex gap-1">
-                              <Dialog>
-                                <DialogTrigger asChild>
-                                  <Button
-                                    variant="ghost"
-                                    size="sm"
-                                    onClick={() => setSelectedOrder(order)}
-                                    className="h-9 w-9 p-0"
-                                  >
-                                    <Eye className="h-4 w-4" />
-                                  </Button>
-                                </DialogTrigger>
-                                <DialogContent className="sm:max-w-2xl">
-                                  <OrderDetailsModal
-                                    order={selectedOrder}
-                                    onEditOrder={handleEditOrder}
-                                    onPrintReceipt={handlePrintReceipt}
-                                    onMarkPaid={handleMarkPaid}
-                                    isProcessing={isProcessing}
-                                  />
-                                </DialogContent>
-                              </Dialog>
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => {
+                                  setSelectedOrder(order)
+                                  setIsDetailsDialogOpen(true)
+                                }}
+                                className="h-9 w-9 p-0"
+                              >
+                                <Eye className="h-4 w-4" />
+                              </Button>
                               <Button
                                 variant="ghost"
                                 size="sm"
@@ -545,13 +517,12 @@ export default function OrdersPage() {
                               >
                                 <Edit className="h-4 w-4" />
                               </Button>
-                              {order.paymentStatus === "pending" && (
+                              {order.payment_status === "pending" && (
                                 <Button
                                   variant="ghost"
                                   size="sm"
                                   className="h-9 w-9 p-0 hidden md:inline-flex"
                                   onClick={() => handleMarkPaid(order.id)}
-                                  disabled={isProcessing}
                                 >
                                   <CheckCircle className="h-4 w-4" />
                                 </Button>
@@ -559,7 +530,8 @@ export default function OrdersPage() {
                             </div>
                           </td>
                         </tr>
-                      )))}
+                        )})
+                      )}
                     </tbody>
                   </table>
                 </div>
@@ -567,7 +539,7 @@ export default function OrdersPage() {
             </div>
           </CardContent>
         </Card>
-      ) : (
+      ) : !loading && !error ? (
         filteredOrders.length === 0 ? (
           <Card>
             <CardContent className="flex flex-col items-center justify-center py-16">
@@ -589,63 +561,55 @@ export default function OrdersPage() {
           </Card>
         ) : (
         <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-          {filteredOrders.map((order) => (
+          {filteredOrders.map((order) => {
+            const displayOrder = formatOrderForDisplay(order)
+            return (
             <Card key={order.id} className="hover:shadow-md transition-shadow">
               <CardHeader className="pb-3">
                 <div className="flex items-center justify-between gap-2">
-                  <CardTitle className="text-sm truncate">{order.id}</CardTitle>
+                  <CardTitle className="text-sm truncate">{order.order_number || order.id.slice(0, 8)}</CardTitle>
                   <Badge className={getStatusColor(order.status) + " text-[9px] px-2 py-1 shrink-0"}>
                     {getStatusIcon(order.status)}
                     <span className="ml-1 capitalize">{order.status}</span>
                   </Badge>
                 </div>
-                <CardDescription className="text-xs truncate">{order.customer.name}</CardDescription>
+                <CardDescription className="text-xs truncate">{displayOrder.customer.name}</CardDescription>
               </CardHeader>
               <CardContent className="space-y-2">
                 <div className="flex items-center gap-2 text-xs text-muted-foreground">
                   <Phone className="h-4 w-4 shrink-0" />
-                  <span className="truncate">{order.customer.phone}</span>
+                  <span className="truncate">{displayOrder.customer.phone}</span>
                 </div>
                 <div className="flex items-center gap-2 text-xs text-muted-foreground">
                   <Calendar className="h-4 w-4 shrink-0" />
-                  {order.date}
+                  {displayOrder.date}
                 </div>
                 <div className="flex items-center gap-2 text-xs text-muted-foreground">
                   <Package className="h-4 w-4 shrink-0" />
-                  {order.items.length} items
+                  {order.items?.length || 0} items
                 </div>
                 <div className="flex items-center justify-between pt-1">
                   <div className="flex items-center gap-2">
                     <DollarSign className="h-4 w-4 shrink-0" />
-                    <span className="font-bold text-sm">৳{order.amount}</span>
+                    <span className="font-bold text-sm">৳{order.total_amount || 0}</span>
                   </div>
-                  <Badge className={getPaymentStatusColor(order.paymentStatus) + " text-[9px] px-2 py-1 capitalize"}>
-                    {order.paymentStatus}
+                  <Badge className={getPaymentStatusColor(order.payment_status) + " text-[9px] px-2 py-1 capitalize"}>
+                    {order.payment_status}
                   </Badge>
                 </div>
                 <div className="flex gap-2 pt-2">
-                  <Dialog>
-                    <DialogTrigger asChild>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        className="flex-1 h-10 text-sm"
-                        onClick={() => setSelectedOrder(order)}
-                      >
-                        <Eye className="h-4 w-4 sm:mr-2" />
-                        <span className="hidden sm:inline">View</span>
-                      </Button>
-                    </DialogTrigger>
-                    <DialogContent className="sm:max-w-2xl">
-                      <OrderDetailsModal
-                        order={selectedOrder}
-                        onEditOrder={handleEditOrder}
-                        onPrintReceipt={handlePrintReceipt}
-                        onMarkPaid={handleMarkPaid}
-                        isProcessing={isProcessing}
-                      />
-                    </DialogContent>
-                  </Dialog>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="flex-1 h-10 text-sm"
+                    onClick={() => {
+                      setSelectedOrder(order)
+                      setIsDetailsDialogOpen(true)
+                    }}
+                  >
+                    <Eye className="h-4 w-4 sm:mr-2" />
+                    <span className="hidden sm:inline">View</span>
+                  </Button>
                   <Button
                     variant="outline"
                     size="sm"
@@ -658,14 +622,15 @@ export default function OrdersPage() {
                 </div>
               </CardContent>
             </Card>
-          ))}
+            )})}
         </div>
-      ))}
+      )) : null}
 
       {/* Edit Order Modal */}
       {editingOrder && (
         <EditOrderModal
-          order={editingOrder}
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          order={editingOrder as any}
           isOpen={isEditModalOpen}
           onClose={() => {
             setIsEditModalOpen(false)
@@ -674,6 +639,19 @@ export default function OrdersPage() {
           onSave={handleSaveEdit}
         />
       )}
+
+      {/* Shared Order Details Dialog - Single instance for all orders */}
+      <Dialog open={isDetailsDialogOpen} onOpenChange={setIsDetailsDialogOpen}>
+        <DialogContent className="sm:max-w-2xl">
+          <OrderDetailsModal
+            order={selectedOrder}
+            onEditOrder={handleEditOrder}
+            onPrintReceipt={handlePrintReceipt}
+            onMarkPaid={handleMarkPaid}
+            isProcessing={isProcessing}
+          />
+        </DialogContent>
+      </Dialog>
     </MainLayout>
   )
 }
@@ -711,15 +689,15 @@ function OrderDetailsModal({
             <CardContent className="space-y-1.5">
               <div className="flex items-center gap-2">
                 <span className="font-medium text-xs">Name:</span>
-                <span className="text-xs">{order.customer.name}</span>
+                <span className="text-xs">{order.customer_name}</span>
               </div>
               <div className="flex items-center gap-2">
                 <Phone className="h-3.5 w-3.5" />
-                <span className="text-xs">{order.customer.phone}</span>
+                <span className="text-xs">{order.customer_phone}</span>
               </div>
               <div className="flex items-center gap-2">
                 <MapPin className="h-3.5 w-3.5" />
-                <span className="text-xs">{order.customer.address}</span>
+                <span className="text-xs">{order.shipping_address}</span>
               </div>
             </CardContent>
           </Card>
@@ -737,13 +715,13 @@ function OrderDetailsModal({
               </div>
               <div className="flex items-center justify-between">
                 <span className="text-xs">Payment:</span>
-                <Badge className={getPaymentStatusColor(order.paymentStatus) + " text-[9px] px-1.5 py-0"}>
-                  {order.paymentStatus}
+                <Badge className={getPaymentStatusColor(order.payment_status) + " text-[9px] px-1.5 py-0"}>
+                  {order.payment_status}
                 </Badge>
               </div>
               <div className="flex items-center justify-between">
                 <span className="text-xs">Delivery:</span>
-                <span className="text-xs">{order.delivery}</span>
+                <span className="text-xs">{order.delivery_provider}</span>
               </div>
             </CardContent>
           </Card>
@@ -758,7 +736,7 @@ function OrderDetailsModal({
               {order.items.map((item, index: number) => (
                 <div key={index} className="flex items-center justify-between py-1.5 border-b last:border-b-0">
                   <div className="flex-1">
-                    <div className="font-medium text-xs">{item.name}</div>
+                    <div className="font-medium text-xs">{item.product_name}</div>
                     <div className="text-[10px] text-muted-foreground">Qty: {item.quantity}</div>
                   </div>
                   <div className="text-right">
@@ -772,7 +750,7 @@ function OrderDetailsModal({
               <div className="pt-2 border-t">
                 <div className="flex justify-between font-bold text-sm">
                   <span>Total Amount:</span>
-                  <span>৳{order.amount}</span>
+                  <span>৳{order.total_amount}</span>
                 </div>
               </div>
             </div>
@@ -796,7 +774,7 @@ function OrderDetailsModal({
             <Download className="h-3.5 w-3.5 mr-2" />
             Print Receipt
           </Button>
-          {order.paymentStatus === "pending" && (
+          {order.payment_status === "pending" && (
             <Button
               className="flex-1 bg-accent hover:bg-accent/90 h-8 text-xs px-3"
               onClick={() => onMarkPaid(order.id)}

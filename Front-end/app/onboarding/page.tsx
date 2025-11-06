@@ -1,7 +1,6 @@
 "use client"
 
 import { useState } from "react"
-import { useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
@@ -10,6 +9,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Badge } from "@/components/ui/badge"
 import { toast } from "sonner"
 import confetti from 'canvas-confetti'
+import { createClient } from "@/lib/supabase/client"
 import {
   Building2,
   CheckCircle,
@@ -24,13 +24,14 @@ import {
   UserPlus,
   Mail
 } from "lucide-react"
-import { useOrganizationWithFallback } from "@/hooks/use-organization"
 
 interface OnboardingData {
+  // Personal Information
+  firstName: string
+  lastName: string
+
   // Business Information
   businessName: string
-  businessType: string
-  industry: string
   phone: string
 
   // Integrations (optional)
@@ -47,16 +48,14 @@ interface OnboardingData {
 }
 
 export default function OnboardingPage() {
-  const router = useRouter()
-  const { organizationId } = useOrganizationWithFallback()
   const [currentStep, setCurrentStep] = useState(1)
   const [isLoading, setIsLoading] = useState(false)
   const totalSteps = 3
 
   const [formData, setFormData] = useState<OnboardingData>({
+    firstName: "",
+    lastName: "",
     businessName: "",
-    businessType: "",
-    industry: "",
     phone: "",
     integrations: {
       delivery: [],
@@ -139,9 +138,9 @@ export default function OnboardingPage() {
   }
 
   const validateBusinessInfo = () => {
-    return formData.businessName &&
-           formData.businessType &&
-           formData.industry &&
+    return formData.firstName &&
+           formData.lastName &&
+           formData.businessName &&
            formData.phone
   }
 
@@ -194,11 +193,6 @@ export default function OnboardingPage() {
   }
 
   const handleSubmit = async () => {
-    if (!organizationId) {
-      toast.error("No organization found. Please try logging in again.")
-      return
-    }
-
     if (!validateBusinessInfo()) {
       toast.error("Please complete the business information first")
       setCurrentStep(1)
@@ -208,25 +202,37 @@ export default function OnboardingPage() {
     setIsLoading(true)
 
     try {
-      const response = await fetch('/api/onboarding', {
+      // Get the current session token
+      const supabase = createClient()
+      const { data: { session }, error: sessionError } = await supabase.auth.getSession()
+
+      if (sessionError || !session) {
+        toast.error("You must be logged in to complete onboarding")
+        window.location.href = '/auth'
+        return
+      }
+
+      const backendUrl = process.env.NEXT_PUBLIC_AI_BACKEND_URL || 'http://localhost:5000'
+
+      const response = await fetch(`${backendUrl}/api/v1/onboarding`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
+          'Authorization': `Bearer ${session.access_token}`
         },
-        body: JSON.stringify({
-          organizationId,
-          ...formData
-        })
+        body: JSON.stringify(formData)
       })
 
-      if (response.ok) {
+      const data = await response.json()
+
+      if (response.ok && data.success) {
         celebrate()
         toast.success("Welcome to Zoddy! Your business is all set up.")
-        setTimeout(() => {
-          router.push('/dashboard')
-        }, 2000)
+
+        // Refresh the organization context
+        window.location.href = '/dashboard'
       } else {
-        throw new Error('Failed to save onboarding data')
+        throw new Error(data.message || 'Failed to save onboarding data')
       }
     } catch (error) {
       console.error('Error during onboarding:', error)
@@ -245,11 +251,37 @@ export default function OnboardingPage() {
               <div className="inline-flex p-3 bg-primary/10 rounded-full mb-4">
                 <Building2 className="h-8 w-8 text-primary" />
               </div>
-              <h2 className="text-xl font-semibold mb-2">Tell us about your business</h2>
-              <p className="text-sm text-muted-foreground">Just 4 quick fields to get started</p>
+              <h2 className="text-xl font-semibold mb-2">Tell us about yourself and your business</h2>
+              <p className="text-sm text-muted-foreground">Just a few quick fields to get started</p>
             </div>
 
             <div className="space-y-4">
+              <div className="grid grid-cols-2 gap-3">
+                <div className="space-y-2">
+                  <Label htmlFor="first-name" className="text-sm">
+                    First Name <span className="text-destructive">*</span>
+                  </Label>
+                  <Input
+                    id="first-name"
+                    placeholder="e.g., Ahmed"
+                    value={formData.firstName}
+                    onChange={(e) => handleInputChange('firstName', e.target.value)}
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="last-name" className="text-sm">
+                    Last Name <span className="text-destructive">*</span>
+                  </Label>
+                  <Input
+                    id="last-name"
+                    placeholder="e.g., Rahman"
+                    value={formData.lastName}
+                    onChange={(e) => handleInputChange('lastName', e.target.value)}
+                  />
+                </div>
+              </div>
+
               <div className="space-y-2">
                 <Label htmlFor="business-name" className="text-sm">
                   Business Name <span className="text-destructive">*</span>
@@ -260,56 +292,6 @@ export default function OnboardingPage() {
                   value={formData.businessName}
                   onChange={(e) => handleInputChange('businessName', e.target.value)}
                 />
-              </div>
-
-              <div className="grid grid-cols-2 gap-3">
-                <div className="space-y-2">
-                  <Label htmlFor="business-type" className="text-sm">
-                    Business Type <span className="text-destructive">*</span>
-                  </Label>
-                  <Select
-                    value={formData.businessType}
-                    onValueChange={(value) => handleInputChange('businessType', value)}
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select type" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="retail">Retail Store</SelectItem>
-                      <SelectItem value="wholesale">Wholesale</SelectItem>
-                      <SelectItem value="ecommerce">E-commerce Only</SelectItem>
-                      <SelectItem value="hybrid">Physical + Online</SelectItem>
-                      <SelectItem value="service">Service Business</SelectItem>
-                      <SelectItem value="manufacturing">Manufacturing</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="industry" className="text-sm">
-                    Industry <span className="text-destructive">*</span>
-                  </Label>
-                  <Select
-                    value={formData.industry}
-                    onValueChange={(value) => handleInputChange('industry', value)}
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select industry" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="fashion">Fashion & Clothing</SelectItem>
-                      <SelectItem value="electronics">Electronics</SelectItem>
-                      <SelectItem value="food">Food & Beverages</SelectItem>
-                      <SelectItem value="beauty">Beauty & Cosmetics</SelectItem>
-                      <SelectItem value="home">Home & Furniture</SelectItem>
-                      <SelectItem value="health">Health & Pharmacy</SelectItem>
-                      <SelectItem value="sports">Sports & Fitness</SelectItem>
-                      <SelectItem value="books">Books & Stationery</SelectItem>
-                      <SelectItem value="jewelry">Jewelry & Accessories</SelectItem>
-                      <SelectItem value="other">Other</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
               </div>
 
               <div className="space-y-2">

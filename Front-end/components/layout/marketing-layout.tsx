@@ -39,10 +39,10 @@ export function MarketingLayout({ children }: MarketingLayoutProps) {
           {/* Desktop Actions */}
           <div className="hidden md:flex items-center space-x-2 lg:space-x-4">
             <ThemeToggle />
-            <Link href="/login">
+            <Link href="/auth">
               <Button variant="ghost" size="sm">Sign In</Button>
             </Link>
-            <Link href="/login">
+            <Link href="/auth">
               <Button className="bg-accent hover:bg-accent/90" size="sm">Get Started Free</Button>
             </Link>
           </div>
@@ -77,10 +77,10 @@ export function MarketingLayout({ children }: MarketingLayoutProps) {
                 Benefits
               </Link>
               <div className="flex flex-col space-y-2 pt-4 border-t">
-                <Link href="/login">
+                <Link href="/auth">
                   <Button variant="outline" className="w-full h-11">Sign In</Button>
                 </Link>
-                <Link href="/login">
+                <Link href="/auth">
                   <Button className="w-full bg-accent hover:bg-accent/90 h-11">Get Started Free</Button>
                 </Link>
               </div>
@@ -118,7 +118,7 @@ export function MarketingLayout({ children }: MarketingLayoutProps) {
               <ul className="space-y-2 text-sm text-muted-foreground">
                 <li><Link href="#features" className="hover:text-foreground transition-colors">Features</Link></li>
                 <li><Link href="/pricing" className="hover:text-foreground transition-colors">Pricing</Link></li>
-                <li><Link href="/login" className="hover:text-foreground transition-colors">Free Trial</Link></li>
+                <li><Link href="/auth" className="hover:text-foreground transition-colors">Free Trial</Link></li>
                 <li><Link href="#" className="hover:text-foreground transition-colors">API</Link></li>
               </ul>
             </div>

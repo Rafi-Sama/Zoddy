@@ -1,21 +1,11 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { createClient } from '@workos-inc/authkit-js'
-
-// Extended user type to include possible organization fields
-interface UserWithOrganization {
-  organizationId?: string
-  organization_id?: string
-  org_id?: string
-  [key: string]: unknown
-}
-
-const workosClientId = process.env.NEXT_PUBLIC_WORKOS_CLIENT_ID || process.env.WORKOS_CLIENT_ID!
+import { createClient } from '@/lib/supabase/client'
 
 /**
  * Hook to get the current organization ID with a fallback mechanism
- * Returns the organization ID from WorkOS user data or a default value
+ * Returns the organization ID from Supabase user metadata or a default value
  */
 export function useOrganizationWithFallback() {
   const [organizationId, setOrganizationId] = useState<string | null>(null)
@@ -25,32 +15,58 @@ export function useOrganizationWithFallback() {
   useEffect(() => {
     async function fetchOrganization() {
       try {
-        // Create the AuthKit client
-        const authkit = await createClient(workosClientId)
+        // Create the Supabase client
+        const supabase = createClient()
 
         // Get the current user
-        const user = await authkit.getUser()
+        const { data: { user }, error: userError } = await supabase.auth.getUser()
+
+        if (userError) {
+          throw userError
+        }
 
         if (user) {
-          // Check for organization ID in the user object
-          // WorkOS typically provides this in the user metadata or as part of the session
-          const userWithOrg = user as unknown as UserWithOrganization
-          const orgId = userWithOrg.organizationId ||
-                       userWithOrg.organization_id ||
-                       userWithOrg.org_id ||
-                       'default-org' // fallback organization ID
+          // Try to get organization from user profile in database
+          const { data: profile, error: profileError } = await supabase
+            .from('profiles')
+            .select('organization_id')
+            .eq('id', user.id)
+            .single()
 
-          setOrganizationId(orgId)
+          if (profileError && profileError.code !== 'PGRST116') {
+            console.warn('Error fetching user profile:', profileError)
+          }
+
+          // Check for organization ID in the profile or metadata
+          const orgId = profile?.organization_id ||
+                       user.user_metadata?.organization_id ||
+                       user.user_metadata?.org_id
+
+          // Only use fallback in development mode
+          if (!orgId && process.env.NODE_ENV === 'development') {
+            console.warn('No organization ID found, using development fallback')
+            setOrganizationId('default-org')
+          } else if (orgId) {
+            setOrganizationId(orgId)
+          } else {
+            throw new Error('No organization ID found for user')
+          }
         } else {
-          // If no user, use a default organization ID
-          // This might happen during development or for guest users
-          setOrganizationId('default-org')
+          // If no user is logged in
+          if (process.env.NODE_ENV === 'development') {
+            console.warn('No user found, using development fallback')
+            setOrganizationId('default-org')
+          } else {
+            throw new Error('User not authenticated')
+          }
         }
       } catch (err) {
         console.error('Error fetching organization:', err)
         setError(err as Error)
-        // Set a default organization ID even on error
-        setOrganizationId('default-org')
+        // Only set default organization ID in development
+        if (process.env.NODE_ENV === 'development') {
+          setOrganizationId('default-org')
+        }
       } finally {
         setIsLoading(false)
       }

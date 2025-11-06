@@ -1,17 +1,20 @@
-import { authkitMiddleware } from '@workos-inc/authkit-nextjs';
+import { type NextRequest } from 'next/server'
+import { updateSession } from '@/lib/supabase/middleware'
 
-// In middleware auth mode, each page is protected by default.
-// Exceptions are configured via the `unauthenticatedPaths` option.
-export default authkitMiddleware({
-  middlewareAuth: {
-    enabled: true,
-    unauthenticatedPaths: ['/', '/benefits', '/pricing', '/contact'],
-  },
-});
+export async function middleware(request: NextRequest) {
+  return await updateSession(request)
+}
 
-// Match all routes except static files, images, and API routes
 export const config = {
   matcher: [
+    /*
+     * Match all request paths except:
+     * - _next/static (static files)
+     * - _next/image (image optimization files)
+     * - favicon.ico (favicon file)
+     * - images - .svg, .png, .jpg, .jpeg, .gif, .webp
+     * Feel free to modify this pattern to fit your needs.
+     */
     '/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)',
-  ]
-};
+  ],
+}

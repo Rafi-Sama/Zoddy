@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from 'react'
+import React, { useState } from 'react'
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -35,7 +35,7 @@ const initialCustomerState: CustomerFormData = {
   notes: ""
 }
 
-export function AddCustomerModal({ open, onOpenChange, onAdd }: AddCustomerModalProps) {
+export const AddCustomerModal = React.memo(function AddCustomerModal({ open, onOpenChange, onAdd }: AddCustomerModalProps) {
   const [customer, setCustomer] = useState<CustomerFormData>(initialCustomerState)
 
   const handleSubmit = () => {
@@ -182,4 +182,4 @@ export function AddCustomerModal({ open, onOpenChange, onAdd }: AddCustomerModal
       </DialogContent>
     </Dialog>
   )
-}
+})

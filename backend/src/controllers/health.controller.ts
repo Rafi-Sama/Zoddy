@@ -33,7 +33,7 @@ export class HealthController {
 
     try {
       const dbStart = Date.now();
-      const { error } = await supabaseAdmin.from('users').select('count').limit(1).single();
+      const { error } = await supabaseAdmin.from('profiles').select('count').limit(1).single();
       databaseLatency = Date.now() - dbStart;
 
       if (!error || error.code === 'PGRST116') {
@@ -55,8 +55,8 @@ export class HealthController {
           status: databaseStatus,
           latency: `${databaseLatency}ms`,
         },
-        workos: {
-          status: process.env.WORKOS_API_KEY ? 'configured' : 'not_configured',
+        supabase_auth: {
+          status: process.env.SUPABASE_URL && process.env.SUPABASE_SERVICE_ROLE_KEY ? 'configured' : 'not_configured',
         },
         gemini: {
           status: process.env.GEMINI_API_KEY && process.env.ENABLE_AI_PROCESSING === 'true'
@@ -108,7 +108,7 @@ export class HealthController {
   static async readiness(_req: Request, res: Response) {
     try {
       // Check database connectivity
-      const { error } = await supabaseAdmin.from('users').select('count').limit(1).single();
+      const { error } = await supabaseAdmin.from('profiles').select('count').limit(1).single();
 
       if (error && error.code !== 'PGRST116') {
         throw new Error('Database not ready');
@@ -118,8 +118,6 @@ export class HealthController {
       const requiredEnvVars = [
         'SUPABASE_URL',
         'SUPABASE_SERVICE_ROLE_KEY',
-        'JWT_SECRET',
-        'WORKOS_API_KEY',
       ];
 
       const missingVars = requiredEnvVars.filter((v) => !process.env[v]);

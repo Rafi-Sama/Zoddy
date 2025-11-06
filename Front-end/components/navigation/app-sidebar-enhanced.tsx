@@ -9,7 +9,6 @@ import {
   ShoppingCart,
   Wallet,
   Megaphone,
-  TrendingUp,
   User2,
   Users,
   UsersRound,
@@ -20,6 +19,7 @@ import {
   GripVertical,
   ArchiveRestore,
 } from "lucide-react"
+import { OrganizationSwitcher } from "@/components/organization-switcher"
 import {
   Sidebar,
   SidebarContent,
@@ -378,14 +378,8 @@ export function AppSidebarEnhanced() {
     >
       <Sidebar collapsible="icon">
         <SidebarHeader>
-          <div className="flex items-center gap-1.5 md:gap-2 py-1.5 group-data-[collapsible=icon]:justify-center group-data-[collapsible=icon]:px-0">
-            <div className="flex h-6 w-6 items-center justify-center rounded-lg bg-accent text-accent-foreground flex-shrink-0 group-data-[collapsible=icon]:mx-auto">
-              <TrendingUp className="h-3.5 w-3.5" />
-            </div>
-            <div className="grid flex-1 text-left text-xs leading-tight min-w-0 group-data-[collapsible=icon]:hidden">
-              <span className="truncate font-bold font-display">Zoddy</span>
-              <span className="truncate text-[10px] text-muted-foreground">Business Tracker</span>
-            </div>
+          <div className="flex flex-col gap-2 px-2 py-1.5">
+            <OrganizationSwitcher />
           </div>
         </SidebarHeader>
         <SidebarContent>

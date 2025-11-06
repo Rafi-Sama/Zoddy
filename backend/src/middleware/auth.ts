@@ -1,21 +1,29 @@
 import { Request, Response, NextFunction } from 'express';
-import jwt from 'jsonwebtoken';
-import { WorkOS } from '@workos-inc/node';
-import { JWTPayload, User } from '../types';
-import { UserModel } from '../models/User';
+import { createClient } from '@supabase/supabase-js';
+import { User } from '../types';
 import logger from '../utils/logger';
 import { ApiError } from './errorHandler';
 
-if (!process.env.WORKOS_API_KEY) {
-  logger.error('WORKOS_API_KEY is not configured');
+// Ensure Supabase environment variables are configured
+if (!process.env.SUPABASE_URL) {
+  logger.error('SUPABASE_URL is not configured');
 }
 
-if (!process.env.JWT_SECRET || process.env.JWT_SECRET.length < 32) {
-  logger.warn('JWT_SECRET is not configured or too short. Using default (INSECURE!)');
+if (!process.env.SUPABASE_SERVICE_ROLE_KEY) {
+  logger.error('SUPABASE_SERVICE_ROLE_KEY is not configured');
 }
 
-const workos = new WorkOS(process.env.WORKOS_API_KEY);
-const JWT_SECRET = process.env.JWT_SECRET || 'your-very-long-secret-key-minimum-32-characters-required';
+// Initialize Supabase client with service role for backend operations
+const supabase = createClient(
+  process.env.SUPABASE_URL || '',
+  process.env.SUPABASE_SERVICE_ROLE_KEY || '',
+  {
+    auth: {
+      autoRefreshToken: false,
+      persistSession: false,
+    },
+  }
+);
 
 // Extend Express Request type
 declare global {
@@ -29,7 +37,7 @@ declare global {
 }
 
 /**
- * Verify JWT token and attach user to request
+ * Verify Supabase JWT token and attach user to request
  */
 export const authenticate = async (
   req: Request,
@@ -49,126 +57,166 @@ export const authenticate = async (
       throw new ApiError('Invalid token format', 401);
     }
 
-    // Verify token with issuer and audience
-    const decoded = jwt.verify(token, JWT_SECRET, {
-      issuer: 'zoddy-api',
-      audience: 'zoddy-app',
-    }) as JWTPayload;
+    // Verify the JWT token with Supabase
+    const { data: { user }, error } = await supabase.auth.getUser(token);
 
-    // Get user from database
-    const user = await UserModel.findById(decoded.userId);
-    if (!user) {
-      throw new ApiError('User not found', 404);
+    if (error || !user) {
+      logger.error('Token verification failed:', error);
+      throw new ApiError('Invalid or expired token', 401);
+    }
+
+    // Get additional user profile data
+    const { data: profile, error: profileError } = await supabase
+      .from('profiles')
+      .select('*')
+      .eq('id', user.id)
+      .single();
+
+    if (profileError && profileError.code !== 'PGRST116') {
+      logger.warn(`Failed to fetch user profile for ${user.id}:`, profileError);
+    }
+
+    // Create user object with Supabase auth data and profile
+    const userData: User = {
+      id: user.id,
+      email: user.email || '',
+      email_verified: user.email_confirmed_at ? true : false,
+      created_at: user.created_at || new Date().toISOString(),
+      updated_at: profile?.updated_at || new Date().toISOString(),
+      first_name: profile?.first_name || user.user_metadata?.first_name,
+      last_name: profile?.last_name || user.user_metadata?.last_name,
+      profile_picture_url: profile?.profile_picture_url || user.user_metadata?.avatar_url,
+      organization_id: profile?.organization_id || user.user_metadata?.organization_id,
+      phone: user.phone || profile?.phone,
+      role: profile?.role || user.user_metadata?.role || 'member',
+    };
+
+    // If user profile doesn't exist in database, create it
+    if (!profile) {
+      const { error: insertError } = await supabase
+        .from('profiles')
+        .insert({
+          id: user.id,
+          first_name: user.user_metadata?.first_name,
+          last_name: user.user_metadata?.last_name,
+          profile_picture_url: user.user_metadata?.avatar_url,
+          phone: user.phone,
+          created_at: user.created_at,
+          updated_at: new Date().toISOString(),
+        });
+
+      if (insertError) {
+        logger.warn(`Failed to create user profile for ${user.id}:`, insertError);
+      } else {
+        logger.info(`User profile created for ${user.email} (${user.id})`);
+      }
     }
 
     // Attach user to request
-    req.user = user;
-    req.userId = user.id;
-    req.organizationId = user.organization_id;
+    req.user = userData;
+    req.userId = userData.id;
+    req.organizationId = userData.organization_id;
 
     next();
   } catch (error) {
-    if (error instanceof jwt.JsonWebTokenError) {
-      return next(new ApiError('Invalid token', 401));
+    if (error instanceof ApiError) {
+      next(error);
+    } else {
+      logger.error('Authentication error:', error);
+      next(new ApiError('Authentication failed', 401));
     }
-    if (error instanceof jwt.TokenExpiredError) {
-      return next(new ApiError('Token expired', 401));
-    }
-    next(error);
   }
 };
 
 /**
- * Verify WorkOS session and create JWT
+ * Verify Supabase session for auth endpoints
  */
-export const verifyWorkOSSession = async (code: string): Promise<{ token: string; user: User }> => {
+export const verifySupabaseSession = async (
+  accessToken: string,
+  refreshToken?: string
+): Promise<{ user: User }> => {
   try {
-    if (!process.env.WORKOS_CLIENT_ID) {
-      throw new ApiError('WorkOS client ID not configured', 500);
-    }
+    // Set the session if refresh token is provided
+    if (refreshToken) {
+      const { data: session, error: sessionError } = await supabase.auth.setSession({
+        access_token: accessToken,
+        refresh_token: refreshToken,
+      });
 
-    // Exchange authorization code for user profile
-    const { user } = await workos.userManagement.authenticateWithCode({
-      code,
-      clientId: process.env.WORKOS_CLIENT_ID,
-    });
-
-    if (!user) {
-      throw new ApiError('Invalid authorization code', 401);
-    }
-
-    // Check if user exists in our database
-    let dbUser = await UserModel.findById(user.id);
-
-    if (!dbUser) {
-      // Create user if doesn't exist
-      try {
-        dbUser = await UserModel.create({
-          id: user.id,
-          email: user.email,
-          first_name: user.firstName || undefined,
-          last_name: user.lastName || undefined,
-          email_verified: user.emailVerified,
-          profile_picture_url: user.profilePictureUrl || undefined,
-          created_at: new Date().toISOString(),
-          updated_at: new Date().toISOString(),
-        });
-
-        logger.info(`New user created: ${user.email} (${user.id})`);
-      } catch (createError) {
-        // Handle race condition - user might have been created by another request
-        logger.warn('User creation failed, attempting to fetch existing user:', createError);
-        dbUser = await UserModel.findById(user.id);
-
-        if (!dbUser) {
-          throw new ApiError('Failed to create or retrieve user', 500);
-        }
+      if (sessionError) {
+        throw new ApiError('Invalid session tokens', 401);
       }
-    } else {
-      // Update user info if changed
-      if (
-        dbUser.email !== user.email ||
-        dbUser.first_name !== user.firstName ||
-        dbUser.last_name !== user.lastName ||
-        dbUser.profile_picture_url !== user.profilePictureUrl
-      ) {
-        try {
-          dbUser = await UserModel.update(user.id, {
-            email: user.email,
-            first_name: user.firstName || undefined,
-            last_name: user.lastName || undefined,
-            email_verified: user.emailVerified,
-            profile_picture_url: user.profilePictureUrl || undefined,
-          });
-        } catch (updateError) {
-          logger.warn('User update failed, using existing data:', updateError);
-          // Continue with existing user data if update fails
-        }
+
+      if (!session?.user) {
+        throw new ApiError('No user found in session', 401);
       }
     }
 
-    // Generate JWT token
-    const jwtPayload: JWTPayload = {
-      userId: dbUser.id,
-      email: dbUser.email,
-      organizationId: dbUser.organization_id,
+    // Get user from access token
+    const { data: { user }, error } = await supabase.auth.getUser(accessToken);
+
+    if (error || !user) {
+      throw new ApiError('Invalid access token', 401);
+    }
+
+    // Get or create user profile
+    let { data: profile } = await supabase
+      .from('profiles')
+      .select('*')
+      .eq('id', user.id)
+      .single();
+
+    // Create profile if it doesn't exist
+    if (!profile) {
+      const newProfile = {
+        id: user.id,
+        first_name: user.user_metadata?.first_name,
+        last_name: user.user_metadata?.last_name,
+        profile_picture_url: user.user_metadata?.avatar_url,
+        phone: user.phone,
+        created_at: user.created_at,
+        updated_at: new Date().toISOString(),
+      };
+
+      const { data: insertedProfile, error: insertError } = await supabase
+        .from('profiles')
+        .insert(newProfile)
+        .select()
+        .single();
+
+      if (insertError) {
+        logger.error('Failed to create user profile:', insertError);
+        profile = newProfile; // Use the new profile data even if insert failed
+      } else {
+        profile = insertedProfile;
+        logger.info(`New user profile created: ${user.email} (${user.id})`);
+      }
+    }
+
+    // Build complete user object
+    const userData: User = {
+      id: user.id,
+      email: user.email || '',
+      email_verified: user.email_confirmed_at ? true : false,
+      created_at: profile.created_at || user.created_at,
+      updated_at: profile.updated_at || new Date().toISOString(),
+      first_name: profile.first_name,
+      last_name: profile.last_name,
+      profile_picture_url: profile.profile_picture_url,
+      organization_id: profile.organization_id,
+      phone: profile.phone || user.phone,
+      role: profile.role || 'member',
     };
 
-    const token = jwt.sign(jwtPayload, JWT_SECRET, {
-      expiresIn: '7d',
-      issuer: 'zoddy-api',
-      audience: 'zoddy-app',
-    });
-
-    return { token, user: dbUser };
+    return { user: userData };
   } catch (error) {
-    logger.error('WorkOS session verification failed:', error);
+    logger.error('Supabase session verification failed:', error);
 
     if (error instanceof ApiError) {
       throw error;
     }
 
-    throw new ApiError('Authentication failed. Please try again.', 401);
+    throw new ApiError('Session verification failed', 401);
   }
 };
 
@@ -183,7 +231,7 @@ export const requirePermission = (permission: keyof import('../types').TeamPermi
       }
 
       // Get team member permissions
-      const { data, error } = await supabaseAdmin
+      const { data, error } = await supabase
         .from('team_members')
         .select('permissions, role')
         .eq('user_id', req.userId)
@@ -227,7 +275,7 @@ export const requireRole = (...roles: Array<'owner' | 'admin' | 'member'>) => {
       }
 
       // Get team member role
-      const { data, error } = await supabaseAdmin
+      const { data, error } = await supabase
         .from('team_members')
         .select('role')
         .eq('user_id', req.userId)
@@ -263,16 +311,33 @@ export const optionalAuth = async (
       const token = authHeader.split(' ')[1];
       if (token) {
         try {
-          const decoded = jwt.verify(token, JWT_SECRET, {
-            issuer: 'zoddy-api',
-            audience: 'zoddy-app',
-          }) as JWTPayload;
-          const user = await UserModel.findById(decoded.userId);
+          const { data: { user }, error } = await supabase.auth.getUser(token);
 
-          if (user) {
-            req.user = user;
-            req.userId = user.id;
-            req.organizationId = user.organization_id;
+          if (user && !error) {
+            // Get user profile
+            const { data: profile } = await supabase
+              .from('profiles')
+              .select('*')
+              .eq('id', user.id)
+              .single();
+
+            const userData: User = {
+              id: user.id,
+              email: user.email || '',
+              email_verified: user.email_confirmed_at ? true : false,
+              created_at: profile?.created_at || user.created_at,
+              updated_at: profile?.updated_at || new Date().toISOString(),
+              first_name: profile?.first_name,
+              last_name: profile?.last_name,
+              profile_picture_url: profile?.profile_picture_url,
+              organization_id: profile?.organization_id,
+              phone: profile?.phone || user.phone,
+              role: profile?.role || 'member',
+            };
+
+            req.user = userData;
+            req.userId = userData.id;
+            req.organizationId = userData.organization_id;
           }
         } catch (verifyError) {
           // Invalid token - continue without auth
@@ -288,5 +353,5 @@ export const optionalAuth = async (
   }
 };
 
-// Fix import issue
-import { supabaseAdmin } from '../config/database';
+// Export the Supabase client for use in other modules
+export { supabase };
