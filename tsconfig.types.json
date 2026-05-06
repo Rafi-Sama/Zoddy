@@ -1,0 +1,10 @@
+{
+    "extends": "./tsconfig.json",
+    "include": [
+        "resources/js/actions/**/*.ts",
+        "resources/js/lib/**/*.ts",
+        "resources/js/hooks/**/*.ts",
+        "resources/js/types/**/*.d.ts",
+        "resources/js/wayfinder.ts"
+    ]
+}
