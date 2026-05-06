@@ -1,0 +1,22 @@
+includes:
+    - vendor/larastan/larastan/extension.neon
+
+parameters:
+    paths:
+        - app/
+        - config/
+        - database/
+        - routes/
+
+    level: 7
+
+    ignoreErrors:
+        -
+            message: '#Parameter \#1 \$string of function rtrim expects string, bool\|string given#'
+            path: config/filesystems.php
+
+    excludePaths:
+        -  app/Providers/TenancyServiceProvider.php
+
+    reportUnmatchedIgnoredErrors: true
+    treatPhpDocTypesAsCertain: false

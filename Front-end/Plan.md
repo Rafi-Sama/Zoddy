@@ -1,0 +1,3 @@
+1. I will connect to free ai like gemini to handle the small tasks like: when users paste a order in a messy way or give screenshot or import the xml files the ai will organize them and put it in their rightful place.
+2. I will connect to the delivery services such as ecourier, redx and pathao to place the orders automatically and showcase their data in my website.
+3. I will connect to the gmail api to send invitations
